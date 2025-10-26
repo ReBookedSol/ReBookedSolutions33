@@ -199,7 +199,7 @@ const ContactUs = () => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 border border-book-200 hover:bg-book-50 text-gray-700 px-3 py-2 rounded-lg transition-colors"
                   >
-                    <Twitter className="h-5 w-5" />
+                    <X className="h-5 w-5" />
                     <span>X</span>
                   </a>
                   <a
