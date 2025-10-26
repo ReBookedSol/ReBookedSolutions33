@@ -147,11 +147,11 @@ const ShareProfileDialog = ({
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
-                onClick={() => shareToSocial("twitter")}
+                onClick={() => shareToSocial("x")}
                 className="flex items-center justify-center"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Twitter
+                X
               </Button>
               <Button
                 variant="outline"
