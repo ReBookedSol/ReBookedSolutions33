@@ -107,17 +107,6 @@ const Report = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="mb-6">
-          <BackButton
-            fallbackPath="/"
-            variant="ghost"
-            className="text-book-600 hover:bg-book-50 mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </BackButton>
-        </div>
-
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
