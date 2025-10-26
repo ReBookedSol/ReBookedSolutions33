@@ -11,7 +11,7 @@ export const DEFAULT_SEO: SEOConfig = {
   title: "Rebooked Solutions - Buy & Sell Textbooks",
   description:
     "Find affordable textbooks for university and school. Buy and sell used textbooks with confidence on South Africa's trusted marketplace.",
-  image: "https://rebookedsolutions.co.za/og-image.jpg",
+  image: "https://cdn.builder.io/api/v1/image/assets%2Fd496663337e74740910037e73ef37db4%2Fa4d94e95c03244a89c08a0582a9856f0?format=webp&width=800",
   url: "https://rebookedsolutions.co.za",
   type: "website",
   keywords: [
