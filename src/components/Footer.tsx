@@ -207,7 +207,7 @@ const Footer = () => {
               className="text-gray-400 hover:text-sky-500 transition-colors"
               aria-label="Follow us on X"
             >
-              <X className="h-5 w-5" />
+              <XIcon className="h-5 w-5" />
             </a>
             <a
               href="https://www.instagram.com/rebooked.solutions?igsh=M2ZsNjd2aTNmZmRh"
