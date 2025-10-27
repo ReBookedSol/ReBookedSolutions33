@@ -388,7 +388,6 @@ const PrivateInstitutionProfile: React.FC = () => {
                                 className="border-book-200 text-book-600 hover:bg-book-50"
                                 onClick={() => {
                                   setExpandedTypes((prev) => ({ ...prev, [type]: !prev[type] }));
-                                  setTimeout(() => window.location.reload(), 0);
                                 }}
                               >
                                 <TrendingUp className={`h-4 w-4 mr-2 ${expandedTypes[type] ? "rotate-180" : ""}`} />
