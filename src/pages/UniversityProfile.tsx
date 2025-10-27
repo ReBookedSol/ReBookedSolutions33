@@ -36,6 +36,7 @@ import {
   Filter,
 } from "lucide-react";
 import Layout from "@/components/Layout";
+import GoogleAd from "@/components/ads/GoogleAd";
 import ProgramDetailModal from "@/components/university-info/ProgramDetailModal";
 import { Degree } from "@/types/university";
 
@@ -146,6 +147,9 @@ const UniversityProfile: React.FC = () => {
   return (
     <Layout>
       <div className="bg-white min-h-screen">
+        <div className="container mx-auto px-4 py-4">
+          <GoogleAd />
+        </div>
         {/* Clean Header */}
         <div className="bg-gradient-to-b from-book-100 via-book-50 to-white border-b border-book-200">
           <div className="container mx-auto px-6 py-8">

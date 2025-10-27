@@ -49,6 +49,7 @@ import {
 import SEO from "@/components/SEO";
 import CampusNavbar from "@/components/CampusNavbar";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import GoogleAd from "@/components/ads/GoogleAd";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationRequestService } from "@/services/notificationRequestService";
 import { toast } from "sonner";
@@ -641,6 +642,10 @@ const UniversityInfo = () => {
       />
 
       <CampusNavbar />
+
+      <div className="container mx-auto px-4 py-4">
+        <GoogleAd />
+      </div>
 
       <div className="min-h-screen bg-gray-50">
         {/* Main Content with Tabs */}

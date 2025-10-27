@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
+import GoogleAd from "@/components/ads/GoogleAd";
 import { getPrivateInstitutionById } from "@/constants/private-institutions";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -133,6 +134,9 @@ const PrivateInstitutionProfile: React.FC = () => {
   return (
     <Layout>
       <div className="bg-white min-h-screen">
+        <div className="container mx-auto px-4 py-4">
+          <GoogleAd />
+        </div>
         {/* Header */}
         <div className="bg-gradient-to-b from-book-100 via-book-50 to-white border-b border-book-200">
           <div className="container mx-auto px-6 py-8">
