@@ -102,7 +102,6 @@ const UniversityProfile: React.FC = () => {
       }
       return newSet;
     });
-    setTimeout(() => window.location.reload(), 0);
   };
 
   const handleAPSCalculator = () => {
