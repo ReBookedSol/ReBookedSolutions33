@@ -45,15 +45,22 @@ import { Degree } from "@/types/university";
  */
 const UniversityProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("programs");
 
-  // Optimized tab change handler
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
+
+  // Tab change handler with URL persistence (no full reload)
   const handleTabChange = useCallback((value: string) => {
-    // Immediate state update for instant visual feedback
     setActiveTab(value);
-  }, []);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", value);
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [selectedProgram, setSelectedProgram] = useState<Degree | null>(null);
   const [isProgramModalOpen, setIsProgramModalOpen] = useState(false);
   const [showEligibleOnly, setShowEligibleOnly] = useState(false);
@@ -158,7 +165,7 @@ const UniversityProfile: React.FC = () => {
               <button
                 type="button"
                 aria-label="Back to Overview"
-                onClick={() => navigate("/university-info")}
+                onClick={() => window.location.assign("/university-info")}
                 className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors group"
               >
                 <ArrowLeft className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-0.5" />

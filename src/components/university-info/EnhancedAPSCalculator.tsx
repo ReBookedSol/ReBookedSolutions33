@@ -1253,7 +1253,7 @@ const EnhancedAPSCalculator: React.FC = () => {
               <div className="flex gap-3 pt-4 border-t">
                 <Button
                   onClick={() =>
-                    navigate(`/university/${selectedProgram.universityId}`)
+                    window.location.assign(`/university/${selectedProgram.universityId}`)
                   }
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >

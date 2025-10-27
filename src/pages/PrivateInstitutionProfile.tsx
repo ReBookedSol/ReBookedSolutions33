@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import GoogleAd from "@/components/ads/GoogleAd";
 import { getPrivateInstitutionById } from "@/constants/private-institutions";
@@ -26,7 +26,20 @@ import {
 const PrivateInstitutionProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("programs");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", value);
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [isProgramDialogOpen, setIsProgramDialogOpen] = useState(false);
   const [expandedTypes, setExpandedTypes] = useState<Record<string, boolean>>({});
@@ -46,12 +59,12 @@ const PrivateInstitutionProfile: React.FC = () => {
               <h1 className="text-2xl font-bold">Institution not found</h1>
               <p className="text-gray-600">The institution you’re looking for doesn’t exist or hasn’t been added yet.</p>
               <div className="flex justify-center">
-                <Link to="/university-info?tool=private-institutions">
+                <a href="/university-info?tool=private-institutions">
                   <Button variant="outline" className="hover:bg-book-50 hover:border-book-300 text-book-600 border-book-200">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Private Institutions
                   </Button>
-                </Link>
+                </a>
               </div>
             </CardContent>
           </Card>
@@ -268,7 +281,7 @@ const PrivateInstitutionProfile: React.FC = () => {
 
         {/* Main Content */}
         <div className="container mx-auto px-6 py-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             {/* Tabs List */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
               <div className="block md:hidden">
@@ -373,7 +386,9 @@ const PrivateInstitutionProfile: React.FC = () => {
                               <Button
                                 variant="outline"
                                 className="border-book-200 text-book-600 hover:bg-book-50"
-                                onClick={() => setExpandedTypes((prev) => ({ ...prev, [type]: !prev[type] }))}
+                                onClick={() => {
+                                  setExpandedTypes((prev) => ({ ...prev, [type]: !prev[type] }));
+                                }}
                               >
                                 <TrendingUp className={`h-4 w-4 mr-2 ${expandedTypes[type] ? "rotate-180" : ""}`} />
                                 {expandedTypes[type] ? "Show Less" : `View ${programs.length - 3} more programs`}

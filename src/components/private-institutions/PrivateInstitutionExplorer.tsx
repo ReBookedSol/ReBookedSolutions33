@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { PRIVATE_INSTITUTIONS } from "@/constants/private-institutions";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -132,12 +131,12 @@ const PrivateInstitutionExplorer = () => {
                   ) : null}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Link to={`/private-institution/${inst.id}`} className="sm:flex-1">
+                  <a href={`/private-institution/${inst.id}`} className="sm:flex-1">
                     <Button variant="outline" className="w-full hover:bg-book-50 hover:border-book-300 text-book-600 border-book-200">
                       <ExternalLink className="w-4 h-4 mr-2" />
                       View Profile
                     </Button>
-                  </Link>
+                  </a>
                   {inst.contact?.website && (
                     <a href={inst.contact.website} target="_blank" rel="noopener noreferrer" className="sm:flex-1">
                       <Button variant="outline" className="w-full border-book-200 text-book-600 hover:bg-book-50">

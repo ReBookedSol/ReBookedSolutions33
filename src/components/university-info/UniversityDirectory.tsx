@@ -215,19 +215,12 @@ const UniversityDirectory = () => {
                               variant="outline"
                               className="border-book-200 text-book-600 hover:bg-book-50"
                               onClick={() => {
-                                // Check if there's an active APS profile to pass context
-                                const userProfile =
-                                  sessionStorage.getItem("userAPSProfile");
-                                const aps = userProfile
-                                  ? JSON.parse(userProfile).totalAPS
-                                  : null;
-
+                                const userProfile = sessionStorage.getItem("userAPSProfile");
+                                const aps = userProfile ? JSON.parse(userProfile).totalAPS : null;
                                 if (aps) {
-                                  navigate(
-                                    `/university/${university.id}?fromAPS=true&aps=${aps}`,
-                                  );
+                                  window.location.assign(`/university/${university.id}?fromAPS=true&aps=${aps}`);
                                 } else {
-                                  navigate(`/university/${university.id}`);
+                                  window.location.assign(`/university/${university.id}`);
                                 }
                               }}
                             >
