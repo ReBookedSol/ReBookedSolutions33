@@ -39,7 +39,6 @@ const PrivateInstitutionProfile: React.FC = () => {
     const params = new URLSearchParams(searchParams);
     params.set("tab", value);
     setSearchParams(params, { replace: true });
-    setTimeout(() => window.location.reload(), 0);
   }, [searchParams, setSearchParams]);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [isProgramDialogOpen, setIsProgramDialogOpen] = useState(false);
