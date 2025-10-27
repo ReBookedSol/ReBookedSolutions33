@@ -380,6 +380,9 @@ const PrivateInstitutionProfile: React.FC = () => {
                               </Button>
                             </div>
                           )}
+                          <div className="pt-6">
+                            <GoogleAd />
+                          </div>
                         </CardContent>
                       </Card>
                     ))}

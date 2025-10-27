@@ -42,6 +42,7 @@ import {
 } from "@/constants/enhancedBursaries";
 import { PROVINCES } from "@/constants/bursaries";
 import { BursaryFilters } from "@/types/university";
+import GoogleAd from "@/components/ads/GoogleAd";
 
 const BursaryExplorer = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -277,6 +278,9 @@ const BursaryExplorer = () => {
                         ? "Show Less"
                         : "View Full Details"}
                     </Button>
+                    <div className="pt-4">
+                      <GoogleAd />
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -644,7 +648,10 @@ const BursaryExplorer = () => {
                       </div>
                     </div>
                   )}
-                </CardContent>
+                <div className="pt-4">
+                  <GoogleAd />
+                </div>
+              </CardContent>
               </Card>
             );
           })}

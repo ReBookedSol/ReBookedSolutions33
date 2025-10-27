@@ -53,6 +53,7 @@ import {
 } from "@/constants/enhancedBursaries";
 import { PROVINCES } from "@/constants/bursaries";
 import { BursaryFilters } from "@/types/university";
+import GoogleAd from "@/components/ads/GoogleAd";
 
 const EnhancedBursaryListing = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -634,6 +635,9 @@ const EnhancedBursaryListing = () => {
                     </div>
                   </div>
                 )}
+                <div className="pt-4">
+                  <GoogleAd />
+                </div>
               </CardContent>
             </Card>
           );

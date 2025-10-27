@@ -3,25 +3,28 @@ import React, { useEffect, useRef } from "react";
 interface GoogleAdProps {
   slot?: string;
   className?: string;
+  format?: "auto" | "fluid";
+  layoutKey?: string;
 }
 
-const GoogleAd: React.FC<GoogleAdProps> = ({ slot = "3944399884", className = "" }) => {
+const GoogleAd: React.FC<GoogleAdProps> = ({
+  slot = "9359366330",
+  className = "",
+  format = "fluid",
+  layoutKey = "-fb+5w+4e-db+86",
+}) => {
   const adRef = useRef<HTMLModElement | null>(null);
 
   useEffect(() => {
     try {
-      // Ensure adsbygoogle array exists
       (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-      // Push a new ad request
       (window as any).adsbygoogle.push({});
     } catch (e) {
-      // Fail silently if blocked by ad blockers
-      // Optionally log in development
       if (import.meta.env.DEV) {
         console.debug("AdSense load skipped or blocked", e);
       }
     }
-  }, [slot]);
+  }, [slot, format, layoutKey]);
 
   return (
     <div className={`w-full ${className}`.trim()}>
@@ -31,7 +34,8 @@ const GoogleAd: React.FC<GoogleAdProps> = ({ slot = "3944399884", className = ""
         style={{ display: "block" }}
         data-ad-client="ca-pub-7763187849877535"
         data-ad-slot={slot}
-        data-ad-format="auto"
+        data-ad-format={format}
+        data-ad-layout-key={layoutKey}
         data-full-width-responsive="true"
       />
     </div>
