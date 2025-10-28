@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 interface GoogleAdProps {
   slot?: string;
@@ -14,6 +15,13 @@ const GoogleAd: React.FC<GoogleAdProps> = ({
   layoutKey = "-fb+5w+4e-db+86",
 }) => {
   const adRef = useRef<HTMLModElement | null>(null);
+  const location = useLocation();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Refresh ad when route changes or ad props change
+  useEffect(() => {
+    setRefreshKey((k) => k + 1);
+  }, [location.pathname, location.search, slot, format, layoutKey]);
 
   useEffect(() => {
     try {
@@ -24,11 +32,12 @@ const GoogleAd: React.FC<GoogleAdProps> = ({
         console.debug("AdSense load skipped or blocked", e);
       }
     }
-  }, [slot, format, layoutKey]);
+  }, [refreshKey]);
 
   return (
     <div className={`w-full ${className}`.trim()}>
       <ins
+        key={refreshKey}
         ref={adRef as any}
         className="adsbygoogle"
         style={{ display: "block" }}

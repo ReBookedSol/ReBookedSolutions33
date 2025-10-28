@@ -84,7 +84,7 @@ const UniversityGrid = ({
     if (onUniversitySelect) {
       onUniversitySelect(universityId);
     } else {
-      window.location.assign(`/university/${universityId}`);
+      navigate(`/university/${universityId}`);
     }
   };
 

@@ -182,7 +182,7 @@ const ProgramDetailsModal: React.FC<ProgramDetailsModalProps> = ({
 
   const handleUniversityRedirect = () => {
     if (program.universityId) {
-      window.location.assign(`/university/${program.universityId}`);
+      navigate(`/university/${program.universityId}`);
     }
   };
 

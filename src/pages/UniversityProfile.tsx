@@ -165,7 +165,7 @@ const UniversityProfile: React.FC = () => {
               <button
                 type="button"
                 aria-label="Back to Overview"
-                onClick={() => window.location.assign("/university-info")}
+                onClick={() => navigate("/university-info")}
                 className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors group"
               >
                 <ArrowLeft className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-0.5" />
@@ -1116,7 +1116,7 @@ const UniversityProfile: React.FC = () => {
                             <li>• Online application system</li>
                             <li>• Early application recommended</li>
                             <li>• Various accommodation options</li>
-                            <li>• Payment plan options</li>
+                            <li>��� Payment plan options</li>
                           </ul>
                         </div>
                       </div>

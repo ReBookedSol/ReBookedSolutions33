@@ -529,7 +529,7 @@ const UniversityInfo = () => {
               className="flex-1 hover:bg-book-50 hover:border-book-300 text-book-600 border-book-200 text-xs sm:text-sm min-h-[36px]"
               onClick={(e) => {
                 e.stopPropagation();
-                window.location.assign(`/university/${applicationInfo.id}`);
+                navigate(`/university/${applicationInfo.id}`);
               }}
             >
               <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
