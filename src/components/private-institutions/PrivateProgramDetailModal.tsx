@@ -103,7 +103,69 @@ const PrivateProgramDetailModal: React.FC<PrivateProgramDetailModalProps> = ({ p
                   {program.description ? (
                     <p className="text-gray-700 leading-relaxed">{program.description}</p>
                   ) : (
-                    <p className="text-gray-600">No description available for this program yet.</p>
+                    <p className="text-gray-700 leading-relaxed">
+                      {`The ${program.name} is a ${program.type ? program.type.replace(/-/g, ' ') : 'program'}${program.duration ? ` that typically runs for ${program.duration}` : ''}${program.credits ? ` and awards ${program.credits} credits` : ''}${program.nqfLevel ? ` at NQF level ${program.nqfLevel}` : ''}. Offered by ${institution.name}.${program.faculty ? ` It sits within the ${program.faculty} faculty.` : ''}`}
+                    </p>
+                  )}
+
+                  {/* Faculty / Website */}
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {program.faculty && (
+                      <Badge variant="secondary" className="bg-book-100 text-book-700">{program.faculty}</Badge>
+                    )}
+                    {program.website && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={program.website} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-2" /> Program Website
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Requirements */}
+                  {program.requirements && (
+                    <div className="mt-6">
+                      <h4 className="font-semibold mb-2">Entry & Academic Requirements</h4>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        {program.requirements.minAPS && (
+                          <div className="text-sm">Minimum APS: <strong>{program.requirements.minAPS}</strong></div>
+                        )}
+                        {program.requirements.academicRequirement && (
+                          <div className="text-sm">{program.requirements.academicRequirement}</div>
+                        )}
+                        {program.requirements.additionalInfo && (
+                          <div className="text-sm">{program.requirements.additionalInfo}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Subjects */}
+                  {program.subjects && program.subjects.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-semibold mb-2">Subject Requirements</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {program.subjects.map((s, idx) => (
+                          <div key={idx} className="p-3 bg-book-50 rounded-lg">
+                            <div className="font-medium">{s.name || s}</div>
+                            {s.level && <div className="text-sm text-gray-600">Level: {s.level}</div>}
+                            {s.isRequired && <div className="text-xs text-red-600">Required</div>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Career Prospects */}
+                  {program.careerProspects && program.careerProspects.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-semibold mb-2">Career Opportunities</h4>
+                      <ul className="list-disc ml-5 text-sm space-y-1">
+                        {program.careerProspects.map((c, i) => (
+                          <li key={i}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </CardContent>
               </Card>
