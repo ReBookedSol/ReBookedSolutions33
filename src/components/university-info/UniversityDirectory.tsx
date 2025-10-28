@@ -218,9 +218,9 @@ const UniversityDirectory = () => {
                                 const userProfile = sessionStorage.getItem("userAPSProfile");
                                 const aps = userProfile ? JSON.parse(userProfile).totalAPS : null;
                                 if (aps) {
-                                  window.location.assign(`/university/${university.id}?fromAPS=true&aps=${aps}`);
+                                  navigate(`/university/${university.id}?fromAPS=true&aps=${aps}`);
                                 } else {
-                                  window.location.assign(`/university/${university.id}`);
+                                  navigate(`/university/${university.id}`);
                                 }
                               }}
                             >
