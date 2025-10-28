@@ -66,7 +66,7 @@ const APSScoreCard: React.FC<APSScoreCardProps> = ({
   const handleUniversityNameClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card onClick
     // Pass APS context through URL parameter to ensure it's preserved
-    window.location.assign(
+    navigate(
       `/university/${score.universityId}?fromAPS=true&aps=${score.score}`,
     );
   };
@@ -169,7 +169,7 @@ const APSScoreCard: React.FC<APSScoreCardProps> = ({
             size="sm"
             onClick={() => {
               // Pass APS context to ensure personalized experience
-              window.location.assign(
+              navigate(
                 `/university/${score.universityId}?fromAPS=true&aps=${score.score}`,
               );
             }}
