@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 import {
   Card,
@@ -55,11 +55,23 @@ import { PROVINCES } from "@/constants/bursaries";
 import { BursaryFilters } from "@/types/university";
 import GoogleAd from "@/components/ads/GoogleAd";
 
-const EnhancedBursaryListing = () => {
+interface EnhancedBursaryListingProps {
+  refreshTrigger?: number;
+}
+
+const EnhancedBursaryListing = ({ refreshTrigger = 0 }: EnhancedBursaryListingProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<BursaryFilters>({});
   const [expandedBursary, setExpandedBursary] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const googleAdRef = useRef<any>(null);
+
+  // Refresh Google Ad when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0 && googleAdRef.current?.refresh) {
+      googleAdRef.current.refresh();
+    }
+  }, [refreshTrigger]);
 
   // Filter university bursaries only
   const filteredBursaries = useMemo(() => {
@@ -636,7 +648,7 @@ const EnhancedBursaryListing = () => {
                   </div>
                 )}
                 <div className="pt-4">
-                  <GoogleAd />
+                  <GoogleAd ref={googleAdRef} />
                 </div>
               </CardContent>
             </Card>

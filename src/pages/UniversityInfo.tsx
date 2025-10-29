@@ -86,6 +86,7 @@ const UniversityInfo = () => {
   const [error, setError] = useState<string | null>(null);
   const [notifyLoading, setNotifyLoading] = useState(false);
   const topAdRef = useRef<any>(null);
+  const [adRefreshTrigger, setAdRefreshTrigger] = useState(0);
 
   // Early return for testing
   if (import.meta.env.DEV) {
@@ -164,10 +165,13 @@ const UniversityInfo = () => {
   // Throttled handlers for better performance
   const throttledTabChange = useThrottleCallback(handleTabChange, 100);
 
-  // Refresh top ad when tab changes
+  // Refresh bursary ads when switching to bursaries tab
   useEffect(() => {
-    if (topAdRef.current?.refresh) {
-      topAdRef.current.refresh();
+    if (currentTool === "bursaries") {
+      // Delay slightly to ensure component is mounted and ads are ready
+      setTimeout(() => {
+        setAdRefreshTrigger(prev => prev + 1);
+      }, 150);
     }
   }, [currentTool]);
 
@@ -827,7 +831,7 @@ const UniversityInfo = () => {
 
             <TabsContent value="bursaries" className="space-y-6">
               <Suspense fallback={<LoadingSection />}>
-                <EnhancedBursaryListing />
+                <EnhancedBursaryListing refreshTrigger={adRefreshTrigger} />
               </Suspense>
             </TabsContent>
 
