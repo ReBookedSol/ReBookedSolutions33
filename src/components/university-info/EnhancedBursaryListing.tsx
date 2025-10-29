@@ -55,11 +55,16 @@ import { PROVINCES } from "@/constants/bursaries";
 import { BursaryFilters } from "@/types/university";
 import GoogleAd from "@/components/ads/GoogleAd";
 
-const EnhancedBursaryListing = () => {
+interface EnhancedBursaryListingProps {
+  refreshTrigger?: number;
+}
+
+const EnhancedBursaryListing = ({ refreshTrigger = 0 }: EnhancedBursaryListingProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<BursaryFilters>({});
   const [expandedBursary, setExpandedBursary] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const googleAdRef = useRef<any>(null);
 
   // Filter university bursaries only
   const filteredBursaries = useMemo(() => {
