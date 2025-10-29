@@ -235,6 +235,28 @@ export const BookTypeSection = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* University Book Type - Optional */}
+          <div>
+            <Label htmlFor="universityBookType" className="text-base font-medium">
+              Book Type <span className="text-gray-400">(Optional)</span>
+            </Label>
+            <Select
+              value={(formData as any).universityBookType || ""}
+              onValueChange={(value) => onSelectChange("universityBookType", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select book type (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {universityBookTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </>
       )}
     </div>
