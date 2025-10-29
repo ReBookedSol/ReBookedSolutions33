@@ -648,7 +648,7 @@ const EnhancedBursaryListing = ({ refreshTrigger = 0 }: EnhancedBursaryListingPr
                   </div>
                 )}
                 <div className="pt-4">
-                  <GoogleAd />
+                  <GoogleAd ref={googleAdRef} />
                 </div>
               </CardContent>
             </Card>
