@@ -4,6 +4,8 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "eduvos",
     name: "Eduvos (Pty) Ltd",
+    locations: ["Midrand, Gauteng"],
+    contact: { website: "https://www.eduvos.com/" },
     programs: [
       { id: "eduvos-hc-art-design", name: "Higher Certificate in Art and design", type: "higher-certificate", mode: "contact", credits: 120, nqfLevel: 5 },
       { id: "eduvos-hc-bioscience", name: "Higher Certificate in Bioscience", type: "higher-certificate", mode: "contact", credits: 120, nqfLevel: 5 },
@@ -33,6 +35,8 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "elizabeth-galloway-academy",
     name: "Elizabeth Galloway Academy of Fashion Design (Pty) Ltd",
+    locations: ["Stellenbosch, Western Cape"],
+    contact: { website: "https://elizabethgalloway.co.za/" },
     programs: [
       { id: "egafd-dip-fashion-design", name: "Diploma in Fashion Design", type: "diploma", mode: "contact", credits: 60, nqfLevel: 6 },
       { id: "egafd-adv-dip-fashion-design", name: "Advanced Diploma in Fashion Design", type: "advanced-diploma", mode: "contact", credits: 120, nqfLevel: 7 },
@@ -42,6 +46,8 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "empilweni-education",
     name: "Empilweni Education (Pty) Ltd",
+    locations: ["Randburg, Gauteng"],
+    contact: { website: "https://empilwenieducation.co.za/" },
     programs: [
       { id: "empilweni-hc-nursing", name: "Higher Certificate in Nursing", type: "higher-certificate", mode: "contact", credits: 120, nqfLevel: 5 },
     ],
@@ -49,6 +55,8 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "esri-south-africa",
     name: "ESRI South Africa (Pty) Ltd",
+    locations: ["Midrand, Gauteng"],
+    contact: { website: "https://www.esri-southafrica.com/" },
     programs: [
       { id: "esri-dip-geoinformation", name: "Diploma in Geoinformation Science and Technology", type: "diploma", mode: "contact", credits: 240, nqfLevel: 6 },
     ],
@@ -56,6 +64,8 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "exercise-teachers-academy",
     name: "Exercise Teachers Academy (Pty) Ltd",
+    locations: ["Multiple campuses (nationwide)"],
+    contact: { website: "https://etacollege.com/" },
     programs: [
       { id: "eta-hc-coaching-science", name: "Higher Certificate in Coaching Science", type: "higher-certificate", mode: "contact", credits: 120, nqfLevel: 5 },
       { id: "eta-dip-fitness-health", name: "Diploma in Fitness and Health", type: "diploma", mode: "contact", credits: 360, nqfLevel: 6 },
@@ -65,6 +75,8 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "foundation-for-professional-development",
     name: "Foundation for Professional Development (Pty) Ltd",
+    abbreviation: "FPD",
+    contact: { website: "https://www.foundation.co.za/" },
     programs: [
       { id: "fpd-hc-healthcare-sciences", name: "Higher Certificate in Healthcare Sciences", type: "higher-certificate", mode: "distance", credits: 120, nqfLevel: 5 },
       { id: "fpd-adv-cert-healthcare-sciences", name: "Advanced Certificate in Healthcare Sciences", type: "advanced-certificate", mode: "distance", credits: 120, nqfLevel: 6 },
@@ -76,6 +88,8 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "friends-of-design",
     name: "Friends of Design - Academy of Digital Arts (Pty) Ltd",
+    locations: ["Cape Town, Western Cape"],
+    contact: { website: "https://friendsofdesign.net/" },
     programs: [
       { id: "fod-hc-print-web-publishing", name: "Higher Certificate in Print and Web Publishing", type: "higher-certificate", mode: "contact", credits: 120, nqfLevel: 5 },
       { id: "fod-hc-game-graphics-animation", name: "Higher Certificate in Game Graphics and Animation", type: "higher-certificate", mode: "contact", credits: 120, nqfLevel: 5 },
@@ -103,19 +117,19 @@ export const PRIVATE_GROUP_3: PrivateInstitution[] = [
   {
     id: "george-whitefield-college",
     name: "George Whitefield College NPC",
+    locations: ["Muizenberg, Cape Town"],
+    contact: { website: "https://www.gwc.ac.za/" },
     programs: [
-      { id: "gwc-bth", name: "Bachelor of Theology", type: "bachelor", mode: "contact", credits: 480, nqfLevel: 8 },
-      { id: "gwc-bth-hons", name: "Bachelor of Theology Honours", type: "honours", mode: "contact", credits: 120, nqfLevel: 8 },
-      { id: "gwc-mth", name: "Master of Theology", type: "masters", mode: "contact", credits: 180, nqfLevel: 9 },
+      { id: "gwc-pgdip-biblical-studies", name: "Postgraduate Diploma in Biblical Studies", type: "postgraduate-diploma", mode: "distance", credits: 120, nqfLevel: 8 },
+      { id: "gwc-ma-theology", name: "Master of Arts in Theology", type: "masters", mode: "distance", credits: 180, nqfLevel: 9 },
     ],
   },
   {
     id: "global-access-trading-school",
     name: "Global Access Trading School (Pty) Ltd",
     programs: [
-      { id: "gats-hc-financial-markets", name: "Higher Certificate in Financial Markets", type: "higher-certificate", mode: "contact", credits: 120, nqfLevel: 5 },
-      { id: "gats-dip-financial-markets", name: "Diploma in Financial Markets", type: "diploma", mode: "contact", credits: 360, nqfLevel: 6 },
-      { id: "gats-adv-dip-financial-markets", name: "Advanced Diploma in Financial Markets", type: "advanced-diploma", mode: "contact", credits: 120, nqfLevel: 7 },
+      { id: "gats-hc-trading", name: "Higher Certificate in Trading", type: "higher-certificate", mode: "distance", credits: 120, nqfLevel: 5 },
+      { id: "gats-dip-trading", name: "Diploma in Trading", type: "diploma", mode: "distance", credits: 360, nqfLevel: 6 },
     ],
   },
 ];
