@@ -167,16 +167,17 @@ const UniversityInfo = () => {
 
   // Refresh ads when tab changes
   useEffect(() => {
+    // Always refresh the top ad
     if (topAdRef.current?.refresh) {
       topAdRef.current.refresh();
     }
 
-    // Refresh bursary ads when switching to/from bursaries tab
-    if (currentTool === "bursaries" && bursaryAdRefresh.current) {
-      // Delay slightly to ensure component is mounted and ready
+    // Refresh bursary ads when switching to bursaries tab
+    if (currentTool === "bursaries") {
+      // Delay slightly to ensure component is mounted and ads are ready
       setTimeout(() => {
         setAdRefreshTrigger(prev => prev + 1);
-      }, 100);
+      }, 150);
     }
   }, [currentTool]);
 
