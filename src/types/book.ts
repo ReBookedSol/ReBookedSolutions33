@@ -17,6 +17,7 @@ export interface Book {
   universityYear?: string;
   university?: string;
   curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
+  universityBookType?: 'Study Guide' | 'Course Book';
   province?: string;
   // Quantity fields
   initialQuantity?: number;
