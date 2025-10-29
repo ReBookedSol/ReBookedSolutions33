@@ -85,6 +85,7 @@ const UniversityInfo = () => {
   const [showAllUniversities, setShowAllUniversities] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifyLoading, setNotifyLoading] = useState(false);
+  const topAdRef = useRef<any>(null);
 
   // Early return for testing
   if (import.meta.env.DEV) {
