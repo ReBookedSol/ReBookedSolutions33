@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Book } from '@/types/book';
+import BuyersProtectionDialog from '@/components/BuyersProtectionDialog';
 
 interface BookInfoProps {
   book: Book;
@@ -16,6 +17,21 @@ const BookInfo = ({ book }: BookInfoProps) => {
           <Badge variant="secondary">{book.category}</Badge>
           <Badge variant="outline">{book.condition}</Badge>
           {book.sold && <Badge variant="destructive">Sold</Badge>}
+        </div>
+
+        {/* Buyer Protection banner placed above the details card */}
+        <div className="mb-4">
+          <BuyersProtectionDialog
+            triggerType="banner"
+            triggerLabel="Buyer Protection"
+            triggerClassName=""
+            triggerProps={{
+              onClick: (e) => {
+                // Prevent any parent click handlers (like navigation) from triggering
+                e.stopPropagation();
+              },
+            }}
+          />
         </div>
       </div>
 
