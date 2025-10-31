@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import BuyersProtectionDialog from "@/components/BuyersProtectionDialog";
 
 const ReadyToGetStarted = () => {
   const navigate = useNavigate();
