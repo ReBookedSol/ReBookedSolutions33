@@ -19,12 +19,12 @@ const BookInfo = ({ book }: BookInfoProps) => {
           {book.sold && <Badge variant="destructive">Sold</Badge>}
         </div>
 
-        {/* Buyer Protection button placed above the details card */}
+        {/* Buyer Protection banner placed above the details card */}
         <div className="mb-4">
           <BuyersProtectionDialog
-            triggerVariant="outline"
+            triggerType="banner"
             triggerLabel="Buyer Protection"
-            triggerClassName="text-book-600"
+            triggerClassName=""
             triggerProps={{
               onClick: (e) => {
                 // Prevent any parent click handlers (like navigation) from triggering
