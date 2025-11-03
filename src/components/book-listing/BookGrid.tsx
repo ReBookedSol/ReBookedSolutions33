@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/utils/errorMessageUtils";
 import Pagination from "@/components/ui/pagination";
 import { getOptimizedImageUrl } from "@/utils/imageOptimization";
+import BuyersProtectionDialog from "@/components/BuyersProtectionDialog";
 
 interface BookGridProps {
   books: Book[];
@@ -231,6 +232,7 @@ const BookGrid = ({
                       </span>
                     </div>
 
+
                     {/* Commit Button for Seller - even for unavailable books */}
                     {isPendingCommit && isOwner && onCommitBook && (
                       <div className="mt-3 pt-3 border-t border-gray-200">
@@ -334,6 +336,7 @@ const BookGrid = ({
                         {book.category}
                       </span>
                     </div>
+
 
                     {/* Commit Button for Seller */}
                     {isPendingCommit && isOwner && onCommitBook && (
