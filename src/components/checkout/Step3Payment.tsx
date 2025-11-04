@@ -446,38 +446,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
     }
   };
 
-  const handlePaystackError = (error: string) => {
-    const classifiedError = classifyPaymentError(error);
-    setError(classifiedError);
-    onPaymentError(error);
-
-    // Mobile-specific error handling
-    if (isMobile && error.toLowerCase().includes('popup')) {
-      toast.error("Payment popup blocked", {
-        description: "Please allow popups in your browser settings and try again.",
-        duration: 8000,
-      });
-    } else if (isMobile && error.toLowerCase().includes('network')) {
-      toast.error("Network error", {
-        description: "Please check your internet connection and try again.",
-        duration: 6000,
-      });
-    } else if (isMobile && error.toLowerCase().includes('timeout')) {
-      toast.error("Payment timeout", {
-        description: "The payment took too long. Please try again.",
-        duration: 6000,
-      });
-    } else {
-      toast.error("Payment failed", {
-        description: classifiedError.message,
-        duration: isMobile ? 6000 : 4000,
-      });
-    }
-  };
-
-  const handlePaystackClose = () => {
-    console.log("Payment popup closed");
-  };
 
   const handleRetryPayment = () => {
     setError(null);
@@ -1187,7 +1155,7 @@ Time: ${new Date().toISOString()}
             <div>
               <h3 className="font-medium">Secure Payment</h3>
               <p className="text-sm text-gray-600">
-                Powered by Paystack - Your payment information is encrypted and
+                Powered by BobPay - Your payment information is encrypted and
                 secure
               </p>
             </div>
@@ -1213,71 +1181,20 @@ Time: ${new Date().toISOString()}
           Back
         </Button>
 
-        {isMobile ? (
-          <PaystackPopupMobile
-            email={userEmail}
-            amount={orderSummary.total_price}
-
-            orderReference={`ORDER-${Date.now()}-${userId}`}
-            metadata={{
-              book_id: orderSummary.book.id,
-              book_title: orderSummary.book.title,
-              seller_id: orderSummary.book.seller_id,
-              buyer_id: userId,
-              delivery_method: orderSummary.delivery.service_name,
-              custom_fields: [
-                {
-                  display_name: "Book Title",
-                  variable_name: "book_title",
-                  value: orderSummary.book.title,
-                },
-                {
-                  display_name: "Delivery Method",
-                  variable_name: "delivery_method",
-                  value: orderSummary.delivery.service_name,
-                },
-              ],
-            }}
-            onSuccess={handlePaystackSuccess}
-            onError={handlePaystackError}
-            onClose={handlePaystackClose}
-            disabled={processing}
-            className="w-full px-4 py-4 text-lg font-medium"
-            buttonText={`Pay Now - ${formatAmountMobile(orderSummary.total_price)}`}
-          />
-        ) : (
-          <PaystackPopup
-            email={userEmail}
-            amount={orderSummary.total_price}
-
-            orderReference={`ORDER-${Date.now()}-${userId}`}
-            metadata={{
-              book_id: orderSummary.book.id,
-              book_title: orderSummary.book.title,
-              seller_id: orderSummary.book.seller_id,
-              buyer_id: userId,
-              delivery_method: orderSummary.delivery.service_name,
-              custom_fields: [
-                {
-                  display_name: "Book Title",
-                  variable_name: "book_title",
-                  value: orderSummary.book.title,
-                },
-                {
-                  display_name: "Delivery Method",
-                  variable_name: "delivery_method",
-                  value: orderSummary.delivery.service_name,
-                },
-              ],
-            }}
-            onSuccess={handlePaystackSuccess}
-            onError={handlePaystackError}
-            onClose={handlePaystackClose}
-            disabled={processing}
-            className="px-8 py-3 text-lg"
-            buttonText={`Pay Now - ${formatAmount(orderSummary.total_price)}`}
-          />
-        )}
+        <Button
+          onClick={handleBobPayPayment}
+          disabled={processing}
+          className="w-full px-8 py-3 text-lg"
+        >
+          {processing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            `Pay Now - R${orderSummary.total_price.toFixed(2)}`
+          )}
+        </Button>
       </div>
     </div>
   );
