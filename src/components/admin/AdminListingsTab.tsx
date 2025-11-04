@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, AlertTriangle } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/table";
 import { AdminListing } from "@/services/admin/adminQueries";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { clearAllBooks } from "@/utils/clearAllBooks";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -32,36 +31,6 @@ const AdminListingsTab = ({
   onListingAction,
 }: AdminListingsTabProps) => {
   const isMobile = useIsMobile();
-  const [isClearing, setIsClearing] = useState(false);
-
-  const handleClearAllBooks = async () => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ALL ${listings.length} books? This action cannot be undone.`,
-    );
-
-    if (!confirmed) return;
-
-    setIsClearing(true);
-    try {
-      const result = await clearAllBooks();
-
-      if (result.success) {
-        toast.success(result.message);
-        // Reload the page to refresh listings
-        window.location.reload();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      console.error(
-        "Error clearing books:",
-        error instanceof Error ? error.message : String(error),
-      );
-      toast.error("Failed to clear books");
-    } finally {
-      setIsClearing(false);
-    }
-  };
 
   if (!listings || listings.length === 0) {
     return (
@@ -94,18 +63,6 @@ const AdminListingsTab = ({
               {listings.length} total)
             </CardDescription>
           </div>
-          <Button
-            onClick={handleClearAllBooks}
-            disabled={isClearing || listings.length === 0}
-            variant="destructive"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <AlertTriangle className="h-4 w-4" />
-            {isClearing
-              ? "Clearing..."
-              : `Clear All Books (${listings.length})`}
-          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0 md:p-6">
