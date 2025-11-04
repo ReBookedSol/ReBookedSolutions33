@@ -64,6 +64,7 @@ export interface OrderConfirmation {
   book_price: number;
   delivery_method: string;
   delivery_price: number;
+  platform_fee?: number;
   total_paid: number;
   created_at: string;
   status: string;
