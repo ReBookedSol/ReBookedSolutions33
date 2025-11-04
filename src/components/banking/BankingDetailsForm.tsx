@@ -28,9 +28,10 @@ import {
   Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PaystackSubaccountService } from "@/services/paystackSubaccountService";
+import { BankingService } from "@/services/bankingService";
 import { UserAutofillService } from "@/services/userAutofillService";
 import { ActivityService } from "@/services/activityService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BankInfo {
   name: string;
@@ -65,6 +66,7 @@ const BankingDetailsForm: React.FC<BankingDetailsFormProps> = ({
   showAsModal = false,
   editMode = false,
 }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     businessName: "",
     email: "",
@@ -81,25 +83,24 @@ const BankingDetailsForm: React.FC<BankingDetailsFormProps> = ({
   // 🔄 Load existing data if in edit mode (but block editing)
   useEffect(() => {
     const loadExistingData = async () => {
-      if (!editMode) return;
+      if (!editMode || !user) return;
 
       try {
         setIsLoading(true);
-        const status =
-          await PaystackSubaccountService.getUserSubaccountStatus();
+        const bankingDetails = await BankingService.getUserBankingDetails(user.id);
 
-        if (status.hasSubaccount) {
+        if (bankingDetails) {
           setFormData({
-            businessName: status.businessName || "",
-            email: status.email || "",
-            bankName: status.bankName || "",
-            accountNumber: status.accountNumber || "",
+            businessName: bankingDetails.business_name || "",
+            email: bankingDetails.email || "",
+            bankName: bankingDetails.bank_name || "",
+            accountNumber: bankingDetails.account_number || "",
           });
 
           const selectedBank = SOUTH_AFRICAN_BANKS.find(
-            (bank) => bank.name === status.bankName,
+            (bank) => bank.name === bankingDetails.bank_name,
           );
-          setBranchCode(selectedBank?.branchCode || "");
+          setBranchCode(bankingDetails.bank_code || selectedBank?.branchCode || "");
         }
       } catch (error) {
         toast.error("Failed to load existing banking details");
@@ -112,7 +113,7 @@ const BankingDetailsForm: React.FC<BankingDetailsFormProps> = ({
     if (!editMode) {
       autofillUserInfo();
     }
-  }, [editMode]);
+  }, [editMode, user]);
 
   // 📝 Auto-fill user info from profile
   const autofillUserInfo = async () => {
@@ -280,10 +281,18 @@ const BankingDetailsForm: React.FC<BankingDetailsFormProps> = ({
         account_number: "***" + subaccountDetails.account_number.slice(-4),
       });
 
-      // 📡 CREATE SUBACCOUNT VIA SERVICE
-      const result = await PaystackSubaccountService.createOrUpdateSubaccount(
-        subaccountDetails,
-        editMode,
+      // 📡 SAVE BANKING DETAILS
+      if (!user) throw new Error("User not authenticated");
+
+      const result = await BankingService.createOrUpdateBankingDetails(
+        user.id,
+        {
+          businessName: subaccountDetails.business_name,
+          email: subaccountDetails.email,
+          bankName: subaccountDetails.bank_name,
+          bankCode: subaccountDetails.bank_code,
+          accountNumber: subaccountDetails.account_number,
+        },
       );
 
       if (result.success) {
@@ -297,31 +306,11 @@ const BankingDetailsForm: React.FC<BankingDetailsFormProps> = ({
 
         // Log the banking update activity
         try {
-          await ActivityService.logBankingUpdate(session.user.id, editMode);
+          await ActivityService.logBankingUpdate(user.id, editMode);
           console.log("✅ Banking update activity logged");
         } catch (activityError) {
           console.warn("⚠️ Failed to log banking update activity:", activityError);
           // Don't fail the entire operation for activity logging issues
-        }
-
-        // 🔗 AUTOMATICALLY LINK ALL USER'S BOOKS TO NEW SUBACCOUNT
-        if (result.subaccount_code) {
-          try {
-            console.log("Linking books to subaccount:", result.subaccount_code);
-            const linkSuccess =
-              await PaystackSubaccountService.linkBooksToSubaccount(
-                result.subaccount_code,
-              );
-
-            if (linkSuccess) {
-              toast.info(
-                "All your book listings have been updated with your payment details.",
-              );
-            }
-          } catch (linkError) {
-            console.error("Error linking books to subaccount:", linkError);
-            // Don't fail the whole process for this
-          }
         }
 
         setTimeout(() => {

@@ -477,6 +477,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       return;
     }
 
+    const PLATFORM_FEE = 20; // R20 platform fee
     const orderSummary: OrderSummary = {
       book: checkoutState.book!,
       delivery,
@@ -484,7 +485,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       seller_address: checkoutState.seller_address!,
       book_price: checkoutState.book!.price,
       delivery_price: delivery.price,
-      total_price: checkoutState.book!.price + delivery.price,
+      platform_fee: PLATFORM_FEE,
+      total_price: checkoutState.book!.price + delivery.price + PLATFORM_FEE,
     };
 
     setCheckoutState((prev) => ({

@@ -265,7 +265,7 @@ const BankingSetupForm: React.FC<BankingSetupFormProps> = ({
         });
       }
 
-      const result = await BankingService.createOrUpdateSubaccount(
+      const result = await BankingService.createOrUpdateBankingDetails(
         user!.id,
         bankingDetails,
       );
@@ -273,7 +273,7 @@ const BankingSetupForm: React.FC<BankingSetupFormProps> = ({
       if (result.success) {
         setCurrentStep("complete");
         toast.success("Banking setup completed successfully!", {
-          description: `Subaccount created: ${result.subaccount_code}`,
+          description: "Your banking details have been saved securely.",
         });
         setTimeout(() => {
           onSuccess?.();

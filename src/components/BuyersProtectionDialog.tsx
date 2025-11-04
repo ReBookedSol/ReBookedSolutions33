@@ -102,6 +102,11 @@ const BuyersProtectionDialog = ({
               Keep photos and tracking info handy — this speeds up our review and resolution.
             </p>
           </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-900">
+              <strong>Platform Fee:</strong> The R20 fee covers transaction and platform costs to ensure your payment is processed securely and your order is handled efficiently.
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
