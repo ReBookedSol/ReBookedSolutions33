@@ -28,7 +28,6 @@ import SubaccountView from "@/components/banking/SubaccountView";
 import SubaccountEditForm from "@/components/banking/SubaccountEditForm";
 import BankingForm from "@/components/banking/BankingForm";
 import PasswordVerificationForm from "@/components/banking/PasswordVerificationForm";
-import { PaystackSubaccountService } from "@/services/paystackSubaccountService";
 import BankingDecryptionService, { type DecryptedBankingDetails } from "@/services/bankingDecryptionService";
 
 const BankingProfileTab = () => {
