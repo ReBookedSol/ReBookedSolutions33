@@ -56,6 +56,78 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
     fetchUserEmail();
   }, []);
 
+  const handleBobPayPayment = async () => {
+    setProcessing(true);
+    setError(null);
+    try {
+      console.log("Initiating BobPay payment for order:", orderSummary);
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user?.email) {
+        throw new Error("User authentication error");
+      }
+
+      const customPaymentId = `ORDER-${Date.now()}-${userId}`;
+      const baseUrl = window.location.origin;
+
+      const paymentRequest = {
+        amount: orderSummary.total_price,
+        email: userData.user.email,
+        mobile_number: "",
+        item_name: orderSummary.book.title,
+        item_description: `Book purchase - ${orderSummary.book.author || "Unknown Author"}`,
+        custom_payment_id: customPaymentId,
+        notify_url: `${baseUrl}/api/bobpay-webhook`,
+        success_url: `${baseUrl}/checkout/success?reference=${customPaymentId}`,
+        pending_url: `${baseUrl}/checkout/pending?reference=${customPaymentId}`,
+        cancel_url: `${baseUrl}/checkout/cancel?reference=${customPaymentId}`,
+        order_summary: {
+          book_id: orderSummary.book.id,
+          seller_id: orderSummary.book.seller_id,
+          buyer_id: userId,
+          delivery_method: orderSummary.delivery.service_name,
+          delivery_price: orderSummary.delivery_price,
+        },
+      };
+
+      console.log("Calling bobpay-initialize-payment with:", paymentRequest);
+
+      const { data: bobpayResult, error: bobpayError } = await supabase.functions.invoke(
+        "bobpay-initialize-payment",
+        { body: paymentRequest }
+      );
+
+      if (bobpayError || !bobpayResult?.success) {
+        throw new Error(
+          bobpayError?.message || bobpayResult?.error || "Failed to initialize BobPay payment"
+        );
+      }
+
+      const paymentUrl = bobpayResult.data?.payment_url;
+      if (!paymentUrl) {
+        throw new Error("No payment URL received from BobPay");
+      }
+
+      console.log("BobPay payment URL:", paymentUrl);
+      toast.success("Redirecting to payment...");
+
+      // Redirect to BobPay payment page
+      window.location.href = paymentUrl;
+    } catch (err) {
+      console.error("BobPay initialization error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Payment initialization failed";
+      const classifiedError = classifyPaymentError(errorMessage);
+      setError(classifiedError);
+      onPaymentError(errorMessage);
+      toast.error("Payment initialization failed", {
+        description: classifiedError.message,
+        duration: 5000,
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handlePaystackSuccess = async (paystackResponse: {
     reference: string;
     status: string;
