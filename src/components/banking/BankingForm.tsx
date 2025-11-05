@@ -143,15 +143,11 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
       // Prepare encrypted bundle for storage
       const encryptedData = encryptionResult.data;
 
-      // Upsert banking details with encrypted values
+      // Upsert banking details with ONLY encrypted values (no plain text sensitive data)
       const { error } = await supabase
         .from("banking_subaccounts")
         .upsert({
           user_id: session.user.id,
-          business_name: formData.businessName,
-          email: formData.email,
-          bank_name: formData.bankName,
-          bank_code: branchCode,
           encrypted_account_number: JSON.stringify(encryptedData.encrypted_account_number),
           encrypted_bank_code: JSON.stringify(encryptedData.encrypted_bank_code),
           encrypted_bank_name: encryptedData.encrypted_bank_name
