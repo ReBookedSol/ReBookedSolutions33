@@ -322,7 +322,7 @@ const BankingProfileTab = () => {
                 <Button
                   onClick={handleDecryptAndView}
                   className="bg-book-600 hover:bg-book-700 flex items-center gap-2"
-                  disabled={isDecrypting || loadingSubaccount}
+                  disabled={isDecrypting}
                 >
                   {isDecrypting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -362,6 +362,42 @@ const BankingProfileTab = () => {
                     Decrypted Banking Details
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    {decryptedDetails.business_name && (
+                      <div>
+                        <label className="font-medium text-blue-800">Business Name:</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="bg-blue-100 px-2 py-1 rounded text-blue-900 font-mono">
+                            {decryptedDetails.business_name}
+                          </code>
+                          <Button
+                            onClick={() => copyToClipboard(decryptedDetails.business_name!, "Business Name")}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {decryptedDetails.email && (
+                      <div>
+                        <label className="font-medium text-blue-800">Email:</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="bg-blue-100 px-2 py-1 rounded text-blue-900 font-mono">
+                            {decryptedDetails.email}
+                          </code>
+                          <Button
+                            onClick={() => copyToClipboard(decryptedDetails.email!, "Email")}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <label className="font-medium text-blue-800">Full Account Number:</label>
                       <div className="flex items-center gap-2 mt-1">

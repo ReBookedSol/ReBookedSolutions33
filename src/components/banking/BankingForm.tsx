@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ActivityService } from "@/services/activityService";
+import BankingEncryptionService from "@/services/bankingEncryptionService";
 
 const SOUTH_AFRICAN_BANKS = [
   { name: "ABSA Bank", branchCode: "632005" },
@@ -117,9 +118,32 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Please log in to continue");
 
-      // Encrypt and save banking details to database
+      // Encrypt banking details before saving
+      console.log("🔒 Starting banking details encryption...");
+      const encryptionResult = await BankingEncryptionService.encryptBankingDetails(
+        formData.accountNumber,
+        branchCode,
+        formData.bankName,
+        formData.businessName,
+        formData.email
+      );
+
+      if (!encryptionResult.success || !encryptionResult.data) {
+        throw new Error(encryptionResult.error || "Failed to encrypt banking details");
+      }
+
+      console.log("✅ Banking details encrypted successfully");
+
+      // Generate encryption key hash for identification
+      const encryptionKeyHash = await BankingEncryptionService.generateKeyHash();
+
+      // Create subaccount code
       const subaccountCode = `ACCT_${session.user.id}_${Date.now()}`;
 
+      // Prepare encrypted bundle for storage
+      const encryptedData = encryptionResult.data;
+
+      // Upsert banking details with encrypted values
       const { error } = await supabase
         .from("banking_subaccounts")
         .upsert({
@@ -128,7 +152,18 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
           email: formData.email,
           bank_name: formData.bankName,
           bank_code: branchCode,
-          account_number: formData.accountNumber,
+          encrypted_account_number: JSON.stringify(encryptedData.encrypted_account_number),
+          encrypted_bank_code: JSON.stringify(encryptedData.encrypted_bank_code),
+          encrypted_bank_name: encryptedData.encrypted_bank_name
+            ? JSON.stringify(encryptedData.encrypted_bank_name)
+            : null,
+          encrypted_business_name: encryptedData.encrypted_business_name
+            ? JSON.stringify(encryptedData.encrypted_business_name)
+            : null,
+          encrypted_email: encryptedData.encrypted_email
+            ? JSON.stringify(encryptedData.encrypted_email)
+            : null,
+          encryption_key_hash: encryptionKeyHash,
           subaccount_code: subaccountCode,
           status: "active",
           created_at: new Date().toISOString(),
@@ -138,6 +173,8 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
         });
 
       if (error) throw new Error(error.message || "Failed to save banking details");
+
+      console.log("✅ Banking details saved to database with encryption");
 
       // Update profile with subaccount code
       await supabase
@@ -162,16 +199,16 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
         console.log("✅ Banking update activity logged");
       } catch (activityError) {
         console.warn("⚠️ Failed to log banking update activity:", activityError);
-        // Don't fail the entire operation for activity logging issues
       }
 
-      toast({ title: "Success!", description: isEditMode ? "Banking details updated!" : "Banking details saved!" });
+      toast({ title: "Success!", description: isEditMode ? "Banking details updated securely!" : "Banking details saved securely!" });
       if (onSuccess) {
         onSuccess();
       } else {
         navigate("/profile");
       }
     } catch (err: any) {
+      console.error("Banking form submission error:", err);
       toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
