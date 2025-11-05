@@ -283,7 +283,7 @@ export class PaystackSubaccountService {
           bankName:
             preferences.bank_details?.bank_name || "Banking details incomplete",
           accountNumber:
-            preferences.bank_details?.account_number || "Not available",
+            preferences.bank_details?.account_number_masked || "Not available",
           email: profileData?.email || "Please update",
           canEdit: true,
         };
@@ -300,19 +300,20 @@ export class PaystackSubaccountService {
           bankName:
             preferences.bank_details?.bank_name || "Banking details incomplete",
           accountNumber:
-            preferences.bank_details?.account_number || "Not available",
+            preferences.bank_details?.account_number_masked || "Not available",
           email: profileData?.email || "Please update",
           canEdit: true,
         };
       }
 
       // We have both subaccount code and banking details
+      // Note: Don't return plaintext account_number - only return masked or indicate encryption required
       return {
         hasSubaccount: true,
         subaccountCode: subaccountData.subaccount_code,
         businessName: subaccountData.business_name,
         bankName: subaccountData.bank_name,
-        accountNumber: subaccountData.account_number,
+        accountNumber: "••••••••", // Encrypted - show masked value
         email: subaccountData.email,
         canEdit: true, // But form will show contact support message
       };
