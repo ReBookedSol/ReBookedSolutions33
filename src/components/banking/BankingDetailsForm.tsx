@@ -70,6 +70,7 @@ const BankingDetailsForm: React.FC<BankingDetailsFormProps> = ({
   editMode = false,
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     businessName: "",
     email: "",
