@@ -225,14 +225,36 @@ export class BankingService {
 
     console.log("💾 Banking record to save:", bankingRecord);
 
-    const { data, error } = await supabase
+    // Check if user already has banking details
+    const { data: existingRecord } = await supabase
       .from("banking_subaccounts")
-      .upsert(bankingRecord, {
-        onConflict: "user_id",
-      })
-      .select();
+      .select("id")
+      .eq("user_id", userId)
+      .single();
 
-    console.log("💾 Upsert result:", { data, error });
+    let data;
+    let error;
+
+    if (existingRecord?.id) {
+      // Update existing record
+      const result = await supabase
+        .from("banking_subaccounts")
+        .update(bankingRecord)
+        .eq("id", existingRecord.id)
+        .select();
+      data = result.data;
+      error = result.error;
+    } else {
+      // Insert new record
+      const result = await supabase
+        .from("banking_subaccounts")
+        .insert(bankingRecord)
+        .select();
+      data = result.data;
+      error = result.error;
+    }
+
+    console.log("💾 Save result:", { data, error });
 
     if (error) {
       console.error("❌ Error saving banking details:", {
@@ -256,7 +278,7 @@ export class BankingService {
       );
     }
 
-    console.log("✅ Banking details saved successfully:", data);
+    console.log("�� Banking details saved successfully:", data);
 
     const { error: profileError } = await supabase
       .from("profiles")
