@@ -180,15 +180,12 @@ export class BankingService {
     bankingDetails: BankingDetails,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log("💾 Saving banking details for user:", userId);
+      console.log("⚠️ createOrUpdateBankingDetails: Banking details must be encrypted via edge function");
 
-      await this.saveBankingDetails(userId, {
-        ...bankingDetails,
-        subaccountCode: `ACCT_${userId}_${Date.now()}`,
-        status: "active",
-      });
-
-      return { success: true };
+      throw new Error(
+        "Banking details encryption must be handled via the encrypt-banking-details edge function. " +
+        "Please use BankingEncryptionService.encryptBankingDetails() before saving."
+      );
     } catch (error) {
       console.error("Banking service error:", {
         message: error instanceof Error ? error.message : "Unknown error",
@@ -196,7 +193,7 @@ export class BankingService {
       });
       return {
         success: false,
-        error: "Failed to save banking details. Please try again.",
+        error: error instanceof Error ? error.message : "Failed to save banking details. Banking details require encryption.",
       };
     }
   }
