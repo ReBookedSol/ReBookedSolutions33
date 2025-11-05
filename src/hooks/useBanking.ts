@@ -134,8 +134,9 @@ export const useBanking = () => {
     subaccountCode: bankingDetails?.subaccount_code,
     businessName: bankingDetails?.business_name,
     bankName: bankingDetails?.bank_name,
+    // Always show masked account number - actual account number only available after decryption
     maskedAccountNumber: bankingDetails
-      ? `****${bankingDetails.account_number.slice(-4)}`
+      ? "••••••••"
       : undefined,
   };
 };
