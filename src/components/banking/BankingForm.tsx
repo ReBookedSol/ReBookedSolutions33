@@ -123,7 +123,9 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
       const encryptionResult = await BankingEncryptionService.encryptBankingDetails(
         formData.accountNumber,
         branchCode,
-        formData.bankName
+        formData.bankName,
+        formData.businessName,
+        formData.email
       );
 
       if (!encryptionResult.success || !encryptionResult.data) {
@@ -154,6 +156,12 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
           encrypted_bank_code: JSON.stringify(encryptedData.encrypted_bank_code),
           encrypted_bank_name: encryptedData.encrypted_bank_name
             ? JSON.stringify(encryptedData.encrypted_bank_name)
+            : null,
+          encrypted_business_name: encryptedData.encrypted_business_name
+            ? JSON.stringify(encryptedData.encrypted_business_name)
+            : null,
+          encrypted_email: encryptedData.encrypted_email
+            ? JSON.stringify(encryptedData.encrypted_email)
             : null,
           encryption_key_hash: encryptionKeyHash,
           subaccount_code: subaccountCode,
