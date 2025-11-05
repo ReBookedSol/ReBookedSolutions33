@@ -11,6 +11,8 @@ export interface EncryptedBankingData {
   encrypted_account_number: EncryptedBundle;
   encrypted_bank_code: EncryptedBundle;
   encrypted_bank_name?: EncryptedBundle;
+  encrypted_business_name?: EncryptedBundle;
+  encrypted_email?: EncryptedBundle;
   encrypted_subaccount_code?: EncryptedBundle;
 }
 
