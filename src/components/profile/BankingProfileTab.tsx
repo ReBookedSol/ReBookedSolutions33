@@ -312,7 +312,11 @@ const BankingProfileTab = () => {
                     <label className="text-sm font-medium text-book-700">
                       Email
                     </label>
-                    <p className="text-book-900">{bankingDetails.email}</p>
+                    <p className="text-book-900">
+                      {showFullAccount && decryptedDetails?.email
+                        ? decryptedDetails.email
+                        : "••••••••"}
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-book-700">
