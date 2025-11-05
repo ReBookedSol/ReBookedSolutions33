@@ -66,7 +66,7 @@ export default function BankingForm({ onSuccess, onCancel }: BankingFormProps) {
           businessName: bankingRecord.business_name || "",
           email: bankingRecord.email || session.user.email || "",
           bankName: bankingRecord.bank_name || "",
-          accountNumber: "", // never prefill full account
+          accountNumber: "", // never prefill account number (encrypted or plain)
         });
         setBranchCode(bankingRecord.bank_code || "");
         setIsEditMode(true);
