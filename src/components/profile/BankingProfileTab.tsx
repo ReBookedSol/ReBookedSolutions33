@@ -425,6 +425,15 @@ const BankingProfileTab = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Update Details
                 </Button>
+                <Button
+                  onClick={() => setShowDeleteDialog(true)}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Details
+                </Button>
               </div>
 
 
