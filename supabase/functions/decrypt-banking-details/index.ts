@@ -90,7 +90,7 @@ serve(async (req) => {
   // Get encrypted banking details for the user (with fallback to legacy columns)
   const { data: bankingDetails, error: fetchError } = await supabase
     .from('banking_subaccounts')
-    .select('encrypted_account_number, encrypted_bank_code, encrypted_bank_name, encrypted_subaccount_code, account_number, bank_code, bank_name, subaccount_code, encryption_key_hash, business_name')
+    .select('encrypted_account_number, encrypted_bank_code, encrypted_bank_name, encrypted_business_name, encrypted_email, encrypted_subaccount_code, account_number, bank_code, bank_name, email, subaccount_code, encryption_key_hash, business_name')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .maybeSingle();
