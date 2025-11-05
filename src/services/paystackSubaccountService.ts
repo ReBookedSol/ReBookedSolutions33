@@ -257,6 +257,69 @@ export class PaystackSubaccountService {
     }
   }
 
+  // 🔄 UPDATE SUBACCOUNT DETAILS
+  static async updateSubaccountDetails(
+    subaccountCode: string,
+    updateData: SubaccountUpdateDetails,
+  ): Promise<{
+    success: boolean;
+    data?: any;
+    error?: string;
+  }> {
+    try {
+      // Banking details (account_number, settlement_bank) must be encrypted via BankingDetailsForm
+      // This method only updates non-sensitive fields
+
+      if (updateData.account_number && updateData.account_number !== "••••••••") {
+        return {
+          success: false,
+          error: "Cannot update banking details here. Please use the Banking Details section to update account information with proper encryption.",
+        };
+      }
+
+      // Only allow non-banking fields to be updated
+      const safeUpdateData: any = {};
+      if (updateData.business_name) safeUpdateData.business_name = updateData.business_name;
+      if (updateData.description) safeUpdateData.description = updateData.description;
+      if (updateData.primary_contact_email) safeUpdateData.primary_contact_email = updateData.primary_contact_email;
+      if (updateData.primary_contact_name) safeUpdateData.primary_contact_name = updateData.primary_contact_name;
+      if (updateData.primary_contact_phone) safeUpdateData.primary_contact_phone = updateData.primary_contact_phone;
+      if (updateData.percentage_charge !== undefined) safeUpdateData.percentage_charge = updateData.percentage_charge;
+      if (updateData.settlement_schedule) safeUpdateData.settlement_schedule = updateData.settlement_schedule;
+
+      // Update profile preferences with safe data
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: "User not authenticated" };
+      }
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("preferences")
+        .eq("id", user.id)
+        .single();
+
+      const currentPrefs = profileData?.preferences || {};
+      const updatedPrefs = { ...currentPrefs, ...safeUpdateData };
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ preferences: updatedPrefs })
+        .eq("id", user.id);
+
+      if (error) {
+        return { success: false, error: "Failed to update subaccount details" };
+      }
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return { success: false, error: errorMessage };
+    }
+  }
+
   // ✅ CHECK IF USER HAS SUBACCOUNT
   static async getUserSubaccountStatus(userId?: string): Promise<{
     hasSubaccount: boolean;
