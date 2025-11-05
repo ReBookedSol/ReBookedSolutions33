@@ -18,6 +18,8 @@ interface BankingEncryptionRequest {
   account_number: string
   bank_code: string
   bank_name?: string
+  business_name?: string
+  email?: string
   subaccount_code?: string
 }
 
