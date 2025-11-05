@@ -94,18 +94,15 @@ const BankingDetailsForm: React.FC<BankingDetailsFormProps> = ({
         const bankingDetails = await BankingService.getUserBankingDetails(user.id);
 
         if (bankingDetails) {
-          // Use available data - encrypted records may not have plain text fields
+          // Note: Plain text fields are no longer stored. For edit mode, we don't pre-fill sensitive encrypted data.
+          // User must enter details fresh or use "View Details" to decrypt
           setFormData({
-            businessName: bankingDetails.business_name || "",
-            email: bankingDetails.email || "",
-            bankName: bankingDetails.bank_name || "",
-            accountNumber: "", // Never prefill encrypted account number
+            businessName: "",
+            email: user?.email || "",
+            bankName: "",
+            accountNumber: "",
           });
-
-          const selectedBank = SOUTH_AFRICAN_BANKS.find(
-            (bank) => bank.name === bankingDetails.bank_name,
-          );
-          setBranchCode(bankingDetails.bank_code || selectedBank?.branchCode || "");
+          setBranchCode("");
         }
       } catch (error) {
         console.warn("Failed to load existing banking details:", error);
