@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { ActivityService } from "@/services/activityService";
+import BankingEncryptionService from "@/services/bankingEncryptionService";
 
 const SOUTH_AFRICAN_BANKS = [
   { name: "ABSA Bank", branchCode: "632005" },
