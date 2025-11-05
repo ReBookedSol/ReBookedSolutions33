@@ -588,6 +588,46 @@ const BankingProfileTab = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Delete Banking Details Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Banking Details
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base mt-2">
+              Are you sure you want to delete your banking details? This action cannot be undone. You will need to set up your banking information again to sell books.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={isDeletingBanking}
+              className="bg-green-600 text-white border-green-600 hover:bg-green-700 hover:text-white"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteBankingDetails}
+              disabled={isDeletingBanking}
+              className="bg-white text-red-600 border border-red-300 hover:bg-red-50"
+            >
+              {isDeletingBanking ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
