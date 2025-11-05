@@ -489,17 +489,12 @@ export type Database = {
         Row: {
           id: string;
           user_id: string | null;
-          business_name?: string;
-          email?: string;
-          bank_name?: string;
-          bank_code?: string;
-          account_number?: string;
-          encrypted_account_number?: string;
-          encrypted_bank_code?: string;
-          encrypted_bank_name?: string;
-          encrypted_business_name?: string;
-          encrypted_email?: string;
-          encryption_key_hash?: string;
+          encrypted_account_number: string;
+          encrypted_bank_code: string;
+          encrypted_bank_name: string;
+          encrypted_business_name: string;
+          encrypted_email: string;
+          encryption_key_hash: string;
           subaccount_code: string | null;
           recipient_code: string | null;
           paystack_response: any | null;
@@ -510,17 +505,12 @@ export type Database = {
         Insert: {
           id?: string;
           user_id?: string | null;
-          business_name?: string;
-          email?: string;
-          bank_name?: string;
-          bank_code?: string;
-          account_number?: string;
-          encrypted_account_number?: string;
-          encrypted_bank_code?: string;
-          encrypted_bank_name?: string;
-          encrypted_business_name?: string;
-          encrypted_email?: string;
-          encryption_key_hash?: string;
+          encrypted_account_number: string;
+          encrypted_bank_code: string;
+          encrypted_bank_name: string;
+          encrypted_business_name: string;
+          encrypted_email: string;
+          encryption_key_hash: string;
           subaccount_code?: string | null;
           recipient_code?: string | null;
           paystack_response?: any | null;
@@ -531,11 +521,6 @@ export type Database = {
         Update: {
           id?: string;
           user_id?: string | null;
-          business_name?: string;
-          email?: string;
-          bank_name?: string;
-          bank_code?: string;
-          account_number?: string;
           encrypted_account_number?: string;
           encrypted_bank_code?: string;
           encrypted_bank_name?: string;
