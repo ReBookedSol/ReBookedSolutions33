@@ -106,12 +106,16 @@ serve(async (req) => {
     const encAccount = bankingDetails.encrypted_account_number || bankingDetails.account_number;
     const encCode = bankingDetails.encrypted_bank_code || bankingDetails.bank_code;
     const encBankName = bankingDetails.encrypted_bank_name || bankingDetails.bank_name;
+    const encBusinessName = bankingDetails.encrypted_business_name || bankingDetails.business_name;
+    const encEmail = bankingDetails.encrypted_email || bankingDetails.email;
     const encSub = bankingDetails.encrypted_subaccount_code || bankingDetails.subaccount_code;
 
     const sources = {
       account_number: bankingDetails.encrypted_account_number ? 'encrypted_account_number' : (bankingDetails.account_number ? 'account_number' : null),
       bank_code: bankingDetails.encrypted_bank_code ? 'encrypted_bank_code' : (bankingDetails.bank_code ? 'bank_code' : null),
       bank_name: bankingDetails.encrypted_bank_name ? 'encrypted_bank_name' : (bankingDetails.bank_name ? 'bank_name' : null),
+      business_name: bankingDetails.encrypted_business_name ? 'encrypted_business_name' : (bankingDetails.business_name ? 'business_name' : null),
+      email: bankingDetails.encrypted_email ? 'encrypted_email' : (bankingDetails.email ? 'email' : null),
       subaccount_code: bankingDetails.encrypted_subaccount_code ? 'encrypted_subaccount_code' : (bankingDetails.subaccount_code ? 'subaccount_code' : null)
     } as const;
 
