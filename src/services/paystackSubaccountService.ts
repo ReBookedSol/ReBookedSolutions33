@@ -190,8 +190,72 @@ export class PaystackSubaccountService {
   // These functions called Paystack edge functions which are no longer needed
   // Banking details are now managed locally with encryption/decryption
 
-  // Note: getCompleteSubaccountInfo methods have been removed
-  // These methods called Paystack edge functions which are no longer needed
+  // 📋 GET COMPLETE SUBACCOUNT INFO
+  static async getCompleteSubaccountInfo(): Promise<{
+    success: boolean;
+    data?: {
+      subaccount_code: string;
+      banking_details: any;
+      paystack_data: SubaccountData;
+      profile_preferences: any;
+    };
+    error?: string;
+  }> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: "User not authenticated" };
+      }
+
+      // Get profile and subaccount code
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("subaccount_code, preferences")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profileData?.subaccount_code) {
+        return { success: false, error: "No subaccount code found" };
+      }
+
+      // Get banking subaccount details
+      const { data: subaccountData, error: subaccountError } = await supabase
+        .from("banking_subaccounts")
+        .select("*")
+        .eq("subaccount_code", profileData.subaccount_code)
+        .single();
+
+      if (subaccountError) {
+        return { success: false, error: "No banking subaccount found" };
+      }
+
+      // Parse encrypted data for display
+      const paystackData: SubaccountData = {
+        subaccount_code: subaccountData.subaccount_code,
+        business_name: subaccountData.business_name || "",
+        account_number: "••••••••", // Don't return plaintext
+        settlement_bank: subaccountData.bank_code || "",
+        percentage_charge: 0,
+        settlement_schedule: "auto",
+        active: subaccountData.status === "active",
+      };
+
+      return {
+        success: true,
+        data: {
+          subaccount_code: profileData.subaccount_code,
+          banking_details: subaccountData,
+          paystack_data: paystackData,
+          profile_preferences: profileData.preferences,
+        },
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return { success: false, error: errorMessage };
+    }
+  }
 
   // ✅ CHECK IF USER HAS SUBACCOUNT
   static async getUserSubaccountStatus(userId?: string): Promise<{
