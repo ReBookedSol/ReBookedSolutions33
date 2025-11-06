@@ -139,13 +139,10 @@ export const useAddressFallback = () => {
   const getAddressConfidence = useCallback((): 'high' | 'medium' | 'low' | null => {
     const best = getBestAddress();
     if (!best) return null;
-    
-    // Google Maps = high confidence
-    if (best.source === 'google_maps') return 'high';
-    
+
     // Manual with coordinates = medium confidence
     if (best.source === 'manual_entry' && best.latitude && best.longitude) return 'medium';
-    
+
     // Manual without coordinates = low confidence
     return 'low';
   }, [getBestAddress]);
