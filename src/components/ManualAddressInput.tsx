@@ -5,7 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, CheckCircle } from "lucide-react";
+import { MapPin, CheckCircle, AlertCircle } from "lucide-react";
+import GooglePlacesAutocomplete from "@/components/GooglePlacesAutocomplete";
+import usePlacesLibrary from "@/hooks/usePlacesLibrary";
 
 export interface AddressData {
   formattedAddress: string;
