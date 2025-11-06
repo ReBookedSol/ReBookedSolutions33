@@ -187,7 +187,7 @@ const FallbackAddressInput: React.FC<FallbackAddressInputProps> = ({
                   Address Saved
                 </p>
                 <Badge variant="outline" className="text-xs">
-                  {selectedAddress.source === 'google_maps' ? 'Smart Address' : 'Manual Entry'}
+                  Manual Entry
                 </Badge>
               </div>
               <p className="text-sm text-green-700">
