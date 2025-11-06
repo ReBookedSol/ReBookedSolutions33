@@ -29,6 +29,8 @@ import CreateListing from "./pages/CreateListing";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
+import CheckoutPending from "./pages/CheckoutPending";
+import CheckoutCancel from "./pages/CheckoutCancel";
 
 // University Pages
 import UniversityInfo from "./pages/UniversityInfo";
