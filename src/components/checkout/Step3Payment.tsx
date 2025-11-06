@@ -109,10 +109,15 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       }
 
       console.log("BobPay payment URL:", paymentUrl);
-      toast.success("Redirecting to payment...");
+      toast.success("Opening payment page in a new tab...");
 
-      // Redirect to BobPay payment page
-      window.location.href = paymentUrl;
+      // Open payment page in a new tab
+      window.open(paymentUrl, "_blank");
+
+      // Optionally show a message to the user
+      toast.info("Please complete your payment in the new tab. You'll be redirected back here once done.", {
+        duration: 7000,
+      });
     } catch (err) {
       console.error("BobPay initialization error:", err);
       const errorMessage = err instanceof Error ? err.message : "Payment initialization failed";

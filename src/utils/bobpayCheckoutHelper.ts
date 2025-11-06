@@ -112,9 +112,12 @@ export const initializeBobPayCheckout = async (
       throw new Error(paymentErr?.message || 'Failed to initialize payment');
     }
 
-    // Redirect to payment URL
+    // Open payment page in a new tab
     if (paymentData.data?.payment_url) {
-      window.location.href = paymentData.data.payment_url;
+      window.open(paymentData.data.payment_url, '_blank');
+      toast.info('Payment page opened. Please complete your payment in the new tab.', {
+        duration: 7000,
+      });
 
       // Return a temporary confirmation (actual will come from webhook)
       return {

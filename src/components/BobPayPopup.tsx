@@ -81,8 +81,11 @@ export const BobPayPopup: React.FC<BobPayPopupProps> = ({
         throw new Error('Invalid response from payment gateway');
       }
 
-      // Redirect to BobPay payment page
-      window.location.href = data.data.payment_url;
+      // Open payment page in a new tab
+      window.open(data.data.payment_url, '_blank');
+      toast.info('Payment page opened. Please complete your payment in the new tab.', {
+        duration: 7000,
+      });
 
       onSuccess({
         payment_url: data.data.payment_url,
