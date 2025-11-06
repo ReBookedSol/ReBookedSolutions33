@@ -577,25 +577,45 @@ Time: ${new Date().toISOString()}
 
       // Subaccount not required: funds go to main Paystack account
 
-      // Step 1: Create order first
-      const createOrderRequest = {
-        bookId: orderSummary.book.id,
-        buyerId: userId,
-        buyerEmail: userData.user.email,
-        sellerId: orderSummary.book.seller_id,
-        amount: orderSummary.total_price,
-        deliveryOption: orderSummary.delivery.service_name,
-        shippingAddress: orderSummary.buyer_address,
-        deliveryData: {
-          courier: orderSummary.delivery.courier,
-          service_name: orderSummary.delivery.service_name,
-          estimated_days: orderSummary.delivery.estimated_days,
-          price: orderSummary.delivery_price,
-        },
-        paystackReference: `order_${Date.now()}_${userId}`, // Temporary reference
+      // Step 1: Encrypt shipping address
+      const shippingObject = {
+        streetAddress: orderSummary.buyer_address.street,
+        city: orderSummary.buyer_address.city,
+        province: orderSummary.buyer_address.province,
+        postalCode: orderSummary.buyer_address.postal_code,
+        country: orderSummary.buyer_address.country,
+        phone: orderSummary.buyer_address.phone,
+        additional_info: orderSummary.buyer_address.additional_info,
       };
 
-      console.log("Creating order with data:", createOrderRequest);
+      console.log("🔐 Encrypting shipping address...");
+
+      const { data: encResult, error: encError } = await supabase.functions.invoke(
+        'encrypt-address',
+        { body: { object: shippingObject } }
+      );
+
+      if (encError || !encResult?.success || !encResult?.data) {
+        throw new Error(encError?.message || 'Failed to encrypt shipping address');
+      }
+
+      const shipping_address_encrypted = JSON.stringify(encResult.data);
+
+      // Step 2: Create order with correct field names
+      const createOrderRequest = {
+        buyer_id: userId,
+        seller_id: orderSummary.book.seller_id,
+        book_id: orderSummary.book.id,
+        delivery_option: orderSummary.delivery.service_name,
+        shipping_address_encrypted,
+        selected_courier_slug: orderSummary.delivery.provider_slug,
+        selected_service_code: orderSummary.delivery.service_level_code,
+        selected_courier_name: orderSummary.delivery.provider_name || orderSummary.delivery.courier,
+        selected_service_name: orderSummary.delivery.service_name,
+        selected_shipping_cost: orderSummary.delivery.price,
+      };
+
+      console.log("📦 Creating order with data:", createOrderRequest);
 
       // Create the order first
       console.log("📦 Calling create-order function...");
