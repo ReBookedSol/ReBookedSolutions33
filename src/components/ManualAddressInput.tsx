@@ -47,6 +47,9 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
   defaultValue = {},
   className = "",
 }) => {
+  const { isLoaded: placesLoaded, error: placesError } = usePlacesLibrary();
+  const [useManualFallback, setUseManualFallback] = useState(false);
+
   const [street, setStreet] = useState(defaultValue?.street || "");
   const [city, setCity] = useState(defaultValue?.city || "");
   const [province, setProvince] = useState(defaultValue?.province || "");
