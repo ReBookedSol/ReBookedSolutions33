@@ -112,8 +112,7 @@ function App() {
       <NetworkErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider attribute="class" defaultTheme="light">
-            <GoogleMapsProvider>
-              <AuthProvider>
+            <AuthProvider>
                 <CartProvider>
                   <Router>
                     <AuthErrorHandler />
@@ -320,7 +319,6 @@ function App() {
                   </Router>
                 </CartProvider>
               </AuthProvider>
-            </GoogleMapsProvider>
           </ThemeProvider>
         </QueryClientProvider>
         <Analytics />
