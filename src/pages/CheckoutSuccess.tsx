@@ -33,11 +33,11 @@ const CheckoutSuccess: React.FC = () => {
 
       console.log("Fetching order data for reference:", reference);
 
-      // Query payment_transactions to find the order by custom_payment_id
+      // Query payment_transactions to find the order by reference
       const { data: paymentTx, error: txError } = await supabase
         .from("payment_transactions")
         .select("*")
-        .eq("custom_payment_id", reference)
+        .eq("reference", reference)
         .single();
 
       if (txError || !paymentTx) {
@@ -66,7 +66,7 @@ const CheckoutSuccess: React.FC = () => {
       // Construct OrderConfirmation object from order data
       const confirmation: OrderConfirmation = {
         order_id: order.id,
-        payment_reference: paymentTx.custom_payment_id,
+        payment_reference: paymentTx.reference,
         book_id: order.book_id,
         seller_id: order.seller_id,
         buyer_id: order.buyer_id,
