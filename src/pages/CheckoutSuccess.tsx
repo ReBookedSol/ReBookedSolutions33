@@ -42,7 +42,7 @@ const CheckoutSuccess: React.FC = () => {
         .from("orders")
         .select("*")
         .eq("order_id", cleanReference)
-        .single();
+        .maybeSingle();
 
       if (orderError || !order) {
         console.error("Order not found:", orderError);
