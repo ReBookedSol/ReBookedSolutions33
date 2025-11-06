@@ -74,12 +74,7 @@ const FallbackAddressInput: React.FC<FallbackAddressInputProps> = ({
   showMethodIndicator = true,
   autoFallback = true,
 }) => {
-  const { isLoaded: mapsLoaded, loadError: mapsLoadError } = useGoogleMaps();
-  
-  const [inputMethod, setInputMethod] = useState<'auto' | 'google' | 'manual'>('auto');
-  const [forceManual, setForceManual] = useState(false);
-  const [googleMapsAttempted, setGoogleMapsAttempted] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline'>('online');
+  const [inputMethod, setInputMethod] = useState<'manual'>('manual');
   
   // Manual address state
   const [manualAddress, setManualAddress] = useState({
