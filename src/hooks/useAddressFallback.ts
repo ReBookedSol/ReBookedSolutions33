@@ -24,8 +24,6 @@ export interface AddressFallbackState {
 }
 
 export const useAddressFallback = () => {
-  const { isLoaded: mapsLoaded, loadError: mapsLoadError } = useGoogleMaps();
-  
   const [state, setState] = useState<AddressFallbackState>({
     isGoogleMapsAvailable: false,
     isOnline: navigator.onLine,
