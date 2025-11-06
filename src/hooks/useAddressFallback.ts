@@ -121,17 +121,6 @@ export const useAddressFallback = () => {
     };
   }, []);
 
-  // Retry Google Maps
-  const retryGoogleMaps = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      retryCount: prev.retryCount + 1,
-      lastError: undefined,
-    }));
-    
-    // Force reload Google Maps context (this would need to be implemented in the context)
-    window.location.reload();
-  }, []);
 
   // Get the best available address
   const getBestAddress = useCallback((): AddressData | null => {
