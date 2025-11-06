@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useGoogleMaps } from '@/contexts/GoogleMapsContext';
 
 export interface AddressData {
   formattedAddress: string;
