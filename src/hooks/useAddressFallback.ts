@@ -66,24 +66,6 @@ export const useAddressFallback = () => {
     }));
   }, []);
 
-  // Save Google Maps address
-  const saveGoogleMapsAddress = useCallback((addressData: Omit<AddressData, 'source' | 'timestamp' | 'confidence'>) => {
-    const address: AddressData = {
-      ...addressData,
-      source: 'google_maps',
-      timestamp: new Date().toISOString(),
-      confidence: 'high', // Google Maps data is usually high confidence
-    };
-
-    setAddresses(prev => ({
-      ...prev,
-      google: address,
-      selected: address,
-    }));
-
-    return address;
-  }, []);
-
   // Save manual address
   const saveManualAddress = useCallback((addressData: Omit<AddressData, 'source' | 'timestamp' | 'confidence'>) => {
     const address: AddressData = {
