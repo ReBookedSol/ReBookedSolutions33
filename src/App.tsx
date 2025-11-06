@@ -214,6 +214,14 @@ function App() {
                         }
                       />
                       <Route
+                        path="/checkout/success"
+                        element={
+                          <ProtectedRoute>
+                            <CheckoutSuccess />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
                         path="/notifications"
                         element={
                           <ProtectedRoute>
