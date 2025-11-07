@@ -39,16 +39,46 @@ const CheckoutSuccess: React.FC = () => {
       const bookItem = order.items?.[0];
       const bookId = bookItem?.book_id || order.book_id;
 
+      console.log("📚 Book ID extracted:", {
+        fromItems: bookItem?.book_id,
+        fromOrder: order.book_id,
+        final: bookId
+      });
+
       // Step 1: Mark book as sold (idempotent operation)
-      if (bookId && !order.sold) {
+      if (bookId) {
         try {
-          const { data: bookData } = await supabase
+          console.log("🔍 Checking if book needs to be marked as sold:", bookId);
+
+          const { data: bookData, error: bookFetchError } = await supabase
             .from("books")
-            .select("id, title, available_quantity, sold_quantity, sold")
+            .select("id, title, available_quantity, sold_quantity, sold, availability")
             .eq("id", bookId)
             .single();
 
-          if (bookData && !bookData.sold) {
+          if (bookFetchError) {
+            console.warn("⚠️ Failed to fetch book data:", bookFetchError);
+            return;
+          }
+
+          if (!bookData) {
+            console.warn("⚠️ Book not found:", bookId);
+            return;
+          }
+
+          console.log("📖 Book current state:", {
+            id: bookData.id,
+            title: bookData.title,
+            sold: bookData.sold,
+            availability: bookData.availability,
+            available_quantity: bookData.available_quantity,
+            sold_quantity: bookData.sold_quantity
+          });
+
+          // Only mark as sold if not already sold
+          if (!bookData.sold) {
+            console.log("🔄 Marking book as sold...");
+
             const { error: bookUpdateError } = await supabase
               .from("books")
               .update({
@@ -61,14 +91,20 @@ const CheckoutSuccess: React.FC = () => {
               .eq("id", bookId);
 
             if (bookUpdateError) {
-              console.warn("⚠️ Failed to mark book as sold:", bookUpdateError);
-            } else {
-              console.log("✅ Book marked as sold:", bookId);
+              console.error("❌ Failed to mark book as sold:", bookUpdateError);
+              throw bookUpdateError;
             }
+
+            console.log("✅ Book marked as sold successfully:", bookId);
+          } else {
+            console.log("ℹ️ Book already marked as sold:", bookId);
           }
         } catch (bookError) {
-          console.warn("⚠️ Book update error (non-critical):", bookError);
+          console.error("❌ Book update error:", bookError);
+          // Continue with other actions even if book marking fails
         }
+      } else {
+        console.warn("⚠️ No book ID found in order");
       }
 
       // Step 2: Send emails via EnhancedPurchaseEmailService
