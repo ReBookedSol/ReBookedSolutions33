@@ -105,6 +105,7 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
             amount: Math.round(orderSummary.total_price * 100),
             status: "pending",
             payment_reference: customPaymentId,
+            paystack_ref: customPaymentId,
 
             items: [
               {
