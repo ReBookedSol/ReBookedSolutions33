@@ -191,12 +191,12 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
 
       console.log("✅ Order created successfully:", createdOrder.id);
 
-      // Step 3: Initialize BobPay payment with the order_id
+      // Step 4: Initialize BobPay payment with the order_id
       const paymentRequest = {
         order_id: createdOrder.id,
         amount: orderSummary.total_price,
-        email: userData.user.email,
-        mobile_number: "",
+        email: buyerProfile.email || userData.user.email,
+        mobile_number: buyerProfile.phone_number || "",
         item_name: orderSummary.book.title,
         item_description: `Book purchase - ${orderSummary.book.author || "Unknown Author"}`,
         custom_payment_id: customPaymentId,
