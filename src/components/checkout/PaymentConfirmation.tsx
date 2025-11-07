@@ -62,45 +62,39 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
         throw new Error("User authentication error");
       }
 
-      // Create order via API
-      const response = await fetch("/api/create-order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: paymentData.buyer_id,
-          items: [
-            {
-              book_id: paymentData.book_id,
-              seller_id: paymentData.seller_id,
-              title: paymentData.book_title,
-              price: paymentData.book_price,
-            },
-          ],
-          total_amount: paymentData.total_paid,
-          shipping_address: {
-            name: userData.user.user_metadata?.name || "Customer",
-            email: userData.user.email,
-          },
-          payment_reference: paymentData.payment_reference,
-          payment_data: {
-            reference: paymentData.payment_reference,
-            amount: paymentData.total_paid,
-            status: "success",
-            verified_at: new Date().toISOString(),
-          },
-        }),
-      });
+      // Create order via Supabase Edge Function
+      console.log("📦 Invoking create-order function...");
 
-      const result = await response.json();
+      const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
+        "create-order",
+        {
+          body: {
+            buyer_id: paymentData.buyer_id,
+            seller_id: paymentData.seller_id,
+            book_id: paymentData.book_id,
+            delivery_option: paymentData.delivery_method,
+            shipping_address_encrypted: JSON.stringify({
+              name: userData.user.user_metadata?.name || "Customer",
+              email: userData.user.email,
+            }),
+            payment_reference: paymentData.payment_reference,
+          },
+        }
+      );
 
-      if (!result.success) {
-        throw new Error(result.error || "Failed to create order");
+      if (invokeError) {
+        console.error("🚫 Function invoke error:", invokeError);
+        throw new Error(invokeError.message || "Failed to invoke create-order function");
+      }
+
+      const result = invokeData;
+
+      if (!result?.success) {
+        throw new Error(result?.error || "Failed to create order");
       }
 
       console.log("✅ Order created successfully:", result);
-      setOrderDetails(result.orders[0]);
+      setOrderDetails(result.order);
 
       // Store payment transaction
       const { error: paymentError } = await supabase
