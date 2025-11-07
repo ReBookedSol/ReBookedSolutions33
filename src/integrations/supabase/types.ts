@@ -1025,6 +1025,7 @@ export type Database = {
           id: string
           items: Json
           metadata: Json | null
+          order_id: string | null
           paid_at: string | null
           payment_data: Json | null
           payment_reference: string | null
@@ -1073,6 +1074,7 @@ export type Database = {
           id?: string
           items?: Json
           metadata?: Json | null
+          order_id?: string | null
           paid_at?: string | null
           payment_data?: Json | null
           payment_reference?: string | null
@@ -1121,6 +1123,7 @@ export type Database = {
           id?: string
           items?: Json
           metadata?: Json | null
+          order_id?: string | null
           paid_at?: string | null
           payment_data?: Json | null
           payment_reference?: string | null
