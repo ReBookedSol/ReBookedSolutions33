@@ -24,7 +24,7 @@ serve(async (req) => {
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("payment_reference, total_amount, amount, tracking_number, delivery_status, status, committed_at, payment_transactions(*)")
+      .select("payment_reference, total_amount, amount, tracking_number, delivery_status, status")
       .eq("id", order_id)
       .single();
 
@@ -64,53 +64,26 @@ serve(async (req) => {
     let refundResult: any = null;
 
     if (shouldRefund && order.payment_reference) {
-      // Check if order is uncommitted - if so, use BobPayRefund
-      const isUncommitted = !order.committed_at;
+      const refundResponse = await supabase.functions.invoke("refund-management", {
+        body: {
+          payment_reference: order.payment_reference,
+          amount: null,
+          reason: reason || "Order cancelled",
+          order_id,
+        },
+      });
 
-      if (isUncommitted) {
-        // For uncommitted orders, use BobPayRefund
-        const refundResponse = await supabase.functions.invoke("bobpay-refund", {
-          body: {
-            order_id,
-            reason: reason || "Order cancelled",
-          },
-        });
+      refundResult = refundResponse.data;
 
-        refundResult = refundResponse.data;
-
-        if (refundResult?.success) {
-          await supabase
-            .from("orders")
-            .update({
-              refund_status: refundResult.data?.status || "success",
-              refund_reference: refundResult.data?.refund_id,
-              refunded_at: new Date().toISOString(),
-            })
-            .eq("id", order_id);
-        }
-      } else {
-        // Use Refund Management for committed orders
-        const refundResponse = await supabase.functions.invoke("refund-management", {
-          body: {
-            payment_reference: order.payment_reference,
-            amount: null,
-            reason: reason || "Order cancelled",
-            order_id,
-          },
-        });
-
-        refundResult = refundResponse.data;
-
-        if (refundResult?.success) {
-          await supabase
-            .from("orders")
-            .update({
-              refund_status: refundResult.data?.status || "pending",
-              refund_reference: refundResult.data?.id,
-              refunded_at: new Date().toISOString(),
-            })
-            .eq("id", order_id);
-        }
+      if (refundResult?.success) {
+        await supabase
+          .from("orders")
+          .update({
+            refund_status: refundResult.data?.status || "pending",
+            refund_reference: refundResult.data?.id,
+            refunded_at: new Date().toISOString(),
+          })
+          .eq("id", order_id);
       }
     }
 
