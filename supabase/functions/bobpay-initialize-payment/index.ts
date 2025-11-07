@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
           order_id: paymentData.order_id,
           user_id: paymentData.buyer_id || user.id,
           reference: paymentData.custom_payment_id,
+          custom_payment_id: paymentData.custom_payment_id, // Store custom payment ID
           amount: amountInCents,
           status: 'pending',
           payment_method: 'bobpay',
