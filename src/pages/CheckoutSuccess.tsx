@@ -6,6 +6,8 @@ import Step4Confirmation from "@/components/checkout/Step4Confirmation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EnhancedPurchaseEmailService } from "@/services/enhancedPurchaseEmailService";
+import { NotificationService } from "@/services/notificationService";
 
 const CheckoutSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -25,6 +27,130 @@ const CheckoutSuccess: React.FC = () => {
 
     fetchOrderData();
   }, [reference]);
+
+  /**
+   * Handle post-payment actions: mark book as sold, send emails, create notifications
+   * This acts as a fallback in case the webhook didn't fire or failed
+   */
+  const handlePostPaymentActions = async (order: any) => {
+    try {
+      console.log("🔄 Processing post-payment actions for order:", order.id);
+
+      const bookItem = order.items?.[0];
+      const bookId = bookItem?.book_id || order.book_id;
+
+      // Step 1: Mark book as sold (idempotent operation)
+      if (bookId && !order.sold) {
+        try {
+          const { data: bookData } = await supabase
+            .from("books")
+            .select("id, title, available_quantity, sold_quantity, sold")
+            .eq("id", bookId)
+            .single();
+
+          if (bookData && !bookData.sold) {
+            const { error: bookUpdateError } = await supabase
+              .from("books")
+              .update({
+                sold: true,
+                availability: "sold",
+                sold_at: new Date().toISOString(),
+                sold_quantity: (bookData.sold_quantity || 0) + 1,
+                available_quantity: Math.max(0, (bookData.available_quantity || 0) - 1),
+              })
+              .eq("id", bookId);
+
+            if (bookUpdateError) {
+              console.warn("⚠️ Failed to mark book as sold:", bookUpdateError);
+            } else {
+              console.log("✅ Book marked as sold:", bookId);
+            }
+          }
+        } catch (bookError) {
+          console.warn("⚠️ Book update error (non-critical):", bookError);
+        }
+      }
+
+      // Step 2: Send emails via EnhancedPurchaseEmailService
+      const buyerName = order.buyer_full_name || "Buyer";
+      const sellerName = order.seller_full_name || "Seller";
+      const bookTitle = bookItem?.book_title || "Book";
+      const bookPrice = bookItem?.price ? bookItem.price / 100 : 0;
+      const orderTotal = order.amount ? order.amount / 100 : 0;
+
+      try {
+        await EnhancedPurchaseEmailService.sendPurchaseEmailsWithFallback({
+          orderId: order.id,
+          bookId: bookId || "",
+          bookTitle,
+          bookPrice,
+          sellerName,
+          sellerEmail: order.seller_email || "",
+          buyerName,
+          buyerEmail: order.buyer_email || "",
+          orderTotal,
+          orderDate: new Date(order.created_at).toLocaleDateString(),
+        });
+        console.log("✅ Purchase emails sent successfully");
+      } catch (emailError) {
+        console.warn("⚠️ Email service error (emails may still be queued):", emailError);
+      }
+
+      // Step 3: Create in-app notifications
+      try {
+        // Notification for buyer
+        await NotificationService.createOrderConfirmation(
+          order.buyer_id,
+          order.id,
+          bookTitle,
+          false // isForSeller
+        );
+        console.log("✅ Buyer notification created");
+      } catch (notifError) {
+        console.warn("⚠️ Failed to create buyer notification:", notifError);
+      }
+
+      try {
+        // Notification for seller
+        await NotificationService.createOrderConfirmation(
+          order.seller_id,
+          order.id,
+          bookTitle,
+          true // isForSeller
+        );
+        console.log("✅ Seller notification created");
+      } catch (notifError) {
+        console.warn("⚠️ Failed to create seller notification:", notifError);
+      }
+
+      // Step 4: Update order status to pending_commit if still pending
+      if (order.status === "pending" || order.payment_status === "pending") {
+        try {
+          const { error: updateError } = await supabase
+            .from("orders")
+            .update({
+              payment_status: "paid",
+              status: "pending_commit",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", order.id);
+
+          if (updateError) {
+            console.warn("⚠️ Failed to update order status:", updateError);
+          } else {
+            console.log("✅ Order status updated to pending_commit");
+          }
+        } catch (updateError) {
+          console.warn("⚠️ Order status update error:", updateError);
+        }
+      }
+
+      console.log("✅ All post-payment actions completed");
+    } catch (error) {
+      console.error("❌ Post-payment actions failed:", error);
+      // Don't throw - show success page anyway as order was created
+    }
+  };
 
   const fetchOrderData = async () => {
     try {
@@ -52,6 +178,9 @@ const CheckoutSuccess: React.FC = () => {
       }
 
       console.log("Order found:", order);
+
+      // Trigger post-payment actions as a fallback (webhook may have already done this)
+      await handlePostPaymentActions(order);
 
       // Log that user visited the success page
       if (order.buyer_id) {
