@@ -164,6 +164,11 @@ Deno.serve(async (req) => {
       return new Response('Order not found', { status: 404 });
     }
 
+    if (!orders) {
+      console.error('No order found for payment_reference:', webhookData.custom_payment_id);
+      return new Response('Order not found', { status: 404 });
+    }
+
     // Update payment transaction
     const { error: txUpdateError } = await supabaseClient
       .from('payment_transactions')
