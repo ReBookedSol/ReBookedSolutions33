@@ -93,9 +93,11 @@ export async function getUserOrdersWithDetails(
         created_at,
         delivery_status,
         cancelled_at,
-        book:books(title, author, isbn),
-        buyer:profiles!buyer_id(name, email),
-        seller:profiles!seller_id(name, email)
+        buyer_full_name,
+        buyer_email,
+        seller_full_name,
+        seller_email,
+        book:books(title, author, isbn)
       `)
       .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
       .order("created_at", { ascending: false });
@@ -119,7 +121,18 @@ export async function getUserOrdersWithDetails(
       throw error;
     }
 
-    return orders || [];
+    // Map the database fields to the expected interface
+    return (orders || []).map((order: any) => ({
+      ...order,
+      buyer: order.buyer_id ? {
+        name: order.buyer_full_name,
+        email: order.buyer_email,
+      } : null,
+      seller: order.seller_id ? {
+        name: order.seller_full_name,
+        email: order.seller_email,
+      } : null,
+    }));
   } catch (error) {
     console.error("Failed to get user orders:", error);
     throw error;
