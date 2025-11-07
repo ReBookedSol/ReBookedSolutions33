@@ -148,7 +148,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
                 {order.book?.author ? `by ${order.book.author}` : ""}
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Order #{order.id.slice(-8)} • {role === "buyer" ? `Seller` : `Buyer`}: {role === "buyer" ? (order.seller?.name || "Unknown") : (order.buyer?.name || "Unknown")}
+                Order #{order.id.slice(-8)} ��� {role === "buyer" ? `Seller` : `Buyer`}: {role === "buyer" ? (order.seller?.name || "Unknown") : (order.buyer?.name || "Unknown")}
               </p>
             </div>
             <div className="text-right">
@@ -343,8 +343,23 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
 
           <OrderActionsPanel order={order} userRole={userRole} onOrderUpdate={fetchOrders} />
 
+          {userRole === "buyer" && ["delivered", "completed"].includes(order.status) && (
+            <>
+              <Separator />
+              <OrderCompletionCard
+                orderId={order.id}
+                bookTitle={order.book?.title || "Book"}
+                sellerName={order.seller?.name || "Seller"}
+                deliveredDate={order.updated_at}
+                onFeedbackSubmitted={() => {
+                  fetchOrders();
+                }}
+              />
+            </>
+          )}
+
           <Separator />
-          {["delivered", "completed"].includes(order.status) && (
+          {["delivered", "completed"].includes(order.status) && userRole === "seller" && (
             <div className="text-xs text-gray-500">Completed on {formatDate(order.updated_at)}</div>
           )}
           {order.status === "cancelled" && (
