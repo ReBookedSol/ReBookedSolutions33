@@ -310,7 +310,7 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
 
                                 // Fixed error message extraction for Supabase FunctionsError
         const extractErrorMessage = (err: any): string => {
-          console.log('🔍 Extracting error message from:', err);
+          console.log('���� Extracting error message from:', err);
 
           // Handle null/undefined
           if (err === null || err === undefined) {
@@ -1039,11 +1039,133 @@ Time: ${new Date().toISOString()}
               sold: true,
               availability: "sold",
               sold_at: new Date().toISOString(),
+              sold_quantity: 1,
             })
             .eq("id", bookItem.book_id);
 
           if (bookError) {
             console.warn("Failed to mark book as sold:", bookError);
+          }
+
+          // Update order status to pending_commit (waiting for seller confirmation)
+          const { error: statusUpdateError } = await supabase
+            .from("orders")
+            .update({
+              status: "pending_commit",
+            })
+            .eq("id", createdOrder.id);
+
+          if (statusUpdateError) {
+            console.warn("Failed to update order status to pending_commit:", statusUpdateError);
+          }
+
+          // Get seller and buyer profiles for email notifications
+          const { data: sellerProfile } = await supabase
+            .from("profiles")
+            .select("email, full_name, name")
+            .eq("id", createdOrder.seller_id)
+            .single();
+
+          const sellerEmail = sellerProfile?.email;
+          const sellerName = sellerProfile?.full_name || sellerProfile?.name || "Seller";
+          const buyerName = userData.user?.user_metadata?.name || userData.user?.email || "Buyer";
+
+          // Queue emails for buyer and seller
+          if (userData.user?.email) {
+            await supabase.from("mail_queue").insert({
+              to_email: userData.user.email,
+              subject: "📚 Payment Confirmed - Waiting for Seller Response",
+              html_content: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <div style="background-color: #00b894; color: white; padding: 20px; text-align: center;">
+                    <h1 style="margin: 0;">📚 Payment Confirmed!</h1>
+                  </div>
+                  <div style="padding: 30px; background-color: #f8f9fa;">
+                    <p>Hello ${buyerName},</p>
+                    <p><strong>Thank you for your purchase!</strong> Your payment has been processed successfully.</p>
+
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                      <h3 style="color: #00b894; margin-top: 0;">Order Summary</h3>
+                      <p><strong>Book:</strong> ${bookItem.book_title}</p>
+                      <p><strong>Seller:</strong> ${sellerName}</p>
+                      <p><strong>Order ID:</strong> ${createdOrder.id}</p>
+                      <p><strong>Amount Paid:</strong> R${orderSummary.total_price.toFixed(2)}</p>
+                    </div>
+
+                    <div style="background-color: #e8f4fd; border: 1px solid #74b9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                      <h3 style="color: #0984e3; margin-top: 0;">⏳ Waiting for Seller Confirmation</h3>
+                      <p>The seller has 48 hours to confirm your order. Once confirmed, your book will be shipped immediately.</p>
+                    </div>
+
+                    <p><strong>What happens next:</strong></p>
+                    <ul>
+                      <li>The seller will confirm your order within 48 hours</li>
+                      <li>Once confirmed, your book will be shipped immediately</li>
+                      <li>You'll receive tracking information via SMS/email</li>
+                      <li>Delivery typically takes 1-3 business days</li>
+                    </ul>
+
+                    <p><strong>If the seller doesn't confirm:</strong> You'll receive a full automatic refund within 48 hours.</p>
+
+                    <p>Thank you for choosing ReBooked Solutions!</p>
+                  </div>
+                  <div style="background-color: #f3fef7; color: #1f4e3d; padding: 20px; text-align: center; font-size: 12px; border-top: 1px solid #e5e7eb;">
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                    <p>For assistance: <a href="mailto:support@rebookedsolutions.co.za">support@rebookedsolutions.co.za</a></p>
+                  </div>
+                </div>
+              `,
+              priority: "high",
+              email_type: "buyer_payment_confirmed",
+            }).catch((err) => console.warn("Failed to queue buyer email:", err));
+          }
+
+          if (sellerEmail) {
+            await supabase.from("mail_queue").insert({
+              to_email: sellerEmail,
+              subject: "🚨 NEW SALE - Confirm Your Book Sale (48hr deadline)",
+              html_content: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <div style="background-color: #e74c3c; color: white; padding: 20px; text-align: center;">
+                    <h1 style="margin: 0;">🚨 New Book Sale - Action Required!</h1>
+                  </div>
+                  <div style="padding: 30px; background-color: #f8f9fa;">
+                    <p>Hello ${sellerName},</p>
+                    <p><strong>Great news!</strong> Someone just purchased your book and is waiting for confirmation.</p>
+
+                    <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                      <h3 style="color: #e17055; margin-top: 0;">⏰ ACTION REQUIRED WITHIN 48 HOURS</h3>
+                      <p><strong>You must confirm this sale to proceed with the order.</strong></p>
+                    </div>
+
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                      <h3 style="color: #2d3436; margin-top: 0;">Sale Details</h3>
+                      <p><strong>Book:</strong> ${bookItem.book_title}</p>
+                      <p><strong>Buyer:</strong> ${buyerName}</p>
+                      <p><strong>Order ID:</strong> ${createdOrder.id}</p>
+                    </div>
+
+                    <p><strong>What happens next:</strong></p>
+                    <ul>
+                      <li>Log in to your ReBooked Solutions account</li>
+                      <li>Click "Commit Sale" for this book</li>
+                      <li>We'll arrange pickup from your location</li>
+                      <li>You'll receive payment after delivery</li>
+                    </ul>
+
+                    <p style="color: #e17055;"><strong>Important:</strong> If you don't confirm within 48 hours, the order will be automatically cancelled and refunded.</p>
+
+                    <p>Thank you for using ReBooked Solutions!</p>
+                  </div>
+                  <div style="background-color: #f3fef7; color: #1f4e3d; padding: 20px; text-align: center; font-size: 12px; border-top: 1px solid #e5e7eb;">
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                    <p>For assistance: <a href="mailto:support@rebookedsolutions.co.za">support@rebookedsolutions.co.za</a></p>
+                  </div>
+                </div>
+              `,
+              priority: "urgent",
+              email_type: "seller_pending_commit",
+            }).catch((err) => console.warn("Failed to queue seller email:", err));
           }
 
           // Create order confirmation data using the database order
