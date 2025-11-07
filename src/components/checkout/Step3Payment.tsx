@@ -70,7 +70,32 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       const customPaymentId = `ORDER-${Date.now()}-${userId}`;
       const baseUrl = window.location.origin;
 
-      // Step 1: Encrypt the shipping address
+      // Step 1: Fetch buyer and seller profiles for denormalized data
+      console.log("🔍 Fetching buyer and seller profiles...");
+      const { data: buyerProfile, error: buyerError } = await supabase
+        .from("profiles")
+        .select("id, full_name, name, first_name, last_name, email, phone_number")
+        .eq("id", userId)
+        .single();
+
+      if (buyerError || !buyerProfile) {
+        throw new Error("Failed to fetch buyer profile");
+      }
+
+      const { data: sellerProfile, error: sellerError } = await supabase
+        .from("profiles")
+        .select("id, full_name, name, first_name, last_name, email, phone_number, pickup_address_encrypted")
+        .eq("id", orderSummary.book.seller_id)
+        .single();
+
+      if (sellerError || !sellerProfile) {
+        throw new Error("Failed to fetch seller profile");
+      }
+
+      const buyerFullName = buyerProfile.full_name || buyerProfile.name || `${buyerProfile.first_name || ''} ${buyerProfile.last_name || ''}`.trim() || 'Buyer';
+      const sellerFullName = sellerProfile.full_name || sellerProfile.name || `${sellerProfile.first_name || ''} ${sellerProfile.last_name || ''}`.trim() || 'Seller';
+
+      // Step 2: Encrypt the shipping address
       console.log("🔐 Encrypting shipping address...");
       const shippingObject = {
         streetAddress: orderSummary.buyer_address.street,
@@ -93,15 +118,21 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
 
       const shipping_address_encrypted = JSON.stringify(encResult.data);
 
-      // Step 2: Create the order with encrypted address (before payment)
+      // Step 3: Create the order with encrypted address (before payment)
       console.log("📦 Creating order before payment initialization...");
 
       const { data: createdOrder, error: orderError } = await supabase
         .from("orders")
         .insert([
           {
-            buyer_email: userData.user.email,
+            buyer_email: buyerProfile.email || userData.user.email,
+            buyer_full_name: buyerFullName,
             seller_id: orderSummary.book.seller_id,
+            seller_email: sellerProfile.email || "",
+            seller_full_name: sellerFullName,
+            buyer_phone_number: buyerProfile.phone_number || "",
+            seller_phone_number: sellerProfile.phone_number || "",
+            pickup_address_encrypted: sellerProfile.pickup_address_encrypted || "",
             amount: Math.round(orderSummary.total_price * 100),
             status: "pending",
             payment_reference: customPaymentId,
@@ -160,12 +191,12 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
 
       console.log("✅ Order created successfully:", createdOrder.id);
 
-      // Step 3: Initialize BobPay payment with the order_id
+      // Step 4: Initialize BobPay payment with the order_id
       const paymentRequest = {
         order_id: createdOrder.id,
         amount: orderSummary.total_price,
-        email: userData.user.email,
-        mobile_number: "",
+        email: buyerProfile.email || userData.user.email,
+        mobile_number: buyerProfile.phone_number || "",
         item_name: orderSummary.book.title,
         item_description: `Book purchase - ${orderSummary.book.author || "Unknown Author"}`,
         custom_payment_id: customPaymentId,
