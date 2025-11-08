@@ -12,6 +12,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { BankingService } from "@/services/bankingService";
 import { PaystackSubaccountService } from "@/services/paystackSubaccountService";
 import type { BankingRequirementsStatus } from "@/types/banking";
