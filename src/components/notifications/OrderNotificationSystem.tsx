@@ -108,13 +108,33 @@ const OrderNotificationSystem: React.FC = () => {
         return;
       }
 
-      // Mark all as read in the database
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .in("id", unreadIds);
+      // Mark all as read in both tables (attempt both to ensure coverage)
+      const [notifResult, orderNotifResult] = await Promise.all([
+        supabase
+          .from("notifications")
+          .update({ read: true })
+          .in("id", unreadIds),
+        supabase
+          .from("order_notifications")
+          .update({ read: true })
+          .in("id", unreadIds),
+      ]);
 
-      if (error) throw error;
+      // Check if at least one succeeded
+      const notifError = notifResult.error;
+      const orderNotifError = orderNotifResult.error;
+
+      if (notifError && orderNotifError) {
+        throw new Error("Failed to update both notification tables");
+      }
+
+      if (notifError) {
+        console.warn("Failed to mark some notifications as read in notifications table:", notifError);
+      }
+
+      if (orderNotifError) {
+        console.warn("Failed to mark some notifications as read in order_notifications table:", orderNotifError);
+      }
 
       await refreshNotifications();
 
