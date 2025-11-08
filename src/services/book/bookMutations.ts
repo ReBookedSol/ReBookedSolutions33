@@ -56,6 +56,22 @@ export const createBook = async (bookData: BookFormData): Promise<Book> => {
       if (bankingData?.subaccount_code) {
         paystackSubaccountCode = bankingData.subaccount_code;
       }
+
+      // Check if user was referred - if so, get the affiliate_ref_id
+      try {
+        const { data: referralData } = await supabase
+          .from("affiliates_referrals")
+          .select("affiliate_id")
+          .eq("referred_user_id", user.id)
+          .maybeSingle();
+
+        if (referralData?.affiliate_id) {
+          affiliateRefId = referralData.affiliate_id;
+          console.log("✅ Found affiliate referral for book listing:", affiliateRefId);
+        }
+      } catch (referralError) {
+        console.log("ℹ️ No affiliate referral found (user was not referred):", referralError);
+      }
     } catch (addressError) {
       console.error("Could not fetch encrypted user address:", addressError);
       // Re-throw error since address is required for book creation
