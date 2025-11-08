@@ -527,13 +527,24 @@ export class BankingService {
         missingRequirements.push("Pickup address required for book collection");
       }
 
+      // Banking is considered verified if status is "active"
+      const isVerified = bankingDetails?.status === "active";
+
       const status: BankingRequirementsStatus = {
         hasBankingInfo: requirements.hasBankingSetup,
         hasPickupAddress: requirements.hasPickupAddress,
-        isVerified: bankingDetails?.status === "active",
-        canListBooks: requirements.canReceivePayments,
+        isVerified: isVerified,
+        canListBooks: requirements.canReceivePayments && isVerified,
         missingRequirements,
       };
+
+      console.log("🏦 Banking requirements check result:", {
+        userId,
+        hasBankingInfo: status.hasBankingInfo,
+        isVerified: status.isVerified,
+        canListBooks: status.canListBooks,
+        missingRequirements: status.missingRequirements,
+      });
 
       return status;
     } catch (error) {
