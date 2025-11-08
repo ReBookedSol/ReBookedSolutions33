@@ -109,44 +109,41 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         console.warn("Could not fetch seller profile:", sellerError);
       }
 
-      // Check if book has seller_subaccount_code, otherwise fall back to seller profile
+      // Get seller subaccount code if available (but don't require it)
+      // Sellers can proceed even if they haven't completed banking setup
       let sellerSubaccountCode = bookData.seller_subaccount_code;
 
       if (!sellerSubaccountCode) {
-        console.log("⚠️ Book has no seller_subaccount_code, fetching from seller profile...");
+        console.log("ℹ️ Book has no seller_subaccount_code, attempting to fetch from seller profile...");
 
-        // Fallback: check seller's profile for subaccount
-        const { data: subaccount, error: subError } = await supabase
-          .from("banking_subaccounts")
-          .select("subaccount_code")
-          .eq("user_id", bookData.seller_id)
-          .maybeSingle();
-
-        if (subError) {
-          console.error("Error fetching seller subaccount:", subError);
-          throw new Error(
-            "Unable to verify seller information. Please try again or contact support if the issue persists.",
-          );
-        }
-
-        if (!subaccount?.subaccount_code) {
-          throw new Error(
-            "This seller hasn't completed their payment setup yet. Please try again later or choose a different book.",
-          );
-        }
-
-        sellerSubaccountCode = subaccount.subaccount_code;
-
-        // Update the book with the subaccount code for future purchases (non-blocking)
+        // Try to fetch subaccount if available, but continue without it if not
         try {
-          await supabase
-            .from("books")
-            .update({ seller_subaccount_code: sellerSubaccountCode })
-            .eq("id", bookData.id);
-          console.log("✅ Updated book with seller subaccount code");
-        } catch (updateError) {
-          console.warn("⚠️ Failed to update book with subaccount code (non-critical):", updateError);
-          // Don't throw - this is just a cache update
+          const { data: subaccount, error: subError } = await supabase
+            .from("banking_subaccounts")
+            .select("subaccount_code")
+            .eq("user_id", bookData.seller_id)
+            .maybeSingle();
+
+          if (!subError && subaccount?.subaccount_code) {
+            sellerSubaccountCode = subaccount.subaccount_code;
+            console.log("✅ Found seller subaccount code");
+
+            // Update the book with the subaccount code for future purchases (non-blocking)
+            try {
+              await supabase
+                .from("books")
+                .update({ seller_subaccount_code: sellerSubaccountCode })
+                .eq("id", bookData.id);
+              console.log("✅ Updated book with seller subaccount code");
+            } catch (updateError) {
+              console.warn("⚠️ Failed to update book with subaccount code (non-critical):", updateError);
+            }
+          } else {
+            console.log("ℹ️ Seller has not set up banking details yet - checkout will proceed without subaccount code");
+          }
+        } catch (error) {
+          console.warn("⚠️ Error checking for seller subaccount (non-critical):", error);
+          // Continue without subaccount code
         }
       }
 
