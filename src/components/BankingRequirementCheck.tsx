@@ -12,8 +12,8 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { BankingService } from "@/services/bankingService";
-import { PaystackSubaccountService } from "@/services/paystackSubaccountService";
 import type { BankingRequirementsStatus } from "@/types/banking";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -45,31 +45,36 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
       setLoading(true);
       console.log("🔍 Checking banking requirements for user:", user.id, forceRefresh ? "(forced refresh)" : "");
 
-      // Run subaccount and address checks in parallel for speed
-      const [subaccountRes, requirementsRes] = await Promise.allSettled([
-        PaystackSubaccountService.getUserSubaccountStatus(user.id),
-        BankingService.getSellerRequirements(user.id),
-      ]);
+      // Check banking details directly from banking_subaccounts table (looking for active status)
+      const { data: bankingDetails } = await supabase
+        .from("banking_subaccounts")
+        .select("id, status")
+        .eq("user_id", user.id)
+        .in("status", ["active", "pending"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      const subaccountStatus =
-        subaccountRes.status === "fulfilled" && subaccountRes.value
-          ? subaccountRes.value
-          : { hasSubaccount: false };
+      // Check pickup address from seller requirements
+      const requirements = await BankingService.getSellerRequirements(user.id);
 
-      const requirements =
-        requirementsRes.status === "fulfilled" && requirementsRes.value
-          ? requirementsRes.value
-          : { hasPickupAddress: false };
+      const hasBankingActive = !!bankingDetails && bankingDetails.status === "active";
+      const hasBankingPending = !!bankingDetails && bankingDetails.status === "pending";
+      const hasBankingSetup = hasBankingActive || hasBankingPending;
 
-      console.log("✅ Subaccount result:", subaccountStatus, "📍 Address result:", requirements);
+      console.log("✅ Banking details result:", {
+        hasBankingActive,
+        hasBankingPending,
+        status: bankingDetails?.status
+      }, "📍 Address result:", requirements);
 
       const status: BankingRequirementsStatus = {
-        hasBankingInfo: subaccountStatus.hasSubaccount, // Use the WORKING logic
+        hasBankingInfo: hasBankingSetup,
         hasPickupAddress: requirements.hasPickupAddress,
-        isVerified: subaccountStatus.hasSubaccount, // If subaccount exists, it's verified
-        canListBooks: subaccountStatus.hasSubaccount && requirements.hasPickupAddress,
+        isVerified: hasBankingActive,
+        canListBooks: hasBankingActive && requirements.hasPickupAddress,
         missingRequirements: [
-          ...(subaccountStatus.hasSubaccount ? [] : ["Banking details required for payments"]),
+          ...(hasBankingSetup ? [] : ["Banking details required for payments"]),
           ...(requirements.hasPickupAddress ? [] : ["Pickup address required for book collection"]),
         ],
       };

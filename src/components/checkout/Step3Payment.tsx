@@ -293,12 +293,30 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         selected_shipping_cost: orderSummary.delivery.price,
       };
 
+      // Create order first
       const { data: createData, error: createErr } = await supabase.functions.invoke('create-order', {
         body: createOrderPayload,
       });
+
       if (createErr || !createData?.success || !createData?.order?.id) {
         throw new Error(createErr?.message || 'Failed to create order');
       }
+
+      console.log('✅ Order created successfully:', createData.order.id);
+
+      // Invoke process-affiliate-earning immediately after order creation (in parallel/background)
+      supabase.functions.invoke('process-affiliate-earning', {
+        body: {
+          book_id: orderSummary.book.id,
+          order_id: createData.order.id,
+          seller_id: orderSummary.book.seller_id,
+        },
+      }).then(() => {
+        console.log('✅ Affiliate earning processed successfully');
+      }).catch((affiliateErr) => {
+        console.warn('Warning: Failed to process affiliate earning:', affiliateErr);
+        // Non-blocking error - affiliate processing is secondary
+      });
 
       onPaymentSuccess({
         order_id: createData.order.id,

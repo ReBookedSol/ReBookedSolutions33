@@ -15,10 +15,9 @@ export const createBook = async (bookData: BookFormData): Promise<Book> => {
       throw new Error("User not authenticated");
     }
 
-    // Fetch province, pickup address, and banking info from user profile
+    // Fetch province and pickup address from user profile
     let province = null;
     let pickupAddress = null;
-    let paystackSubaccountCode = null;
     let affiliateRefId = null;
 
     try {
@@ -44,17 +43,6 @@ export const createBook = async (bookData: BookFormData): Promise<Book> => {
       } else {
         console.error("❌ No encrypted pickup address found in profile");
         throw new Error("You must set up your pickup address in your profile before listing a book. Please go to your profile and add your address.");
-      }
-
-      // Get subaccount code from profile
-      const { data: bankingData } = await supabase
-        .from("profiles")
-        .select("subaccount_code")
-        .eq("id", user.id)
-        .single();
-
-      if (bankingData?.subaccount_code) {
-        paystackSubaccountCode = bankingData.subaccount_code;
       }
 
       // Check if user was referred - if so, get the affiliate_ref_id
@@ -98,19 +86,16 @@ export const createBook = async (bookData: BookFormData): Promise<Book> => {
       university_year: bookData.universityYear,
       curriculum: (bookData as any).curriculum || null,
       province: province,
-      seller_subaccount_code: paystackSubaccountCode,
       affiliate_ref_id: affiliateRefId,
-      requires_banking_setup: false,
       // Quantity fields at creation
       initial_quantity: quantity,
       available_quantity: quantity,
       sold_quantity: 0,
     };
 
-    console.log("📍 Creating book with address and banking info:", {
+    console.log("📍 Creating book with address info:", {
       province,
       hasPickupAddress: !!pickupAddress,
-      hasSubaccountCode: !!paystackSubaccountCode,
     });
 
     const { data: book, error } = await supabase
