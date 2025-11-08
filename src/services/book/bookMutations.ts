@@ -86,19 +86,16 @@ export const createBook = async (bookData: BookFormData): Promise<Book> => {
       university_year: bookData.universityYear,
       curriculum: (bookData as any).curriculum || null,
       province: province,
-      seller_subaccount_code: paystackSubaccountCode,
       affiliate_ref_id: affiliateRefId,
-      requires_banking_setup: false,
       // Quantity fields at creation
       initial_quantity: quantity,
       available_quantity: quantity,
       sold_quantity: 0,
     };
 
-    console.log("📍 Creating book with address and banking info:", {
+    console.log("📍 Creating book with address info:", {
       province,
       hasPickupAddress: !!pickupAddress,
-      hasSubaccountCode: !!paystackSubaccountCode,
     });
 
     const { data: book, error } = await supabase
