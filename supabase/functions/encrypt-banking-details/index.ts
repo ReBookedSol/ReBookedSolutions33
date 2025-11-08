@@ -167,46 +167,57 @@ serve(async (req) => {
     let body: any = {};
     try {
       body = await req.json();
-    } catch (_e) {
-      // No body provided is fine; we'll fall back to DB values
+    } catch (e) {
+      console.error('Failed to parse request body:', e);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid request body'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
-    const { account_number, bank_code, bank_name, business_name, email } = body;
+    const { account_number, bank_code, bank_name, business_name, email, subaccount_code } = body;
+
+    // Validate required fields
+    if (!account_number || !bank_code || !bank_name || !business_name || !email) {
+      console.error('Missing required fields');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Missing required banking details: account_number, bank_code, bank_name, business_name, email'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    console.log('Banking details received for user:', user.id);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { data: row, error: rowError } = await supabase
+    // Check if user already has a banking record
+    const { data: existingRow } = await supabase
       .from('banking_subaccounts')
-      .select(
-        'id, encrypted_account_number, encrypted_bank_code, encrypted_bank_name, encrypted_business_name, encrypted_email, account_number, bank_code, bank_name, business_name, email'
-      )
+      .select('id, status')
       .eq('user_id', user.id)
-      .eq('status', 'active')
       .maybeSingle();
 
-    if (rowError || !row) {
-      console.error('No banking record found:', rowError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'No banking record found for user'
-        }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
     const source = {
-      account_number: account_number ?? row.account_number ?? null,
-      bank_code: bank_code ?? row.bank_code ?? null,
-      bank_name: bank_name ?? row.bank_name ?? null,
-      business_name: business_name ?? row.business_name ?? null,
-      email: email ?? row.email ?? null
+      account_number,
+      bank_code,
+      bank_name,
+      business_name,
+      email
     };
 
     const encryptionKey = getEncryptionKey();
@@ -225,90 +236,84 @@ serve(async (req) => {
     }
 
     try {
-      const updates: any = {};
-      const responseData: any = {};
-      const updatedFields: string[] = [];
+      console.log('Encrypting all banking fields...');
+      
+      // Encrypt all fields
+      const encrypted_account_number = await encryptGCM(source.account_number, encryptionKey, 1);
+      const encrypted_bank_code = await encryptGCM(source.bank_code, encryptionKey, 1);
+      const encrypted_bank_name = await encryptGCM(source.bank_name, encryptionKey, 1);
+      const encrypted_business_name = await encryptGCM(source.business_name, encryptionKey, 1);
+      const encrypted_email = await encryptGCM(source.email, encryptionKey, 1);
 
-      if (!row.encrypted_account_number && source.account_number) {
-        console.log('Encrypting account_number...');
-        const encrypted = await encryptGCM(source.account_number, encryptionKey, 1);
-        updates.encrypted_account_number = JSON.stringify(encrypted);
-        responseData.encrypted_account_number = encrypted;
-        updatedFields.push('account_number');
+      const encryptedData = {
+        user_id: user.id,
+        encrypted_account_number: JSON.stringify(encrypted_account_number),
+        encrypted_bank_code: JSON.stringify(encrypted_bank_code),
+        encrypted_bank_name: JSON.stringify(encrypted_bank_name),
+        encrypted_business_name: JSON.stringify(encrypted_business_name),
+        encrypted_email: JSON.stringify(encrypted_email),
+        subaccount_code: subaccount_code || null,
+        status: 'active'
+      };
+
+      let savedRecord;
+
+      if (existingRow) {
+        // Update existing record
+        console.log('Updating existing banking record:', existingRow.id);
+        const { data, error: updateError } = await supabase
+          .from('banking_subaccounts')
+          .update(encryptedData)
+          .eq('id', existingRow.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('Failed to update banking record:', updateError);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Failed to update encrypted banking data: ' + updateError.message
+            }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+        savedRecord = data;
+      } else {
+        // Create new record
+        console.log('Creating new banking record for user:', user.id);
+        const { data, error: insertError } = await supabase
+          .from('banking_subaccounts')
+          .insert(encryptedData)
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Failed to create banking record:', insertError);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Failed to save encrypted banking data: ' + insertError.message
+            }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+        savedRecord = data;
       }
 
-      if (!row.encrypted_bank_code && source.bank_code) {
-        console.log('Encrypting bank_code...');
-        const encrypted = await encryptGCM(source.bank_code, encryptionKey, 1);
-        updates.encrypted_bank_code = JSON.stringify(encrypted);
-        responseData.encrypted_bank_code = encrypted;
-        updatedFields.push('bank_code');
-      }
-
-      if (!row.encrypted_bank_name && source.bank_name) {
-        console.log('Encrypting bank_name...');
-        const encrypted = await encryptGCM(source.bank_name, encryptionKey, 1);
-        updates.encrypted_bank_name = JSON.stringify(encrypted);
-        responseData.encrypted_bank_name = encrypted;
-        updatedFields.push('bank_name');
-      }
-
-      if (!row.encrypted_business_name && source.business_name) {
-        console.log('Encrypting business_name...');
-        const encrypted = await encryptGCM(source.business_name, encryptionKey, 1);
-        updates.encrypted_business_name = JSON.stringify(encrypted);
-        responseData.encrypted_business_name = encrypted;
-        updatedFields.push('business_name');
-      }
-
-      if (!row.encrypted_email && source.email) {
-        console.log('Encrypting email...');
-        const encrypted = await encryptGCM(source.email, encryptionKey, 1);
-        updates.encrypted_email = JSON.stringify(encrypted);
-        responseData.encrypted_email = encrypted;
-        updatedFields.push('email');
-      }
-
-      if (updatedFields.length === 0) {
-        console.log('No fields to encrypt for user:', user.id);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            updatedFields: [],
-            message: 'Nothing to encrypt'
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-
-      const { error: updateError } = await supabase
-        .from('banking_subaccounts')
-        .update(updates)
-        .eq('id', row.id);
-
-      if (updateError) {
-        console.error('Failed updating encrypted fields:', updateError);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Failed to save encrypted data: ' + updateError.message
-          }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        );
-      }
-
-      console.log('✅ Successfully encrypted fields for user', user.id, ':', updatedFields);
+      console.log('✅ Successfully encrypted and saved banking details for user:', user.id);
 
       return new Response(
         JSON.stringify({
           success: true,
-          updatedFields,
-          data: responseData
+          message: existingRow ? 'Banking details updated and encrypted' : 'Banking details created and encrypted',
+          record_id: savedRecord.id
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
