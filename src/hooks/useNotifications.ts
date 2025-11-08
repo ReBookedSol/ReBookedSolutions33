@@ -123,6 +123,7 @@ class NotificationManager {
     try {
       const channel = supabase.channel(channelName);
 
+      // Subscribe to regular notifications table
       channel.on(
         "postgres_changes",
         {
@@ -133,7 +134,31 @@ class NotificationManager {
         },
         (payload) => {
           console.log(
-            "[NotificationManager] Received event:",
+            "[NotificationManager] Received event from notifications table:",
+            payload.eventType,
+          );
+          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
+            clearNotificationCache(userId);
+            refreshCallback().catch((err) => {
+              const safeMessage = getSafeErrorMessage(err, 'Refresh callback failed');
+              console.error('[NotificationManager] Refresh callback error:', safeMessage, { original: err });
+            });
+          }
+        },
+      );
+
+      // Subscribe to order_notifications table
+      channel.on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "order_notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log(
+            "[NotificationManager] Received event from order_notifications table:",
             payload.eventType,
           );
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
