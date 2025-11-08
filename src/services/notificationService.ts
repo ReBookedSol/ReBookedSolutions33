@@ -54,7 +54,7 @@ const notificationCache = new Map<string, { data: Notification[]; timestamp: num
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Get notifications for a user with caching
+ * Get notifications for a user with caching (from both notifications and order_notifications tables)
  */
 export async function getNotifications(userId: string): Promise<Notification[]> {
   try {
@@ -64,29 +64,48 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
       return cached.data;
     }
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    // Fetch from both tables in parallel
+    const [regularNotif, orderNotif] = await Promise.all([
+      supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      supabase
+        .from('order_notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50),
+    ]);
 
-    if (error) {
-      const serializedError = serializeError(error);
-      console.error('Error fetching notifications:', serializedError);
-      const safeMessage = getSafeErrorMessage(error, 'Failed to fetch notifications');
-      throw new Error(safeMessage);
+    if (regularNotif.error) {
+      const serializedError = serializeError(regularNotif.error);
+      console.error('Error fetching regular notifications:', serializedError);
     }
 
-    const notifications = data || [];
+    if (orderNotif.error) {
+      const serializedError = serializeError(orderNotif.error);
+      console.error('Error fetching order notifications:', serializedError);
+    }
+
+    const regularData = regularNotif.data || [];
+    const orderData = orderNotif.data || [];
+
+    // Merge both notification arrays and sort by created_at
+    const allNotifications = [...regularData, ...orderData]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 100); // Limit to 100 total notifications
 
     // Update cache
     notificationCache.set(userId, {
-      data: notifications,
+      data: allNotifications,
       timestamp: Date.now()
     });
 
-    return notifications;
+    console.log(`📨 Loaded ${allNotifications.length} notifications (${regularData.length} regular, ${orderData.length} order) for user ${userId}`);
+    return allNotifications;
   } catch (error) {
     const serializedError = serializeError(error);
     console.error('Failed to get notifications:', serializedError);
