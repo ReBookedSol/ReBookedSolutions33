@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,10 +28,47 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [submittedFeedback, setSubmittedFeedback] = useState<{
     buyer_status: string;
     buyer_feedback: string;
   } | null>(null);
+
+  // Check on mount if feedback already exists for this order
+  useEffect(() => {
+    const checkExistingFeedback = async () => {
+      try {
+        const { data: existingFeedback, error } = await supabase
+          .from("buyer_feedback_orders")
+          .select("buyer_status, buyer_feedback")
+          .eq("order_id", orderId)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          // PGRST116 means no rows found, which is expected
+          console.error("Error checking existing feedback:", error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (existingFeedback) {
+          // Feedback already exists - lock the form
+          setSubmittedFeedback({
+            buyer_status: existingFeedback.buyer_status,
+            buyer_feedback: existingFeedback.buyer_feedback,
+          });
+          setIsSubmitted(true);
+        }
+
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error checking existing feedback:", err);
+        setIsLoading(false);
+      }
+    };
+
+    checkExistingFeedback();
+  }, [orderId]);
 
   const handleSubmitFeedback = async () => {
     if (!receivedStatus) {
