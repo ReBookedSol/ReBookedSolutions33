@@ -127,11 +127,27 @@ serve(async (req) => {
               .from("orders")
               .update({ status: "completed", delivery_status: "delivered", updated_at: new Date().toISOString() })
               .eq("tracking_number", tracking_number)
-              .select("id, book_id, seller_id")
+              .select("id, book_id, seller_id, buyer_id")
               .single();
 
             if (updatedOrderError) {
               throw updatedOrderError;
+            }
+
+            // Create notification for buyer to confirm receipt
+            if (updatedOrderRow && updatedOrderRow.buyer_id) {
+              try {
+                await supabase.from("order_notifications").insert({
+                  order_id: updatedOrderRow.id,
+                  user_id: updatedOrderRow.buyer_id,
+                  type: "delivery_confirmation_needed",
+                  title: "Your Book Has Arrived!",
+                  message: "Your book has been delivered. Please confirm receipt to complete the transaction.",
+                  read: false,
+                });
+              } catch (notifErr) {
+                console.warn("Failed to create delivery notification:", notifErr);
+              }
             }
 
             try {
