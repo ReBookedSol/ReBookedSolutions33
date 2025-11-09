@@ -214,6 +214,17 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
     }
   };
 
+  if (isLoading) {
+    return (
+      <Card className="border-gray-200 bg-gray-50">
+        <CardContent className="p-6 flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
+          <span className="text-gray-600">Loading order status...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (isSubmitted && submittedFeedback) {
     return (
       <Card className="border-green-200 bg-green-50">
@@ -258,6 +269,12 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
               <strong>Status:</strong> {submittedFeedback.buyer_status === "received" ? "✅ Received" : "⚠️ Not Received"}
             </p>
           </div>
+          <Alert className="border-blue-200 bg-white">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-xs text-blue-700">
+              Your feedback has been locked and cannot be changed. Thank you for your response!
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );
