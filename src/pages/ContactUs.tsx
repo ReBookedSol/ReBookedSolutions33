@@ -158,7 +158,8 @@ const ContactUs = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">Email</h3>
                   <p className="text-gray-600 mt-1">
-                    support@rebookedsolutions.co.za
+                    support@rebookedsolutions.co.za<br/>
+                    <a href="tel:+27686076209" className="text-book-600 hover:text-book-800">+27 68 607 6209</a>
                   </p>
                   <a
                     href="mailto:rebooked.solutions@gmail.com"
