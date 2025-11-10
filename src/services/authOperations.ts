@@ -1,6 +1,5 @@
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { isAdminUser } from "@/services/admin/adminAuthService";
 import {
   logError,
   getErrorMessage,
