@@ -204,8 +204,8 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
           // Resolve buyer and seller emails if not present on order
           let buyerEmail: string | null = order.buyer_email || null;
           let sellerEmail: string | null = (order as any).seller_email || null;
-          let sellerName = sellerName || "Seller";
-          let buyerName = (order as any).buyer_name || "Buyer";
+          let sellerFullName = sellerName || "Seller";
+          let buyerFullName = (order as any).buyer_name || "Buyer";
 
           if (!buyerEmail && order.buyer_id) {
             try {
@@ -215,7 +215,7 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
                 .eq("id", order.buyer_id)
                 .single();
               buyerEmail = buyerData?.email || buyerEmail;
-              buyerName = buyerData?.full_name || buyerName;
+              buyerFullName = buyerData?.full_name || buyerFullName;
             } catch (e) {
               console.warn("Failed to fetch buyer email:", e);
             }
@@ -229,7 +229,7 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
                 .eq("id", order.seller_id)
                 .single();
               sellerEmail = sellerData?.email || sellerEmail;
-              sellerName = sellerData?.full_name || sellerName;
+              sellerFullName = sellerData?.full_name || sellerFullName;
             } catch (e) {
               console.warn("Failed to fetch seller email:", e);
             }
