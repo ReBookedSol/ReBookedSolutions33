@@ -440,6 +440,11 @@ const GettingStarted = () => {
                     <span>Packaging Guidelines</span>
                     <ChevronRight className="ml-auto w-4 h-4 text-gray-400" />
                   </a>
+                  <a href="#missed-shipment" className="flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 hover:bg-book-50 hover:text-book-800">
+                    <AlertCircle className="w-4 h-4 text-orange-600" />
+                    <span>Missed Shipment?</span>
+                    <ChevronRight className="ml-auto w-4 h-4 text-gray-400" />
+                  </a>
                   <a href="#buyer" className="flex items-center gap-2 px-3 py-2 rounded-md text-gray-700 hover:bg-book-50 hover:text-book-800">
                     <ShoppingCart className="w-4 h-4 text-book-600" />
                     <span>Becoming a Buyer</span>
