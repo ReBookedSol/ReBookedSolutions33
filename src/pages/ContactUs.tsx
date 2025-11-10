@@ -178,7 +178,7 @@ const ContactUs = () => {
                   <p className="text-gray-600 mt-1">
                     <a href="tel:+27686076209" className="text-book-600 hover:text-book-800">+27 68 607 6209</a>
                   </p>
-                  <p className="text-gray-600 mt-1">Available Mon–Fri: 08:00–17:00</p>
+                  <p className="text-gray-600 mt-1">Available Mon–Fri: 09:00–17:00</p>
                 </div>
               </div>
 
