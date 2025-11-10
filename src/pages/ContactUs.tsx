@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Mail, Send, Instagram, Facebook, Clock } from "lucide-react";
+import { Mail, Send, Instagram, Facebook, Clock, Phone } from "lucide-react";
 import XIcon from "@/components/icons/XIcon";
 import { submitContactMessage } from "@/services/contactService";
 import TikTokIcon from "@/components/icons/TikTokIcon";
@@ -171,11 +171,24 @@ const ContactUs = () => {
 
               <div className="flex items-start py-4">
                 <div className="bg-book-100 p-3 rounded-full mr-4">
+                  <Phone className="h-6 w-6 text-book-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Phone</h3>
+                  <p className="text-gray-600 mt-1">
+                    <a href="tel:+27686076209" className="text-book-600 hover:text-book-800">+27 68 607 6209</a>
+                  </p>
+                  <p className="text-gray-600 mt-1">Available Mon–Fri: 09:00–17:00</p>
+                </div>
+              </div>
+
+              <div className="flex items-start py-4">
+                <div className="bg-book-100 p-3 rounded-full mr-4">
                   <Clock className="h-6 w-6 text-book-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">Working Hours</h3>
-                  <p className="text-gray-600 mt-1">Monday–Friday: 08:00–17:00</p>
+                  <p className="text-gray-600 mt-1">Monday–Friday: 09:00–17:00</p>
                   <p className="text-gray-600">Saturday–Sunday: Closed</p>
                 </div>
               </div>
