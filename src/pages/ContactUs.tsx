@@ -34,12 +34,12 @@ const ContactUs = () => {
         message,
       });
 
-      toast.success(`Your message has been sent! Ref: ${saved.id}`);
+      toast.success("Message sent — we'll get back to you soon!");
       setSubject("");
       setMessage("");
     } catch (error) {
       console.error("Failed to send message:", error);
-      toast.error("Failed to send message. Please try again later.");
+      toast.error("Unable to send message. Please try again or contact support.");
     } finally {
       setIsSubmitting(false);
     }

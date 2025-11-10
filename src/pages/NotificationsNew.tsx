@@ -655,15 +655,15 @@ const NotificationsNew = () => {
           hint: deleteError.hint,
         });
 
-        // Handle specific error cases
+        // Handle specific error cases with user-friendly messages
         if (deleteError.code === 'PGRST116') {
-          toast.error('Notification not found or already deleted');
+          toast.error('Notification not found. Please try again.');
         } else if (deleteError.code === '42501') {
-          toast.error('Permission denied. You can only delete your own notifications.');
+          toast.error('Unable to remove notification. Please try again or contact support.');
         } else if (safeDeleteErrorMessage?.includes('Failed to fetch') || safeDeleteErrorMessage?.includes('network')) {
-          toast.error('Network error. Please check your connection and try again.');
+          toast.error('Network connection issue. Please check your internet and try again.');
         } else {
-          toast.error(`Failed to remove notification: ${safeDeleteErrorMessage}`);
+          toast.error('Unable to remove notification. Please try again or contact support.');
         }
         return;
       }
@@ -693,7 +693,7 @@ const NotificationsNew = () => {
       });
 
       // Show success message immediately after UI update
-      toast.success('✅ Notification permanently removed');
+      toast.success('Notification removed');
       console.log('✅ Notification removed from UI - dismissNotification completed successfully');
 
       // Immediately refresh the notifications hook to update badge count and ensure consistency
@@ -709,7 +709,7 @@ const NotificationsNew = () => {
           details: refreshError?.details
         });
         // Show warning but don't fail the operation since local state was updated
-        toast.warning('Notification removed but badge count may need a page refresh');
+        toast.warning('Notification removed. Please refresh if the count seems off.');
       }
 
     } catch (error) {
@@ -722,13 +722,13 @@ const NotificationsNew = () => {
         stack: error instanceof Error ? error.stack : undefined
       });
 
-      // Handle network errors specifically
+      // Show user-friendly error message
       const safeCatchErrorMessage = getSafeErrorMessage(error, 'An unexpected error occurred');
 
       if (error instanceof TypeError && safeCatchErrorMessage.includes('Failed to fetch')) {
-        toast.error('Network error. Please check your internet connection and try again.');
+        toast.error('Network connection issue. Please check your internet and try again.');
       } else {
-        toast.error(`Error: ${safeCatchErrorMessage}`);
+        toast.error('Unable to remove notification. Please try again or contact support.');
       }
     } finally {
       // Clear dismissing state
