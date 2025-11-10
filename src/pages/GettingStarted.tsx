@@ -302,6 +302,43 @@ const GettingStarted = () => {
                   </div>
                 </div>
 
+                <div id="missed-shipment" className="rounded-lg border border-orange-200 bg-orange-50 p-5">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="text-base font-semibold text-gray-900 mb-2">Missed a shipment or pickup?</h4>
+                      <p className="text-gray-700 text-sm mb-4">
+                        If the courier couldn't collect your package or you missed the pickup window, don't worry. We can arrange a reschedule for you.
+                      </p>
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <h5 className="font-semibold text-gray-900 mb-1">Reschedule Policy:</h5>
+                          <ul className="space-y-2 text-gray-700">
+                            <li className="flex gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span><strong>First reschedule:</strong> Completely free. No charges apply.</span>
+                            </li>
+                            <li className="flex gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span><strong>Subsequent reschedules:</strong> Will be deducted from your book payout, or you can pay separately if you prefer to keep your full payout.</span>
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="pt-2">
+                          <p className="text-gray-700 mb-2">
+                            <strong>Get in touch:</strong> Contact our support team immediately to arrange your reschedule.
+                          </p>
+                          <Link to="/contact">
+                            <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white">
+                              <Phone className="w-4 h-4 mr-2" /> Contact support
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="pt-2">
                   <a href="#top" className="text-sm text-book-700 underline">Back to top</a>
                 </div>
