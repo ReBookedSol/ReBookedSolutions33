@@ -448,12 +448,6 @@ const AdminDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Email Test Button */}
-              <Button onClick={() => navigate('/emailtest')} className="hidden sm:inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800">
-                <Mail className="h-4 w-4" />
-                <span className="text-sm">Email Test</span>
-              </Button>
-
               {/* Notification Bell */}
               {(stats.pendingReports > 0 || stats.unreadMessages > 0) && (
                 <div className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
