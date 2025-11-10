@@ -196,6 +196,99 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
         console.warn("Failed to create notification:", notifErr);
       }
 
+      // Send transactional emails based on buyer response
+      (async () => {
+        try {
+          const { emailService } = await import("@/services/emailService");
+
+          // Resolve buyer and seller emails if not present on order
+          let buyerEmail: string | null = order.buyer_email || null;
+          let sellerEmail: string | null = (order as any).seller_email || null;
+          let sellerName = sellerName || "Seller";
+          let buyerName = (order as any).buyer_name || "Buyer";
+
+          if (!buyerEmail && order.buyer_id) {
+            try {
+              const { data: buyerData } = await supabase
+                .from("users")
+                .select("email, full_name")
+                .eq("id", order.buyer_id)
+                .single();
+              buyerEmail = buyerData?.email || buyerEmail;
+              buyerName = buyerData?.full_name || buyerName;
+            } catch (e) {
+              console.warn("Failed to fetch buyer email:", e);
+            }
+          }
+
+          if (!sellerEmail && order.seller_id) {
+            try {
+              const { data: sellerData } = await supabase
+                .from("users")
+                .select("email, full_name")
+                .eq("id", order.seller_id)
+                .single();
+              sellerEmail = sellerData?.email || sellerEmail;
+              sellerName = sellerData?.full_name || sellerName;
+            } catch (e) {
+              console.warn("Failed to fetch seller email:", e);
+            }
+          }
+
+          if (receivedStatus === "received") {
+            // Buyer: Thank you and next steps
+            if (buyerEmail) {
+              const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Thank you — Order Received</title></head><body style="font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:600px;margin:0 auto;padding:20px;"><div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:25px;text-align:center;border-radius:8px;color:#fff;"><h1 style="margin:0;font-size:22px;">Thank you — Order Received</h1></div><div style="background:#f9f9f9;padding:20px;border-radius:0 0 8px 8px;border:1px solid #ddd;"><p>Hello ${buyerName},</p><p>Thanks for confirming receipt of <strong>${bookTitle}</strong>. We're glad it arrived safely.</p><p>We will release payment to the seller shortly. You can view your order here:</p><p><a href="https://rebookedsolutions.co.za/orders/${orderId}" style="display:inline-block;padding:12px 18px;background:#667eea;color:#fff;border-radius:6px;text-decoration:none;">View Order</a></p><p style="font-size:13px;color:#666;">If you have additional feedback, reply to this email or contact support.</p><p style="font-size:13px;color:#666;">— ReBooked Solutions</p></div></body></html>`;
+              const text = `Thank you — Order Received\n\nHello ${buyerName},\n\nThanks for confirming receipt of ${bookTitle}. We will release payment to the seller shortly.\n\nView order: https://rebookedsolutions.co.za/orders/${orderId}\n\n— ReBooked Solutions`;
+
+              try {
+                await emailService.sendEmail({ to: buyerEmail, subject: "Thank you — Order Received", html, text });
+              } catch (emailErr) {
+                console.warn("Failed to send buyer received email:", emailErr);
+              }
+            }
+
+            // Seller: Notify payment is on the way
+            if (sellerEmail) {
+              const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payment on the way</title></head><body style="font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:600px;margin:0 auto;padding:20px;"><div style="background:linear-gradient(135deg,#00b894 0%,#00a085 100%);padding:25px;text-align:center;border-radius:8px;color:#fff;"><h1 style="margin:0;font-size:22px;">Payment on the way</h1></div><div style="background:#f9f9f9;padding:20px;border-radius:0 0 8px 8px;border:1px solid #ddd;"><p>Hello ${sellerName},</p><p>The buyer has confirmed delivery of <strong>${bookTitle}</strong> (Order ID: ${orderId.slice(-8)}). We will process your payment and notify you once it has been released.</p><p><a href="https://rebookedsolutions.co.za/seller/orders/${orderId}" style="display:inline-block;padding:12px 18px;background:#00b894;color:#fff;border-radius:6px;text-decoration:none;">View Order</a></p><p style="font-size:13px;color:#666;">Thank you for selling on ReBooked Solutions.</p></div></body></html>`;
+              const text = `Payment on the way\n\nHello ${sellerName},\n\nThe buyer has confirmed delivery of ${bookTitle} (Order ID: ${orderId.slice(-8)}). We will process your payment and notify you once released.\n\nView order: https://rebookedsolutions.co.za/seller/orders/${orderId}`;
+
+              try {
+                await emailService.sendEmail({ to: sellerEmail, subject: "Payment on the way — ReBooked Solutions", html, text });
+              } catch (emailErr) {
+                console.warn("Failed to send seller payment email:", emailErr);
+              }
+            }
+          } else if (receivedStatus === "not_received") {
+            // Buyer: Acknowledge report
+            if (buyerEmail) {
+              const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>We've received your report</title></head><body style="font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:600px;margin:0 auto;padding:20px;"><div style="background:linear-gradient(135deg,#ff6b6b 0%,#ee5a24 100%);padding:25px;text-align:center;border-radius:8px;color:#fff;"><h1 style="margin:0;font-size:22px;">We've received your report</h1></div><div style="background:#f9f9f9;padding:20px;border-radius:0 0 8px 8px;border:1px solid #ddd;"><p>Hello ${buyerName},</p><p>Thank you for reporting an issue with your order <strong>${orderId.slice(-8)}</strong>. Our support team will contact you shortly to investigate: "${feedback.trim()}"</p><p style="font-size:13px;color:#666;">You can also view your case here:</p><p><a href="https://rebookedsolutions.co.za/orders/${orderId}" style="display:inline-block;padding:12px 18px;background:#ff6b6b;color:#fff;border-radius:6px;text-decoration:none;">View Order</a></p></div></body></html>`;
+              const text = `We've received your report\n\nHello ${buyerName},\n\nThank you for reporting an issue with your order ${orderId.slice(-8)}. Our support team will contact you shortly to investigate: "${feedback.trim()}"\n\nView order: https://rebookedsolutions.co.za/orders/${orderId}`;
+
+              try {
+                await emailService.sendEmail({ to: buyerEmail, subject: "We've received your report — ReBooked Solutions", html, text });
+              } catch (emailErr) {
+                console.warn("Failed to send buyer issue email:", emailErr);
+              }
+            }
+
+            // Seller: Notify issue finalising order
+            if (sellerEmail) {
+              const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Issue finalising order</title></head><body style="font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:600px;margin:0 auto;padding:20px;"><div style="background:linear-gradient(135deg,#fdcb6e 0%,#e17055 100%);padding:25px;text-align:center;border-radius:8px;color:#fff;"><h1 style="margin:0;font-size:22px;">Issue finalising order</h1></div><div style="background:#f9f9f9;padding:20px;border-radius:0 0 8px 8px;border:1px solid #ddd;"><p>Hello ${sellerName},</p><p>We encountered an issue while finalising Order ID: ${orderId.slice(-8)} for <strong>${bookTitle}</strong>. The buyer reported: "${feedback.trim()}". Our team is investigating and may contact you for more information.</p><p><a href="https://rebookedsolutions.co.za/seller/orders/${orderId}" style="display:inline-block;padding:12px 18px;background:#e17055;color:#fff;border-radius:6px;text-decoration:none;">View Order</a></p></div></body></html>`;
+              const text = `Issue finalising order\n\nHello ${sellerName},\n\nWe encountered an issue while finalising Order ID: ${orderId.slice(-8)} for ${bookTitle}. The buyer reported: "${feedback.trim()}". Our team is investigating and may contact you for more information.\n\nView order: https://rebookedsolutions.co.za/seller/orders/${orderId}`;
+
+              try {
+                await emailService.sendEmail({ to: sellerEmail, subject: "Issue finalising order — ReBooked Solutions", html, text });
+              } catch (emailErr) {
+                console.warn("Failed to send seller issue email:", emailErr);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Error sending transactional emails:", e);
+        }
+      })();
+
       if (onFeedbackSubmitted) {
         onFeedbackSubmitted({
           buyer_status: receivedStatus,

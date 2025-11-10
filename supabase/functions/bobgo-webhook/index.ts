@@ -148,6 +148,44 @@ serve(async (req) => {
               } catch (notifErr) {
                 console.warn("Failed to create delivery notification:", notifErr);
               }
+
+              // Send email prompting buyer to confirm receipt
+              try {
+                const { data: buyerData, error: buyerErr } = await supabase
+                  .from("users")
+                  .select("email, full_name")
+                  .eq("id", updatedOrderRow.buyer_id)
+                  .limit(1)
+                  .single();
+
+                const buyerEmail = buyerData?.email;
+                const buyerName = buyerData?.full_name || "Buyer";
+
+                if (buyerEmail) {
+                  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+                  const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+                  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Your Book Has Arrived</title></head><body style="font-family:Arial, sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;"><div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:25px;text-align:center;border-radius:8px;color:#fff;"><h1 style="margin:0;font-size:22px;">Your Book Has Arrived!</h1></div><div style="background:#f9f9f9;padding:20px;border-radius:0 0 8px 8px;border:1px solid #ddd;"><p>Hello ${buyerName},</p><p>Your order has been marked as delivered. Please log into your account and confirm whether you received the order to complete the transaction.</p><p style="text-align:center;margin-top:18px;"><a href="https://rebookedsolutions.co.za/orders/${updatedOrderRow.id}" style="padding:12px 18px;background:#667eea;color:#fff;border-radius:6px;text-decoration:none;">Confirm Delivery</a></p><p style="font-size:13px;color:#666;">If you did not receive the order, please report it in the order page and our team will assist you.</p></div></body></html>`;
+
+                  const text = `Your Book Has Arrived!\n\nHello ${buyerName},\n\nYour order has been marked as delivered. Please log into your account and confirm whether you received the order to complete the transaction.\n\nConfirm: https://rebookedsolutions.co.za/orders/${updatedOrderRow.id}`;
+
+                  await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+                    },
+                    body: JSON.stringify({
+                      to: buyerEmail,
+                      subject: "Your Book Has Arrived — Please Confirm",
+                      html,
+                      text,
+                    }),
+                  });
+                }
+              } catch (emailErr) {
+                console.warn("Failed to send delivery confirmation email:", emailErr);
+              }
             }
 
             try {
