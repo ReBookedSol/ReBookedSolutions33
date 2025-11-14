@@ -68,11 +68,7 @@ async function verifySignature(
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const calculatedSignature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    console.log('Signature verification:', {
-      received: webhookData.signature,
-      calculated: calculatedSignature,
-      match: calculatedSignature === webhookData.signature,
-    });
+    // Signature verification completed
 
     return calculatedSignature === webhookData.signature;
   } catch (error) {
