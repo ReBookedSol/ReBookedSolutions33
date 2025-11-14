@@ -359,7 +359,6 @@ Deno.serve(async (req: Request) => {
       }
 
       // No data found
-      console.log(`[decrypt-address] No address data found`)
       return jsonResponse({
         success: false,
         data: null, 
