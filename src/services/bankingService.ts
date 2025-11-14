@@ -265,6 +265,9 @@ export class BankingService {
     }
 
     console.log("�� Banking details saved successfully:", data);
+    if (import.meta.env.DEV) {
+      console.log("✅ Banking details saved successfully");
+    }
 
     const { error: profileError } = await supabase
       .from("profiles")
