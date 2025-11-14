@@ -124,7 +124,6 @@ const Register = () => {
 
       const affiliateCode = getStoredAffiliateCode();
       const result = await register(email, password, firstName, lastName, normalizedPhone, affiliateCode ?? undefined);
-      console.log("✅ Register function returned:", result);
 
       // Handle different registration outcomes
       if (result?.needsVerification) {
