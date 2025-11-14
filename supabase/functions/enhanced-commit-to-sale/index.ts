@@ -47,13 +47,9 @@ serve(async (req) => {
 
     const { order_id, seller_id, delivery_method, locker_id, use_locker_api }: CommitRequest = await req.json();
 
-    console.log('🚀 Enhanced commit request:', { 
-      order_id, 
-      seller_id, 
-      delivery_method, 
-      locker_id, 
-      use_locker_api 
-    });
+    if (Deno.env.get('ENVIRONMENT') === 'development') {
+      console.log('🚀 Enhanced commit request received');
+    }
 
     // Validate required fields
     if (!order_id || !seller_id || !delivery_method) {
