@@ -170,11 +170,9 @@ const CheckoutSuccess: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching order data for order_id:", reference);
-
+      // Fetching order data
       // Clean the reference - remove any suffixes like ":1" that may be appended by payment providers
       const cleanReference = reference ? reference.split(':')[0] : reference;
-      console.log("Clean reference:", cleanReference);
 
       // Fetch the order directly from orders table using payment_reference
       const { data: order, error: orderError } = await supabase
