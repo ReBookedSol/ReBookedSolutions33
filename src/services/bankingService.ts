@@ -448,10 +448,9 @@ export class BankingService {
         throw error;
       }
 
-      console.log("✅ Successfully linked books to subaccount:", {
-        userId,
-        subaccount_code: bankingDetails.subaccount_code,
-      });
+      if (import.meta.env.DEV) {
+        console.log("✅ Successfully linked books to subaccount for user:", userId);
+      }
     } catch (error) {
       console.error("Error linking books to subaccount:", {
         message: error instanceof Error ? error.message : "Unknown error",
