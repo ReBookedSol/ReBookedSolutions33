@@ -276,7 +276,7 @@ serve(async (req) => {
 
     if (orderError) {
       console.error("❌ Failed to create order:", orderError);
-      console.error("Order data that failed:", JSON.stringify(orderData, null, 2));
+      // Sensitive order data not logged to prevent exposure
 
       // ROLLBACK: Undo the book marking
       console.log("🔄 Rolling back book marking...");

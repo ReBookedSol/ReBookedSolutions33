@@ -25,12 +25,9 @@ export class BankingService {
           .select("*")
           .eq("user_id", userId);
 
-        console.log("🔍 [Banking Debug] All banking records for user:", {
-          userId,
-          records: allRecords,
-          count: allRecords?.length || 0,
-          rawRecords: JSON.stringify(allRecords, null, 2)
-        });
+        if (import.meta.env.DEV) {
+          console.log("🔍 [Banking Debug] Banking records count:", allRecords?.length || 0);
+        }
 
         const query = await supabase
           .from("banking_subaccounts")
@@ -202,13 +199,9 @@ export class BankingService {
     userId: string,
     bankingDetails: BankingDetails & { subaccountCode: string },
   ): Promise<void> {
-    console.log("💾 Saving banking details to database:", {
-      userId,
-      subaccountCode: bankingDetails.subaccountCode,
-      businessName: bankingDetails.businessName,
-      bankName: bankingDetails.bankName,
-      status: bankingDetails.status
-    });
+    if (import.meta.env.DEV) {
+      console.log("💾 Saving banking details to database for user:", userId);
+    }
 
     const bankingRecord = {
       user_id: userId,
@@ -219,8 +212,6 @@ export class BankingService {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     } as any;
-
-    console.log("💾 Banking record to save:", bankingRecord);
 
     // Check if user already has banking details
     const { data: existingRecord } = await supabase
@@ -250,8 +241,6 @@ export class BankingService {
       data = result.data;
       error = result.error;
     }
-
-    console.log("💾 Save result:", { data, error });
 
     if (error) {
       console.error("❌ Error saving banking details:", {
