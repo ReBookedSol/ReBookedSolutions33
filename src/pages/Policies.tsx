@@ -47,6 +47,12 @@ const Policies = () => {
             </div>
           </div>
         </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-6 mt-6 max-w-5xl mx-auto shadow-sm">
+          <div className="text-amber-900 text-sm sm:text-base">
+            <p className="font-medium mb-2">Messaging & Communication Notice:</p>
+            <p>The Platform may offer messaging features in the future. Currently, Users must communicate through other means agreed upon for any transactions or disputes.</p>
+          </div>
+        </div>
 
         <div className="w-full">
           <div className="mb-8 sm:mb-12">
