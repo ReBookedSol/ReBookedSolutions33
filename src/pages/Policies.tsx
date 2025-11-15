@@ -1651,7 +1651,7 @@ const Policies = () => {
                         <span>
                           <strong>Platform Operator:</strong> ReBooked Solutions (Pty) Ltd
                         </span>
-                        <span className="mx-2">•</span>
+                        <span className="mx-2">���</span>
                         <span>
                           <strong>Support:</strong>{" "}
                           <span className="break-all">
@@ -1826,30 +1826,28 @@ const Policies = () => {
                   <div className="prose max-w-none space-y-4 sm:space-y-6">
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        4.1 Return Grounds
+                        4.1 Return Eligibility
                       </h3>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
                         Returns are accepted only under the following conditions:
                       </p>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Incorrect item delivered (e.g., different title, author, or edition).</li>
-                        <li>Severe damage or defects not disclosed in the listing.</li>
-                        <li>Item is confirmed counterfeit or an illegal reproduction.</li>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base mb-3 sm:mb-4">
+                        <li>The wrong item was delivered (e.g., different title, author, or edition).</li>
+                        <li>The item has undisclosed major defects or severe damage (e.g., missing pages, water damage, mold).</li>
+                        <li>The item is confirmed counterfeit, illegal, or an unauthorized reproduction.</li>
                       </ul>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3 mb-3 sm:mb-4">
-                        All returns must be initiated within three (3) calendar days of delivery by contacting legal@rebookedsolutions.co.za for written return authorization. Returns sent without prior approval will be rejected.
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        Return requests must be submitted within three (3) calendar days of delivery by emailing legal@rebookedsolutions.co.za for written authorization. Returns sent without prior approval will be rejected.
                       </p>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        Buyers are responsible for:
+                        Buyer responsibilities:
                       </p>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Retaining original packaging and materials.</li>
-                        <li>Returning items using a trackable, insured shipping method.</li>
-                        <li>Sharing tracking details with ReBooked Solutions once shipped.</li>
+                        <li>Retain all original packaging and materials.</li>
+                        <li>Ship the item back using a trackable and insured courier service (preferably Bobgo).</li>
+                        <li>Provide tracking information to ReBooked Solutions once shipped.</li>
+                        <li>Cover return shipping costs and any associated courier fees, except when the issue is due to major seller misconduct, such as confirmed fraud, counterfeit goods, or undisclosed serious defects.</li>
                       </ul>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3">
-                        Return shipping costs and any associated courier fees are the buyer's responsibility, except in cases of major seller misconduct, such as confirmed fraud, counterfeit goods, or undisclosed serious defects.
-                      </p>
                     </section>
 
                     <section>
@@ -1857,34 +1855,40 @@ const Policies = () => {
                         4.2 Return Exclusions
                       </h3>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        Returns will not be accepted in the following instances:
+                        Returns will not be accepted for:
                       </p>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Disputes over minor flaws or typical wear associated with secondhand items.</li>
-                        <li>Buyer's remorse or dissatisfaction after receiving the item.</li>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base mb-3 sm:mb-4">
+                        <li>Minor wear and tear consistent with secondhand goods.</li>
+                        <li>Buyer's remorse, change of mind, or dissatisfaction after receipt.</li>
                         <li>Damage caused after delivery due to buyer negligence, improper handling, or poor storage.</li>
                       </ul>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3">
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
                         ReBooked Solutions will not cover return shipping, packaging, or handling fees for any of the above exclusions.
                       </p>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        4.3 Inspection and Refund Processing
+                        4.3 Inspection & Refund Processing
                       </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        All returned items are subject to inspection upon receipt. Refunds will only be issued if:
-                      </p>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>The return is approved based on the verified issue.</li>
-                        <li>The item is returned in its original condition with all components.</li>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base mb-3 sm:mb-4">
+                        <li>All returned items are subject to inspection upon receipt.</li>
+                        <li>
+                          Refunds are issued only if:
+                          <ul className="list-disc pl-6 mt-2 space-y-1 text-gray-700 text-sm sm:text-base">
+                            <li>The return is verified and approved by ReBooked Solutions, and</li>
+                            <li>The item is returned in its original condition with all components and packaging.</li>
+                          </ul>
+                        </li>
                       </ul>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3">
-                        If approved, refunds will be processed within 5–10 business days, covering the item's purchase price only. Shipping costs (both original and return) will not be refunded unless a major platform-verified issue is found.
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        Approved refunds are typically processed within 7–10 business days, covering the item's purchase price only.
                       </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3">
-                        ReBooked Solutions serves as a neutral mediator in these cases, but reserves final decision-making authority on any return or refund case.
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        Shipping costs (original and return) are refunded only in cases of major seller misconduct verified by the platform.
+                      </p>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        ReBooked Solutions acts as a neutral mediator in return disputes but reserves final decision-making authority on all return or refund cases.
                       </p>
                     </section>
                   </div>
