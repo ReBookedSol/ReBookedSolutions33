@@ -63,7 +63,7 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Handle autocomplete search
+  // Handle autocomplete search with debouncing
   const handleSearchInputChange = async (value: string) => {
     setSearchInput(value);
     setAutocompleteError("");
@@ -81,7 +81,7 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
 
     setIsLoadingSuggestions(true);
     
-    // Debounce the search
+    // Debounce the search by 300ms
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         const results = await getAddressSuggestions(value);
@@ -97,20 +97,25 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
     }, 300);
   };
 
-  // Handle suggestion selection
+  // Handle suggestion selection and auto-fill address fields
   const handleSuggestionSelect = async (suggestion: AddressSuggestion) => {
     try {
       setIsLoadingSuggestions(true);
       const parsed = await selectAddressSuggestion(suggestion.place_id);
-
+      
       if (parsed) {
-        setStreet(parsed.street);
+        // Auto-fill the address fields with parsed components
+        setStreet(parsed.street_address);
         setCity(parsed.city);
-        setPostalCode(parsed.postalCode);
-        // Note: Province must be selected manually from the dropdown
-        // as it's not reliably provided by the Google Maps API
+        setPostalCode(parsed.postal_code);
+        
+        // Try to match the province to the SA provinces list
+        const matchedProvince = SA_PROVINCES.find(
+          p => p.toLowerCase() === parsed.province.toLowerCase()
+        );
+        setProvince(matchedProvince || parsed.province);
       }
-
+      
       setSearchInput("");
       setSuggestions([]);
       setShowSuggestions(false);
@@ -137,7 +142,7 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
     }
   }, [showSuggestions]);
 
-  // Validate address
+  // Validate address and trigger callback when complete
   useEffect(() => {
     const complete = street.trim() && city.trim() && province && postalCode.trim();
     setIsValid(!!complete);
@@ -186,9 +191,10 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
                     }
                   }}
                   className="flex-1"
+                  disabled={isLoadingSuggestions}
                 />
                 {isLoadingSuggestions && (
-                  <Loader2 className="h-4 w-4 animate-spin text-orange-600" />
+                  <Loader2 className="h-4 w-4 animate-spin text-orange-600 flex-shrink-0" />
                 )}
               </div>
 
@@ -203,6 +209,7 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
                       key={`${suggestion.place_id}-${index}`}
                       onClick={() => handleSuggestionSelect(suggestion)}
                       className="w-full text-left px-4 py-3 hover:bg-orange-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                      type="button"
                     >
                       <div className="flex items-start gap-2">
                         <MapPin className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
