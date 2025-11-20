@@ -6,10 +6,17 @@ export interface Suggestion {
   place_id: string;
 }
 
-export interface LocationDetails {
-  address: string;
+export interface AddressDetails {
+  formatted_address: string;
   lat: number;
   lng: number;
+  street_number: string;
+  route: string;
+  street_address: string;
+  city: string;
+  province: string;
+  postal_code: string;
+  country: string;
 }
 
 export interface PickupPoint {
@@ -20,6 +27,7 @@ export interface PickupPoint {
 
 /**
  * Fetch address suggestions from the autocomplete Edge Function
+ * Uses correct endpoint: /autocomplete (not /address-autocomplete)
  */
 export const fetchSuggestions = async (searchInput: string): Promise<Suggestion[]> => {
   if (!searchInput.trim()) {
@@ -29,12 +37,11 @@ export const fetchSuggestions = async (searchInput: string): Promise<Suggestion[
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch(
-      `${ENV.VITE_SUPABASE_URL}/functions/v1/address-autocomplete?input=${encodeURIComponent(searchInput)}`,
+      `${ENV.VITE_SUPABASE_URL}/functions/v1/autocomplete?input=${encodeURIComponent(searchInput)}`,
       {
         headers: {
           'Authorization': `Bearer ${session?.access_token || ENV.VITE_SUPABASE_ANON_KEY}`,
           'apikey': ENV.VITE_SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
         },
       }
     );
@@ -54,25 +61,31 @@ export const fetchSuggestions = async (searchInput: string): Promise<Suggestion[
 };
 
 /**
- * Fetch address details from place_id
+ * Fetch parsed address details from place_id
+ * Uses correct endpoint: /autocomplete-details (not /address-place-details)
+ * Returns all parsed address components ready for auto-fill
  */
-export const fetchAddressDetails = async (placeId: string): Promise<LocationDetails | null> => {
+export const fetchAddressDetails = async (placeId: string): Promise<AddressDetails | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch(
-      `${ENV.VITE_SUPABASE_URL}/functions/v1/address-place-details?place_id=${encodeURIComponent(placeId)}`,
+      `${ENV.VITE_SUPABASE_URL}/functions/v1/autocomplete-details?place_id=${encodeURIComponent(placeId)}`,
       {
         headers: {
           'Authorization': `Bearer ${session?.access_token || ENV.VITE_SUPABASE_ANON_KEY}`,
           'apikey': ENV.VITE_SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
         },
       }
     );
 
-    const details: LocationDetails = await response.json();
+    if (!response.ok) {
+      console.error('Failed to fetch address details:', response.statusText);
+      return null;
+    }
 
-    if (!details.address) {
+    const details: AddressDetails = await response.json();
+
+    if (!details.formatted_address) {
       console.error('Failed to get address details');
       return null;
     }
