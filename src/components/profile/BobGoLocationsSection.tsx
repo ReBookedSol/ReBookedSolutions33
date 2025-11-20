@@ -194,31 +194,18 @@ const BobGoLocationsSection: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Provider Logo/Image */}
-                      <div className="flex gap-3 mb-3">
-                        {(location.provider_logo || location.logo) && (
-                          <div className="flex-shrink-0">
-                            <img
-                              src={location.provider_logo || location.logo}
-                              alt="Provider logo"
-                              className="h-12 w-12 object-contain rounded border border-gray-200"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
-                        {(location.image_url || location.provider_image) && (
-                          <div className="flex-shrink-0">
-                            <img
-                              src={location.image_url || location.provider_image}
-                              alt="Location image"
-                              className="h-12 w-12 object-cover rounded border border-gray-200"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          </div>
+                      {/* Provider Logo/Image - Large and Clickable */}
+                      <div className="mb-4 -mx-4 -mt-4">
+                        {(location.image_url || location.provider_image || location.provider_logo || location.logo) && (
+                          <img
+                            src={location.image_url || location.provider_image || location.provider_logo || location.logo}
+                            alt={location.name || "Location image"}
+                            className="w-full h-40 object-cover rounded-t-lg border-b border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setSelectedImage(location.image_url || location.provider_image || location.provider_logo || location.logo || null)}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
                         )}
                       </div>
 
