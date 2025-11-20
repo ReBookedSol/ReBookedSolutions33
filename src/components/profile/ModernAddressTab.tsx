@@ -491,9 +491,17 @@ const ModernAddressTab = ({
                       id="same-as-pickup"
                       checked={sameAsPickup}
                       onChange={(e) => {
-                        setSameAsPickup(e.target.checked);
-                        if (e.target.checked && pickupAddress) {
-                          setShippingAddress(pickupAddress);
+                        const checked = e.target.checked;
+                        setSameAsPickup(checked);
+                        if (checked && pickupAddress) {
+                          // Explicitly set shipping address to match pickup address
+                          setShippingAddress({
+                            street: pickupAddress.street,
+                            city: pickupAddress.city,
+                            province: pickupAddress.province,
+                            postalCode: pickupAddress.postalCode,
+                            country: pickupAddress.country,
+                          });
                         }
                       }}
                       className="rounded border-gray-300"
