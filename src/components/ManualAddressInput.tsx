@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { ENV } from "@/config/environment";
+import { fetchSuggestions, fetchAddressDetails, type Suggestion } from "@/services/addressAutocompleteService";
 
 export interface AddressData {
   formattedAddress: string;
@@ -50,7 +51,7 @@ export const ManualAddressInput = ({
   className = "",
 }: ManualAddressInputProps) => {
   const [searchInput, setSearchInput] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [additionalInfo, setAdditionalInfo] = useState(
@@ -90,22 +91,9 @@ export const ManualAddressInput = ({
     debounceTimer.current = setTimeout(async () => {
       try {
         setIsLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
-
-        const response = await fetch(
-          `${SUPABASE_URL}/functions/v1/address-autocomplete?input=${encodeURIComponent(value)}`,
-          {
-            headers: {
-              "Authorization": `Bearer ${session?.access_token || ANON_KEY}`,
-              "apikey": ANON_KEY,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const result = await response.json();
-        setSuggestions(result.suggestions || []);
-        setShowDropdown(result.suggestions && result.suggestions.length > 0);
+        const results = await fetchSuggestions(value);
+        setSuggestions(results);
+        setShowDropdown(results.length > 0);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
         setSuggestions([]);
