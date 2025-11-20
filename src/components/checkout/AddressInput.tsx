@@ -63,6 +63,81 @@ const AddressInput: React.FC<AddressInputProps> = ({
   const debounceTimer = useRef<NodeJS.Timeout>();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Fetch suggestions as user types
+  const handleSearch = async (value: string) => {
+    setSearchInput(value);
+
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    if (!value.trim()) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    // Set new timer for debouncing (300ms)
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        setIsSearching(true);
+        const results = await fetchSuggestions(value);
+        setSuggestions(results);
+        setShowDropdown(results.length > 0);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  };
+
+  // Handle suggestion selection and auto-fill
+  const handleSelectSuggestion = async (placeId: string, description: string) => {
+    setSearchInput(description);
+    setShowDropdown(false);
+
+    try {
+      setIsSearching(true);
+      const details = await fetchAddressDetails(placeId);
+
+      if (details) {
+        // Use the parsed components directly from the API response
+        setAddress({
+          street: details.street_address || '',
+          city: details.city || '',
+          province: details.province || '',
+          postal_code: details.postal_code || '',
+          country: details.country || 'South Africa',
+          additional_info: address.additional_info,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching address details:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDropdown]);
+
   const validateAddress = (): boolean => {
     const newErrors: Record<string, string> = {};
 
