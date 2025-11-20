@@ -56,58 +56,36 @@ const Step4Confirmation: React.FC<Step4ConfirmationProps> = ({
     }
   };
 
-  const downloadReceipt = () => {
-    // Generate and download receipt PDF
-    const receiptContent = generateReceiptText();
-    const blob = new Blob([receiptContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `receipt-${orderData.order_id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const downloadReceipt = async () => {
+    if (!receiptRef.current) {
+      toast.error("Receipt element not found");
+      return;
+    }
 
-    toast.success("Receipt downloaded successfully!");
-  };
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 800,
+      });
 
-  const generateReceiptText = () => {
-    return `
-REBOOKED SOLUTIONS - PURCHASE RECEIPT
-=====================================
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `receipt-${orderData.order_id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-Order ID: ${orderData.order_id}
-Payment Reference: ${orderData.payment_reference}
-Date: ${new Date(orderData.created_at).toLocaleDateString()}
-Time: ${new Date(orderData.created_at).toLocaleTimeString()}
-
-BOOK DETAILS
-============
-Title: ${orderData.book_title}
-Book ID: ${orderData.book_id}
-Price: R${orderData.book_price.toFixed(2)}
-
-SELLER INFORMATION
-==================
-Seller ID: ${orderData.seller_id}
-
-DELIVERY INFORMATION
-====================
-Method: ${orderData.delivery_method}
-Cost: R${orderData.delivery_price.toFixed(2)}
-
-PAYMENT SUMMARY
-===============
-Book Price: R${orderData.book_price.toFixed(2)}
-Delivery Fee: R${orderData.delivery_price.toFixed(2)}
-Total Paid: R${orderData.total_paid.toFixed(2)}
-
-Status: ${orderData.status.toUpperCase()}
-
-Thank you for your purchase!
-Visit https://rebooked.co.za to track your order.
-    `.trim();
+      toast.success("Receipt downloaded successfully!");
+    } catch (error) {
+      console.error("Error generating receipt:", error);
+      toast.error("Failed to generate receipt image");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
