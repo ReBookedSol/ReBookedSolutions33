@@ -102,18 +102,15 @@ const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
     try {
       setIsLoadingSuggestions(true);
       const parsed = await selectAddressSuggestion(suggestion.place_id);
-      
+
       if (parsed) {
         setStreet(parsed.street);
         setCity(parsed.city);
         setPostalCode(parsed.postalCode);
-        // Keep existing province if user hasn't selected one
-        if (!province) {
-          // Try to extract province from the address if available
-          setProvince("");
-        }
+        // Note: Province must be selected manually from the dropdown
+        // as it's not reliably provided by the Google Maps API
       }
-      
+
       setSearchInput("");
       setSuggestions([]);
       setShowSuggestions(false);
