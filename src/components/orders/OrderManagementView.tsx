@@ -87,53 +87,76 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First fetch orders
+      const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
         .select(`
           id, book_id, buyer_id, seller_id, status, delivery_status, created_at, updated_at,
           cancelled_at, cancellation_reason, tracking_number, tracking_data,
           selected_courier_name, selected_service_name, total_amount, delivery_data,
-          buyer_full_name, buyer_email, seller_full_name, seller_email,
-          book:book_id(id, title, author, price, image_url, additional_images)
+          buyer_full_name, buyer_email, seller_full_name, seller_email
         `)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        logError("Error fetching orders (Supabase query)", error);
-        toast.error(error.message || "Failed to load orders");
+      if (ordersError) {
+        logError("Error fetching orders", ordersError);
+        toast.error(ordersError.message || "Failed to load orders");
         return;
       }
 
-      // Filter out obvious test/demo orders by missing real book data
-      const mappedOrders = (data || []).map((o: any) => {
-        // Ensure book object exists with all required fields
-        const book = o.book || (o.book_id ? { id: o.book_id } : null);
-        return {
-          ...o,
-          book: book ? {
-            id: book.id,
-            title: book.title,
-            author: book.author,
-            price: book.price,
-            image_url: book.image_url,
-            additional_images: Array.isArray(book.additional_images) ? book.additional_images : [],
-          } : null,
-          // Map buyer/seller fields to match the Order type
-          buyer: o.buyer_id ? {
-            id: o.buyer_id,
-            full_name: o.buyer_full_name,
-            name: o.buyer_full_name,
-            email: o.buyer_email,
-          } : null,
-          seller: o.seller_id ? {
-            id: o.seller_id,
-            full_name: o.seller_full_name,
-            name: o.seller_full_name,
-            email: o.seller_email,
-          } : null,
-        };
-      }).filter((o: any) => !!(o.book?.title));
+      // Get unique book IDs
+      const bookIds = (ordersData || [])
+        .map((o: any) => o.book_id)
+        .filter((id: string | null): id is string => !!id);
+
+      let bookMap: { [key: string]: any } = {};
+
+      // Fetch books if we have book IDs
+      if (bookIds.length > 0) {
+        const { data: booksData, error: booksError } = await supabase
+          .from("books")
+          .select("id, title, author, price, image_url, additional_images")
+          .in("id", bookIds);
+
+        if (booksError) {
+          logError("Error fetching books", booksError);
+          // Continue anyway - we'll show orders without book data
+        } else {
+          bookMap = Object.fromEntries((booksData || []).map((b: any) => [b.id, b]));
+        }
+      }
+
+      // Map orders with book data
+      const mappedOrders = (ordersData || [])
+        .map((o: any) => {
+          const book = o.book_id ? bookMap[o.book_id] : null;
+          return {
+            ...o,
+            book: book ? {
+              id: book.id,
+              title: book.title,
+              author: book.author,
+              price: book.price,
+              image_url: book.image_url,
+              additional_images: Array.isArray(book.additional_images) ? book.additional_images : [],
+            } : null,
+            // Map buyer/seller fields to match the Order type
+            buyer: o.buyer_id ? {
+              id: o.buyer_id,
+              full_name: o.buyer_full_name,
+              name: o.buyer_full_name,
+              email: o.buyer_email,
+            } : null,
+            seller: o.seller_id ? {
+              id: o.seller_id,
+              full_name: o.seller_full_name,
+              name: o.seller_full_name,
+              email: o.seller_email,
+            } : null,
+          };
+        })
+        .filter((o: any) => !!(o.book?.title));
 
       // Deduplicate by order id to prevent duplicates
       const seenIds = new Set<string>();
