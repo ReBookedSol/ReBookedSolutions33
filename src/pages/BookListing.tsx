@@ -194,7 +194,9 @@ const BookListing = () => {
     setPriceRange([0, 1000]);
     setBookType("all");
     setCurrentPage(1); // Reset to first page when clearing filters
-    setSearchParams(new URLSearchParams());
+    const newSearchParams = new URLSearchParams();
+    newSearchParams.set("page", "1");
+    setSearchParams(newSearchParams);
   }, [setSearchParams]);
 
   const handleCommitBook = async (bookId: string) => {
