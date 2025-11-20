@@ -25,7 +25,9 @@ export async function getAddressSuggestions(input: string): Promise<AddressSugge
     }
 
     const { data, error } = await supabase.functions.invoke('address-autocomplete', {
-      body: {
+      method: 'GET',
+    }, {
+      query: {
         input: input.trim(),
       },
     });
@@ -57,7 +59,9 @@ export async function getAddressDetails(placeId: string): Promise<{
 } | null> {
   try {
     const { data, error } = await supabase.functions.invoke('address-place-details', {
-      body: {
+      method: 'GET',
+    }, {
+      query: {
         place_id: placeId,
       },
     });
