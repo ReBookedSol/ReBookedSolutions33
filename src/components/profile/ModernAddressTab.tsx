@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -119,7 +119,7 @@ const ModernAddressTab = ({
     }
   };
 
-  const handlePickupAddressChange = (address: GoogleAddressData) => {
+  const handlePickupAddressChange = useCallback((address: GoogleAddressData) => {
     const formattedAddress: Address = {
       street: address.street,
       city: address.city,
@@ -132,9 +132,9 @@ const ModernAddressTab = ({
     if (sameAsPickup) {
       setShippingAddress(formattedAddress);
     }
-  };
+  }, [sameAsPickup]);
 
-  const handleShippingAddressChange = (address: GoogleAddressData) => {
+  const handleShippingAddressChange = useCallback((address: GoogleAddressData) => {
     const formattedAddress: Address = {
       street: address.street,
       city: address.city,
@@ -143,7 +143,7 @@ const ModernAddressTab = ({
       country: address.country,
     };
     setShippingAddress(formattedAddress);
-  };
+  }, []);
 
   if (isLoading) {
     return (
