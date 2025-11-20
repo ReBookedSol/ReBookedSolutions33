@@ -107,25 +107,13 @@ export const ManualAddressInput = ({
       const details = await fetchAddressDetails(placeId);
 
       if (details) {
-        // Parse the formatted address
-        // Format: "Street Number Street Name, Suburb, City, Postal Code, Country"
-        const parts = details.address.split(',').map(p => p.trim());
-
-        let streetAddr = parts[0] || '';
-        if (parts[1] && !parts[1].match(/^\d+$/)) {
-          streetAddr = `${parts[0]}, ${parts[1]}`;
-        }
-
-        const city = parts[2] || parts[1] || '';
-        const postalCode = parts[3] || '';
-
-        // Auto-fill the form fields
+        // Use the parsed components directly from the API response
         setFormData({
-          street_address: streetAddr,
-          city: city,
-          province: "",
-          postal_code: postalCode,
-          country: "South Africa",
+          street_address: details.street_address || '',
+          city: details.city || '',
+          province: details.province || '',
+          postal_code: details.postal_code || '',
+          country: details.country || 'South Africa',
         });
       }
     } catch (error) {
@@ -184,15 +172,26 @@ export const ManualAddressInput = ({
       {/* Address Search Input */}
       <div className="relative" ref={dropdownRef}>
         <Label htmlFor="address-search">Search Address</Label>
-        <Input
-          id="address-search"
-          type="text"
-          value={searchInput}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Start typing an address..."
-          className="mt-2"
-          disabled={isLoading}
-        />
+        <div className="relative mt-2">
+          <Input
+            id="address-search"
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Start typing an address..."
+            className="pr-10"
+          />
+          {/* Mini Loading Indicator */}
+          {isLoading && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Suggestions Dropdown */}
         {showDropdown && suggestions.length > 0 && (

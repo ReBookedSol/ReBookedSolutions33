@@ -16,11 +16,13 @@ import {
   Package,
   Loader2,
   Info,
+  Trash2,
 } from "lucide-react";
 import ManualAddressInput from "@/components/ManualAddressInput";
 import type { AddressData as GoogleAddressData } from "@/components/ManualAddressInput";
 import { AddressData, Address } from "@/types/address";
 import { handleAddressError } from "@/utils/errorDisplayUtils";
+import BobGoLocationsSection from "./BobGoLocationsSection";
 
 interface ModernAddressTabProps {
   addressData: AddressData | null;
@@ -44,6 +46,7 @@ const ModernAddressTab = ({
   const [shippingAddress, setShippingAddress] = useState<Address | null>(null);
   const [sameAsPickup, setSameAsPickup] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<"pickup" | "shipping" | null>(null);
 
   useEffect(() => {
     if (addressData) {
@@ -119,6 +122,72 @@ const ModernAddressTab = ({
     }
   };
 
+  const handleDeletePickupAddress = async () => {
+    setPickupAddress(null);
+    setSameAsPickup(false);
+    setDeleteConfirm(null);
+
+    // Attempt to save the deletion
+    if (onSaveAddresses && shippingAddress) {
+      setIsSaving(true);
+      try {
+        await onSaveAddresses(
+          {
+            street: "",
+            city: "",
+            province: "",
+            postalCode: "",
+            country: "South Africa",
+          },
+          shippingAddress,
+          false
+        );
+      } catch (error) {
+        const formattedError = handleAddressError(error, "delete");
+        console.error(formattedError.developerMessage, formattedError.originalError);
+        // Restore the address if deletion fails
+        if (addressData?.pickup_address) {
+          setPickupAddress(addressData.pickup_address);
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const handleDeleteShippingAddress = async () => {
+    setShippingAddress(null);
+    setSameAsPickup(false);
+    setDeleteConfirm(null);
+
+    // Attempt to save the deletion
+    if (onSaveAddresses && pickupAddress) {
+      setIsSaving(true);
+      try {
+        await onSaveAddresses(
+          pickupAddress,
+          {
+            street: "",
+            city: "",
+            province: "",
+            postalCode: "",
+            country: "South Africa",
+          },
+          false
+        );
+      } catch (error) {
+        const formattedError = handleAddressError(error, "delete");
+        console.error(formattedError.developerMessage, formattedError.originalError);
+        // Restore the address if deletion fails
+        if (addressData?.shipping_address) {
+          setShippingAddress(addressData.shipping_address);
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
   const handlePickupAddressChange = useCallback((address: GoogleAddressData) => {
     const formattedAddress: Address = {
       street: address.street,
@@ -128,11 +197,20 @@ const ModernAddressTab = ({
       country: address.country,
     };
     setPickupAddress(formattedAddress);
+  }, []);
 
-    if (sameAsPickup) {
-      setShippingAddress(formattedAddress);
+  // Sync shipping address when pickup address changes and "use pickup for shipping" is checked
+  useEffect(() => {
+    if (sameAsPickup && pickupAddress) {
+      setShippingAddress({
+        street: pickupAddress.street,
+        city: pickupAddress.city,
+        province: pickupAddress.province,
+        postalCode: pickupAddress.postalCode,
+        country: pickupAddress.country,
+      });
     }
-  }, [sameAsPickup]);
+  }, [sameAsPickup, pickupAddress]);
 
   const handleShippingAddressChange = useCallback((address: GoogleAddressData) => {
     const formattedAddress: Address = {
@@ -216,7 +294,7 @@ const ModernAddressTab = ({
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex items-start gap-3">
                       <Home className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-blue-900">
                           Current Address
                         </p>
@@ -226,14 +304,56 @@ const ModernAddressTab = ({
                       </div>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => startEditing("pickup")}
-                    variant="outline"
-                    className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Pickup Address
-                  </Button>
+
+                  {deleteConfirm === "pickup" ? (
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200 space-y-3">
+                      <p className="text-sm text-red-800">
+                        Are you sure you want to delete this pickup address? This action cannot be undone.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleDeletePickupAddress}
+                          variant="destructive"
+                          className="flex-1 bg-red-600 hover:bg-red-700"
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 mr-2" />
+                          )}
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={() => setDeleteConfirm(null)}
+                          variant="outline"
+                          className="flex-1"
+                          disabled={isSaving}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => startEditing("pickup")}
+                        variant="outline"
+                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => setDeleteConfirm("pickup")}
+                        variant="outline"
+                        className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : editMode === "pickup" || editMode === "both" ? (
                 <div className="space-y-4">
@@ -307,7 +427,7 @@ const ModernAddressTab = ({
                   <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                     <div className="flex items-start gap-3">
                       <Navigation className="h-5 w-5 text-green-600 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-green-900">
                           Current Address
                         </p>
@@ -322,14 +442,56 @@ const ModernAddressTab = ({
                       </div>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => startEditing("shipping")}
-                    variant="outline"
-                    className="w-full border-green-300 text-green-700 hover:bg-green-50"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Shipping Address
-                  </Button>
+
+                  {deleteConfirm === "shipping" ? (
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200 space-y-3">
+                      <p className="text-sm text-red-800">
+                        Are you sure you want to delete this shipping address? This action cannot be undone.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleDeleteShippingAddress}
+                          variant="destructive"
+                          className="flex-1 bg-red-600 hover:bg-red-700"
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 mr-2" />
+                          )}
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={() => setDeleteConfirm(null)}
+                          variant="outline"
+                          className="flex-1"
+                          disabled={isSaving}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => startEditing("shipping")}
+                        variant="outline"
+                        className="flex-1 border-green-300 text-green-700 hover:bg-green-50"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => setDeleteConfirm("shipping")}
+                        variant="outline"
+                        className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : editMode === "shipping" || editMode === "both" ? (
                 <div className="space-y-4">
@@ -339,9 +501,17 @@ const ModernAddressTab = ({
                       id="same-as-pickup"
                       checked={sameAsPickup}
                       onChange={(e) => {
-                        setSameAsPickup(e.target.checked);
-                        if (e.target.checked && pickupAddress) {
-                          setShippingAddress(pickupAddress);
+                        const checked = e.target.checked;
+                        setSameAsPickup(checked);
+                        if (checked && pickupAddress) {
+                          // Explicitly set shipping address to match pickup address
+                          setShippingAddress({
+                            street: pickupAddress.street,
+                            city: pickupAddress.city,
+                            province: pickupAddress.province,
+                            postalCode: pickupAddress.postalCode,
+                            country: pickupAddress.country,
+                          });
                         }
                       }}
                       className="rounded border-gray-300"
@@ -406,6 +576,9 @@ const ModernAddressTab = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* BobGo Locations Section */}
+      <BobGoLocationsSection />
 
       {/* Action Buttons for Edit Mode */}
       {editMode !== "none" && (
