@@ -165,57 +165,65 @@ const BobGoLocationsSection: React.FC = () => {
           )}
 
           {/* BobGo Locations List */}
-          {showLocations && locations.length > 0 && !isLoadingLocations && (
+          {locations.length > 0 && !isLoadingLocations && (
             <div className="space-y-3">
               <h3 className="font-medium text-sm text-gray-700">
-                {locations.length} locations found near {selectedAddress}
+                {locations.length} locations found
+                {selectedAddress && ` near ${selectedAddress}`}
               </h3>
               <div className="max-h-96 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-3 bg-gray-50">
-                {locations.map((location, index) => (
-                  <div
-                    key={location.id || index}
-                    onClick={() => {
-                      // TODO: Handle location selection
-                      console.log("Selected location:", location);
-                    }}
-                    className="p-4 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-400 cursor-pointer transition-all"
-                  >
-                    <div className="flex items-start gap-3">
-                      <MapPin className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">
-                          {location.name || `Location ${index + 1}`}
-                        </h4>
-                        <p className="text-sm text-gray-700 mt-1 line-clamp-2">
-                          {location.address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`}
-                        </p>
+                {locations.map((location, index) => {
+                  // Handle different possible field names for address
+                  const addressText = location.address || location.name || location.street_address || `${location.latitude?.toFixed(4)}, ${location.longitude?.toFixed(4)}`;
+                  const nameText = location.name || location.location_name || `Location ${index + 1}`;
 
-                        {/* Additional Info */}
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {location.distance && (
-                            <Badge variant="outline" className="text-xs">
-                              {typeof location.distance === "number"
-                                ? `${location.distance.toFixed(1)} km`
-                                : location.distance}
-                            </Badge>
-                          )}
-                          {location.hours && (
-                            <Badge variant="outline" className="text-xs flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {location.hours}
-                            </Badge>
-                          )}
-                          {location.phone && (
-                            <Badge variant="outline" className="text-xs flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {location.phone}
-                            </Badge>
-                          )}
+                  return (
+                    <div
+                      key={location.id || index}
+                      onClick={() => {
+                        console.log("Selected location:", location);
+                      }}
+                      className="p-4 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 hover:border-purple-400 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <MapPin className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 truncate">
+                            {nameText}
+                          </h4>
+                          <p className="text-sm text-gray-700 mt-1 line-clamp-2">
+                            {addressText}
+                          </p>
+
+                          {/* Additional Info */}
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {(location.distance || location.distance_km) && (
+                              <Badge variant="outline" className="text-xs">
+                                {typeof location.distance === "number"
+                                  ? `${location.distance.toFixed(1)} km`
+                                  : typeof location.distance_km === "number"
+                                  ? `${location.distance_km.toFixed(1)} km`
+                                  : location.distance || location.distance_km}
+                              </Badge>
+                            )}
+                            {(location.hours || location.operating_hours) && (
+                              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {location.hours || location.operating_hours}
+                              </Badge>
+                            )}
+                            {(location.phone || location.contact_phone) && (
+                              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                {location.phone || location.contact_phone}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
