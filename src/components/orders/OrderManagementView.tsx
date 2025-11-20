@@ -626,6 +626,8 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
           </div>
         )}
       </div>
+
+      {renderImageGalleryModal()}
     </div>
   );
 };
