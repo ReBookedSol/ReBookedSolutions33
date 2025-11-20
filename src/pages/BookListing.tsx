@@ -20,7 +20,9 @@ const BookListing = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10)
+  );
   const [totalBooks, setTotalBooks] = useState(0);
   const booksPerPage = 12;
   const pageTopRef = useRef<HTMLDivElement>(null);
