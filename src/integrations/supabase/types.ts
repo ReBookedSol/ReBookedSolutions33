@@ -176,6 +176,44 @@ export type Database = {
           },
         ]
       }
+      affiliate_orders: {
+        Row: {
+          affiliate_id: string
+          created_at: string
+          id: string
+          order_id: string
+          referral_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          referral_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          referral_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliates_referrals: {
         Row: {
           affiliate_id: string
@@ -348,6 +386,33 @@ export type Database = {
         }
         Relationships: []
       }
+      bobbox_webhooks: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          received_at: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+          received_at?: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           additional_images: string[]
@@ -369,7 +434,6 @@ export type Database = {
           initial_quantity: number
           inside_pages: string | null
           isbn: string | null
-          pickup_address: Json | null
           pickup_address_encrypted: string | null
           price: number
           province: string | null
@@ -405,7 +469,6 @@ export type Database = {
           initial_quantity?: number
           inside_pages?: string | null
           isbn?: string | null
-          pickup_address?: Json | null
           pickup_address_encrypted?: string | null
           price: number
           province?: string | null
@@ -441,7 +504,6 @@ export type Database = {
           initial_quantity?: number
           inside_pages?: string | null
           isbn?: string | null
-          pickup_address?: Json | null
           pickup_address_encrypted?: string | null
           price?: number
           province?: string | null
@@ -613,7 +675,7 @@ export type Database = {
           {
             foreignKeyName: "buyer_feedback_orders_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -634,6 +696,115 @@ export type Database = {
           {
             foreignKeyName: "buyer_feedback_orders_seller_id_fkey"
             columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cashout_request: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          contact_email: string | null
+          created_at: string
+          encrypted_account_number: string | null
+          encrypted_bank_code: string | null
+          encrypted_bank_name: string | null
+          encrypted_business_name: string | null
+          encrypted_email: string | null
+          encrypted_first_name: string | null
+          encrypted_last_name: string | null
+          encrypted_phone_number: string | null
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          referral_data: Json
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          contact_email?: string | null
+          created_at?: string
+          encrypted_account_number?: string | null
+          encrypted_bank_code?: string | null
+          encrypted_bank_name?: string | null
+          encrypted_business_name?: string | null
+          encrypted_email?: string | null
+          encrypted_first_name?: string | null
+          encrypted_last_name?: string | null
+          encrypted_phone_number?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          referral_data?: Json
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          contact_email?: string | null
+          created_at?: string
+          encrypted_account_number?: string | null
+          encrypted_bank_code?: string | null
+          encrypted_bank_name?: string | null
+          encrypted_business_name?: string | null
+          encrypted_email?: string | null
+          encrypted_first_name?: string | null
+          encrypted_last_name?: string | null
+          encrypted_phone_number?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          referral_data?: Json
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashout_request_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashout_request_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "cashout_request_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashout_request_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashout_request_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "cashout_request_processed_by_fkey"
+            columns: ["processed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1202,11 +1373,13 @@ export type Database = {
           bobpay_response: Json | null
           created_at: string
           currency: string | null
+          custom_payment_id: string | null
           id: string
           items: Json | null
           metadata: Json | null
           order_id: string
           payment_method: string
+          paystack_response: Json | null
           reference: string
           shipping_address: Json | null
           status: string
@@ -1219,11 +1392,13 @@ export type Database = {
           bobpay_response?: Json | null
           created_at?: string
           currency?: string | null
+          custom_payment_id?: string | null
           id?: string
           items?: Json | null
           metadata?: Json | null
           order_id: string
           payment_method?: string
+          paystack_response?: Json | null
           reference: string
           shipping_address?: Json | null
           status?: string
@@ -1236,11 +1411,13 @@ export type Database = {
           bobpay_response?: Json | null
           created_at?: string
           currency?: string | null
+          custom_payment_id?: string | null
           id?: string
           items?: Json | null
           metadata?: Json | null
           order_id?: string
           payment_method?: string
+          paystack_response?: Json | null
           reference?: string
           shipping_address?: Json | null
           status?: string
@@ -1496,6 +1673,8 @@ export type Database = {
       refund_transactions: {
         Row: {
           amount: number
+          bobpay_refund_reference: string | null
+          bobpay_response: Json | null
           completed_at: string | null
           created_at: string
           error_message: string | null
@@ -1512,6 +1691,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          bobpay_refund_reference?: string | null
+          bobpay_response?: Json | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
@@ -1528,6 +1709,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          bobpay_refund_reference?: string | null
+          bobpay_response?: Json | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
@@ -1936,6 +2119,17 @@ export type Database = {
           total_book_sales: number
           total_earnings: number
           total_referrals: number
+        }[]
+      }
+      get_bobbox_webhooks: {
+        Args: never
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean
+          received_at: string
         }[]
       }
       get_complete_schema: { Args: never; Returns: Json }
