@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import BookImageCarousel from "@/components/BookImageCarousel";
 
 import {
   Package,
@@ -72,6 +74,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<CollapsibleOrderState>({});
+  const [selectedOrderForGallery, setSelectedOrderForGallery] = useState<Order | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -84,41 +87,76 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First fetch orders
+      const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
         .select(`
-          id, buyer_id, seller_id, status, delivery_status, created_at, updated_at,
+          id, book_id, buyer_id, seller_id, status, delivery_status, created_at, updated_at,
           cancelled_at, cancellation_reason, tracking_number, tracking_data,
           selected_courier_name, selected_service_name, total_amount, delivery_data,
-          buyer_full_name, buyer_email, seller_full_name, seller_email,
-          book:books(id, title, author, price, image_url, additional_images)
+          buyer_full_name, buyer_email, seller_full_name, seller_email
         `)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        logError("Error fetching orders (Supabase query)", error);
-        toast.error(error.message || "Failed to load orders");
+      if (ordersError) {
+        logError("Error fetching orders", ordersError);
+        toast.error(ordersError.message || "Failed to load orders");
         return;
       }
 
-      // Filter out obvious test/demo orders by missing real book data
-      const mappedOrders = (data || []).map((o: any) => ({
-        ...o,
-        // Map buyer/seller fields to match the Order type
-        buyer: o.buyer_id ? {
-          id: o.buyer_id,
-          full_name: o.buyer_full_name,
-          name: o.buyer_full_name,
-          email: o.buyer_email,
-        } : null,
-        seller: o.seller_id ? {
-          id: o.seller_id,
-          full_name: o.seller_full_name,
-          name: o.seller_full_name,
-          email: o.seller_email,
-        } : null,
-      })).filter((o: any) => !!(o.book?.title));
+      // Get unique book IDs
+      const bookIds = (ordersData || [])
+        .map((o: any) => o.book_id)
+        .filter((id: string | null): id is string => !!id);
+
+      let bookMap: { [key: string]: any } = {};
+
+      // Fetch books if we have book IDs
+      if (bookIds.length > 0) {
+        const { data: booksData, error: booksError } = await supabase
+          .from("books")
+          .select("id, title, author, price, image_url, additional_images")
+          .in("id", bookIds);
+
+        if (booksError) {
+          logError("Error fetching books", booksError);
+          // Continue anyway - we'll show orders without book data
+        } else {
+          bookMap = Object.fromEntries((booksData || []).map((b: any) => [b.id, b]));
+        }
+      }
+
+      // Map orders with book data
+      const mappedOrders = (ordersData || [])
+        .map((o: any) => {
+          const book = o.book_id ? bookMap[o.book_id] : null;
+          return {
+            ...o,
+            book: book ? {
+              id: book.id,
+              title: book.title,
+              author: book.author,
+              price: book.price,
+              image_url: book.image_url,
+              additional_images: Array.isArray(book.additional_images) ? book.additional_images : [],
+            } : null,
+            // Map buyer/seller fields to match the Order type
+            buyer: o.buyer_id ? {
+              id: o.buyer_id,
+              full_name: o.buyer_full_name,
+              name: o.buyer_full_name,
+              email: o.buyer_email,
+            } : null,
+            seller: o.seller_id ? {
+              id: o.seller_id,
+              full_name: o.seller_full_name,
+              name: o.seller_full_name,
+              email: o.seller_email,
+            } : null,
+          };
+        })
+        .filter((o: any) => !!(o.book?.title));
 
       // Deduplicate by order id to prevent duplicates
       const seenIds = new Set<string>();
@@ -169,6 +207,23 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     }));
   };
 
+  const getBookImages = (order: Order): string[] => {
+    const images: string[] = [];
+
+    // Add primary image
+    if (order.book?.image_url) {
+      images.push(order.book.image_url);
+    }
+
+    // Add additional images
+    if (order.book?.additional_images && Array.isArray(order.book.additional_images)) {
+      images.push(...order.book.additional_images.filter(Boolean));
+    }
+
+    // Return unique images and filter out empty strings
+    return [...new Set(images)].filter(Boolean);
+  };
+
   const handleFeedbackSubmitted = useCallback(() => {
     fetchOrders();
   }, []);
@@ -176,20 +231,29 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
   const OrderHeaderDetails: React.FC<{ order: Order }> = ({ order }) => {
     const role = getUserRole(order);
     const img = order.book?.additional_images?.[0] || order.book?.image_url || "/placeholder.svg";
-    const otherPartyName = role === "buyer" 
-      ? (order.seller?.full_name || order.seller?.name || "Seller") 
+    const otherPartyName = role === "buyer"
+      ? (order.seller?.full_name || order.seller?.name || "Seller")
       : (order.buyer?.full_name || order.buyer?.name || "Buyer");
-    
+
+    const bookImages = getBookImages(order);
+    const hasMultipleImages = bookImages.length > 1;
+
     return (
       <div className="flex gap-4">
-        <div className="w-16 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+        <button
+          onClick={() => setSelectedOrderForGallery(order)}
+          className={`w-16 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all ${
+            hasMultipleImages ? 'cursor-pointer hover:shadow-md hover:ring-2 hover:ring-book-600' : ''
+          }`}
+          title={hasMultipleImages ? "Click to view all photos" : undefined}
+        >
           <img
             src={img}
             alt={order.book?.title || "Book"}
             className="w-full h-full object-cover"
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
           />
-        </div>
+        </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div>
@@ -458,6 +522,33 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
 
   const stats = getOrderStats();
 
+  const renderImageGalleryModal = () => {
+    if (!selectedOrderForGallery) return null;
+
+    const bookImages = getBookImages(selectedOrderForGallery);
+
+    return (
+      <Dialog open={!!selectedOrderForGallery} onOpenChange={(open) => {
+        if (!open) setSelectedOrderForGallery(null);
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedOrderForGallery.book?.title || "Book Photos"}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {bookImages.length > 0 ? (
+              <BookImageCarousel images={bookImages} />
+            ) : (
+              <div className="aspect-[3/4] bg-gray-200 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500">No images available</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -570,6 +661,8 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
           </div>
         )}
       </div>
+
+      {renderImageGalleryModal()}
     </div>
   );
 };
