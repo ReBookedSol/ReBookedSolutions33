@@ -196,16 +196,20 @@ const ModernAddressTab = ({
       country: address.country,
     };
     setPickupAddress(formattedAddress);
-
-    // If "use pickup for shipping" is checked, also update shipping address
-    // This handles updates to the pickup address when the checkbox is already checked
-    setSameAsPickup((currentSameAsPickup) => {
-      if (currentSameAsPickup) {
-        setShippingAddress(formattedAddress);
-      }
-      return currentSameAsPickup;
-    });
   }, []);
+
+  // Sync shipping address when pickup address changes and "use pickup for shipping" is checked
+  useEffect(() => {
+    if (sameAsPickup && pickupAddress) {
+      setShippingAddress({
+        street: pickupAddress.street,
+        city: pickupAddress.city,
+        province: pickupAddress.province,
+        postalCode: pickupAddress.postalCode,
+        country: pickupAddress.country,
+      });
+    }
+  }, [sameAsPickup, pickupAddress]);
 
   const handleShippingAddressChange = useCallback((address: GoogleAddressData) => {
     const formattedAddress: Address = {
