@@ -281,45 +281,13 @@ const BobGoLocationsSection: React.FC = () => {
 
                         {/* Status */}
                         {(location.status || location.is_active !== undefined) && (
-                          <div className="pb-2 border-b border-gray-100">
+                          <div>
                             <p className="text-xs font-medium text-gray-500 uppercase">Status</p>
                             <Badge className={`mt-1 ${location.is_active || location.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                               {location.status || (location.is_active ? 'Active' : 'Inactive')}
                             </Badge>
                           </div>
                         )}
-
-                        {/* All other fields */}
-                        {Object.entries(location).map(([key, value]) => {
-                          // Skip already displayed fields and internal/unnecessary fields
-                          const skippedFields = [
-                            'id', 'name', 'address', 'street_address', 'latitude', 'longitude',
-                            'distance', 'distance_km', 'phone', 'contact_phone', 'telephone',
-                            'hours', 'operating_hours', 'working_hours', 'email', 'contact_email',
-                            'status', 'is_active', 'location_name', 'title',
-                            'provider_logo', 'logo', 'image_url', 'provider_image',
-                            'type', 'provider_id', 'provider_data', 'provider_sludge',
-                            'compartment_errors', 'compartment_error', 'human_name'
-                          ];
-
-                          if (skippedFields.includes(key.toLowerCase()) || !value) {
-                            return null;
-                          }
-
-                          // Format the value
-                          const displayValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-
-                          return (
-                            <div key={key} className="pb-2 border-b border-gray-100">
-                              <p className="text-xs font-medium text-gray-500 uppercase">
-                                {key.replace(/_/g, ' ')}
-                              </p>
-                              <p className="text-gray-800 mt-1 break-words">
-                                {displayValue}
-                              </p>
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
                   );
