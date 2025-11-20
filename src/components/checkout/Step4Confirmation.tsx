@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,11 @@ import {
   Mail,
   Eye,
   ShoppingBag,
+  Loader2,
 } from "lucide-react";
 import { OrderConfirmation } from "@/types/checkout";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
 
 interface Step4ConfirmationProps {
   orderData: OrderConfirmation;
