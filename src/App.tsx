@@ -298,7 +298,8 @@ function App() {
                       
                       {/* Support Routes */}
                       <Route path="/contact" element={<ContactUs />} />
-                                            <Route path="/faq" element={<FAQ />} />
+                      <Route path="/test" element={<TestReceipt />} />
+                      <Route path="/faq" element={<FAQ />} />
                       <Route path="/privacy" element={<Privacy />} />
                       <Route path="/terms" element={<Terms />} />
                       <Route path="/policies" element={<Policies />} />
