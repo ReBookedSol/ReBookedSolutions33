@@ -170,7 +170,8 @@ const BookListing = () => {
       newSearchParams.set("province", selectedProvince);
     }
 
-    setCurrentPage(1); // Reset to first page when filters change
+    newSearchParams.set("page", "1"); // Reset to first page when filters change
+    setCurrentPage(1);
     setSearchParams(newSearchParams);
   }, [
     searchQuery,
