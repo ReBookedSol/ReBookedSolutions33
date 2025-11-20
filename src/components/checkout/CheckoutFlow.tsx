@@ -605,11 +605,22 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         additional_info: address.additional_info,
       };
 
+      // Get existing addresses to preserve pickup address if it exists
+      const { getSimpleUserAddresses } = await import(
+        "@/services/simplifiedAddressService"
+      );
+
+      const existingAddresses = await getSimpleUserAddresses(user.id);
+
+      // Save the entered address as shipping, preserve existing pickup address
+      const pickupToSave = existingAddresses?.pickup_address || simpleAddress;
+      const shippingToSave = simpleAddress;
+
       await saveSimpleUserAddresses(
         user.id,
-        simpleAddress, // Use as pickup address
-        simpleAddress, // Use as shipping address
-        true, // Addresses are the same
+        pickupToSave,
+        shippingToSave,
+        false, // Addresses are different
       );
 
       toast.success("Address saved to your profile!");
