@@ -284,7 +284,7 @@ const ModernAddressTab = ({
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex items-start gap-3">
                       <Home className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-blue-900">
                           Current Address
                         </p>
@@ -294,14 +294,56 @@ const ModernAddressTab = ({
                       </div>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => startEditing("pickup")}
-                    variant="outline"
-                    className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Pickup Address
-                  </Button>
+
+                  {deleteConfirm === "pickup" ? (
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200 space-y-3">
+                      <p className="text-sm text-red-800">
+                        Are you sure you want to delete this pickup address? This action cannot be undone.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleDeletePickupAddress}
+                          variant="destructive"
+                          className="flex-1 bg-red-600 hover:bg-red-700"
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 mr-2" />
+                          )}
+                          Delete
+                        </Button>
+                        <Button
+                          onClick={() => setDeleteConfirm(null)}
+                          variant="outline"
+                          className="flex-1"
+                          disabled={isSaving}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => startEditing("pickup")}
+                        variant="outline"
+                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => setDeleteConfirm("pickup")}
+                        variant="outline"
+                        className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : editMode === "pickup" || editMode === "both" ? (
                 <div className="space-y-4">
