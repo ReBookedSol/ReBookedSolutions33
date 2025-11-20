@@ -74,6 +74,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<CollapsibleOrderState>({});
+  const [selectedOrderForGallery, setSelectedOrderForGallery] = useState<Order | null>(null);
 
   useEffect(() => {
     if (user) {
