@@ -213,6 +213,11 @@ const BookListing = () => {
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
 
+    // Update URL params with new page number
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("page", page.toString());
+    setSearchParams(newSearchParams);
+
     // Quick scroll to top without smooth behavior for better performance
     requestAnimationFrame(() => {
       if (pageTopRef.current) {
@@ -227,7 +232,7 @@ const BookListing = () => {
         });
       }
     });
-  }, []);
+  }, [searchParams, setSearchParams]);
 
 
 
