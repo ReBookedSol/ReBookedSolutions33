@@ -121,6 +121,72 @@ const ModernAddressTab = ({
     }
   };
 
+  const handleDeletePickupAddress = async () => {
+    setPickupAddress(null);
+    setSameAsPickup(false);
+    setDeleteConfirm(null);
+
+    // Attempt to save the deletion
+    if (onSaveAddresses && shippingAddress) {
+      setIsSaving(true);
+      try {
+        await onSaveAddresses(
+          {
+            street: "",
+            city: "",
+            province: "",
+            postalCode: "",
+            country: "South Africa",
+          },
+          shippingAddress,
+          false
+        );
+      } catch (error) {
+        const formattedError = handleAddressError(error, "delete");
+        console.error(formattedError.developerMessage, formattedError.originalError);
+        // Restore the address if deletion fails
+        if (addressData?.pickup_address) {
+          setPickupAddress(addressData.pickup_address);
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const handleDeleteShippingAddress = async () => {
+    setShippingAddress(null);
+    setSameAsPickup(false);
+    setDeleteConfirm(null);
+
+    // Attempt to save the deletion
+    if (onSaveAddresses && pickupAddress) {
+      setIsSaving(true);
+      try {
+        await onSaveAddresses(
+          pickupAddress,
+          {
+            street: "",
+            city: "",
+            province: "",
+            postalCode: "",
+            country: "South Africa",
+          },
+          false
+        );
+      } catch (error) {
+        const formattedError = handleAddressError(error, "delete");
+        console.error(formattedError.developerMessage, formattedError.originalError);
+        // Restore the address if deletion fails
+        if (addressData?.shipping_address) {
+          setShippingAddress(addressData.shipping_address);
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
   const handlePickupAddressChange = useCallback((address: GoogleAddressData) => {
     const formattedAddress: Address = {
       street: address.street,
