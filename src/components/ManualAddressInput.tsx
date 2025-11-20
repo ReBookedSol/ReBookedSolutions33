@@ -68,10 +68,6 @@ export const ManualAddressInput = ({
   const debounceTimer = useRef<NodeJS.Timeout>();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get Supabase credentials
-  const SUPABASE_URL = ENV.VITE_SUPABASE_URL;
-  const ANON_KEY = ENV.VITE_SUPABASE_ANON_KEY;
-
   // Fetch suggestions as user types
   const handleSearch = async (value: string) => {
     setSearchInput(value);
