@@ -45,6 +45,8 @@ export async function getBobGoLocations(
     params.append("min_lng", bounds.min_lng.toString());
     params.append("max_lng", bounds.max_lng.toString());
 
+    console.log("Fetching BobGo locations with bounds:", bounds);
+
     const response = await fetch(
       `${ENV.VITE_SUPABASE_URL}/functions/v1/bobgo-get-locations?${params.toString()}`,
       {
@@ -61,13 +63,47 @@ export async function getBobGoLocations(
     }
 
     const data = await response.json();
-    
-    // The response structure depends on BobGo API, but typically:
-    // { success: true, data: [...locations...] }
-    // or { locations: [...] }
-    const locations = data.data || data.locations || [];
-    
-    return Array.isArray(locations) ? locations : [];
+    console.log("BobGo API response:", data);
+
+    let locations: BobGoLocation[] = [];
+
+    // Handle different response structures from the edge function
+    if (data.success && data.data) {
+      // Structure: { success: true, data: {...} }
+      const innerData = data.data;
+
+      // Check if innerData is an array
+      if (Array.isArray(innerData)) {
+        locations = innerData;
+      }
+      // Check if innerData has a locations property
+      else if (innerData.locations && Array.isArray(innerData.locations)) {
+        locations = innerData.locations;
+      }
+      // Check if innerData has a results property (common API pattern)
+      else if (innerData.results && Array.isArray(innerData.results)) {
+        locations = innerData.results;
+      }
+      // If it's an object with location data, treat it as single item
+      else if (typeof innerData === 'object' && innerData.name) {
+        locations = [innerData];
+      }
+    }
+    // Direct array response
+    else if (Array.isArray(data)) {
+      locations = data;
+    }
+    // Check for locations property at root level
+    else if (data.locations && Array.isArray(data.locations)) {
+      locations = data.locations;
+    }
+    // Check for results property at root level
+    else if (data.results && Array.isArray(data.results)) {
+      locations = data.results;
+    }
+
+    console.log("Parsed locations:", locations);
+    return locations;
   } catch (error) {
     console.error("Error fetching BobGo locations:", error);
     return [];
