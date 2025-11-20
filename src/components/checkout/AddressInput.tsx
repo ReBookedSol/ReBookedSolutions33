@@ -56,6 +56,12 @@ const AddressInput: React.FC<AddressInputProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveToProfile, setSaveToProfile] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceTimer = useRef<NodeJS.Timeout>();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const validateAddress = (): boolean => {
     const newErrors: Record<string, string> = {};
