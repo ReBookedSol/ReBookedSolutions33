@@ -328,11 +328,22 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* SIMPLIFIED - Only home delivery available, locker functionality disabled */}
               <div className="space-y-4">
-                <div className="flex items-start space-x-3 p-3 sm:p-4 border rounded-lg bg-blue-50 border-blue-200">
+                {/* Home Pick-Up Option */}
+                <div
+                  className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    deliveryMethod === "home"
+                      ? "bg-blue-50 border-blue-500"
+                      : "bg-gray-50 border-gray-200 hover:border-blue-300"
+                  }`}
+                  onClick={() => {
+                    setDeliveryMethod("home");
+                    setSelectedLocker(null);
+                  }}
+                >
+                  <RadioGroupItem value="home" checked={deliveryMethod === "home"} className="mt-1 flex-shrink-0" />
                   <div className="flex-1">
-                    <Label className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                    <Label className="flex items-center gap-2 font-medium text-sm sm:text-base cursor-pointer">
                       <Home className="w-4 h-4 flex-shrink-0" />
                       <span>Home Pick-Up (Courier Collection)</span>
                     </Label>
@@ -341,6 +352,53 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
                     </p>
                   </div>
                 </div>
+
+                {/* Locker Drop-Off Option */}
+                <div
+                  className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    deliveryMethod === "locker"
+                      ? "bg-purple-50 border-purple-500"
+                      : "bg-gray-50 border-gray-200 hover:border-purple-300"
+                  }`}
+                  onClick={() => setDeliveryMethod("locker")}
+                >
+                  <RadioGroupItem value="locker" checked={deliveryMethod === "locker"} className="mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <Label className="flex items-center gap-2 font-medium text-sm sm:text-base cursor-pointer">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span>BobGo Locker Drop-Off</span>
+                    </Label>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                      Drop the book at a nearby BobGo location. Buyer will collect from there.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Locker Selection UI - Only show if locker method is selected */}
+                {deliveryMethod === "locker" && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <BobGoLockerSelector
+                      onLockerSelect={setSelectedLocker}
+                      selectedLockerId={selectedLocker?.id}
+                      title="Select Pickup Location"
+                      description="Search for an address and select a nearby BobGo location for drop-off"
+                      showCardLayout={false}
+                    />
+
+                    {/* Selected Locker Summary */}
+                    {selectedLocker && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm font-medium text-green-800 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          Selected: {selectedLocker.name}
+                        </p>
+                        <p className="text-xs text-green-700 mt-1">
+                          {selectedLocker.address || selectedLocker.full_address}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
