@@ -44,6 +44,7 @@ const BobGoLockerSelector: React.FC<BobGoLockerSelectorProps> = ({
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [showLocations, setShowLocations] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [savingLockerId, setSavingLockerId] = useState<string | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout>();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
