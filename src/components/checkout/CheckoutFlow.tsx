@@ -783,29 +783,47 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         )}
 
         {checkoutState.step.current === 3 &&
-          checkoutState.buyer_address &&
           checkoutState.seller_address &&
           !isEditingAddress && (
-            <Step2DeliveryOptions
-              buyerAddress={checkoutState.buyer_address}
-              sellerAddress={checkoutState.seller_address}
-              onSelectDelivery={handleDeliverySelection}
-              onBack={() => goToStep(2)}
-              onCancel={handleCancelCheckout}
-              onEditAddress={handleEditAddress}
-              selectedDelivery={checkoutState.selected_delivery}
-              preSelectedLocker={checkoutState.delivery_method === "locker" ? checkoutState.selected_locker : null}
-            />
+            <>
+              {checkoutState.delivery_method === "locker" && checkoutState.selected_locker ? (
+                <Step2DeliveryOptions
+                  buyerAddress={{
+                    street: "",
+                    city: "",
+                    province: "",
+                    postal_code: "",
+                    country: "South Africa",
+                  }}
+                  sellerAddress={checkoutState.seller_address}
+                  onSelectDelivery={handleDeliverySelection}
+                  onBack={() => goToStep(2)}
+                  onCancel={handleCancelCheckout}
+                  onEditAddress={handleEditAddress}
+                  selectedDelivery={checkoutState.selected_delivery}
+                  preSelectedLocker={checkoutState.selected_locker}
+                />
+              ) : checkoutState.buyer_address ? (
+                <Step2DeliveryOptions
+                  buyerAddress={checkoutState.buyer_address}
+                  sellerAddress={checkoutState.seller_address}
+                  onSelectDelivery={handleDeliverySelection}
+                  onBack={() => goToStep(2)}
+                  onCancel={handleCancelCheckout}
+                  onEditAddress={handleEditAddress}
+                  selectedDelivery={checkoutState.selected_delivery}
+                  preSelectedLocker={checkoutState.delivery_method === "locker" ? checkoutState.selected_locker : null}
+                />
+              ) : (
+                <AddressInput
+                  title="Enter Your Delivery Address"
+                  onAddressSubmit={handleAddressSubmit}
+                  onSaveToProfile={handleSaveAddressToProfile}
+                  loading={checkoutState.loading}
+                />
+              )}
+            </>
           )}
-
-        {checkoutState.step.current === 3 && !checkoutState.buyer_address && (
-          <AddressInput
-            title="Enter Your Delivery Address"
-            onAddressSubmit={handleAddressSubmit}
-            onSaveToProfile={handleSaveAddressToProfile}
-            loading={checkoutState.loading}
-          />
-        )}
 
         {checkoutState.step.current === 3 &&
           checkoutState.buyer_address &&
