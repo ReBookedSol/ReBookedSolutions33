@@ -288,8 +288,8 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
               <BobGoLockerSelector
                 onLockerSelect={setSelectedLocker}
                 selectedLockerId={selectedLocker?.id}
-                title="Find BobGo Pickup Locations"
-                description="Enter an address and we'll show you nearby BobGo locations where you can pick up your order."
+                title="Find a Locker Location"
+                description="Enter an address and we'll show you nearby locker locations where you can pick up your order."
                 showCardLayout={false}
               />
             </div>
