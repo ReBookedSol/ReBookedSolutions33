@@ -174,20 +174,29 @@ export class WalletService {
       });
 
       if (error) {
-        console.error("Error crediting wallet:", error);
+        console.error("❌ Edge function error:", error);
+        console.error("Error details:", {
+          message: error.message,
+          status: (error as any).status,
+          context: (error as any).context,
+        });
         return {
           success: false,
           error: error.message || "Failed to credit wallet",
         };
       }
 
+      console.log("Edge function response:", data);
+
       if (!data || !data.success) {
-        console.error("Wallet credit failed:", data);
+        console.error("❌ Wallet credit failed:", data);
         return {
           success: false,
           error: data?.message || data?.error || "Failed to credit wallet",
         };
       }
+
+      console.log("✅ Wallet credited successfully");
 
       // Edge function handles credit_amount calculation (90% of book price)
       const creditAmount = data.credit_amount ? data.credit_amount / 100 : undefined;
@@ -197,7 +206,8 @@ export class WalletService {
         creditAmount,
       };
     } catch (error) {
-      console.error("Error in creditWalletOnCollection:", error);
+      console.error("❌ Error in creditWalletOnCollection:", error);
+      console.error("Full error object:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
