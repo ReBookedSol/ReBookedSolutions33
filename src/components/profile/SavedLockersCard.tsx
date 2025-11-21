@@ -68,9 +68,9 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
     }
   };
 
-  const handleDeleteDeliveryLocker = async () => {
+  const handleDeleteLocker = async () => {
     try {
-      setIsDeletingDelivery(true);
+      setIsDeleting(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -86,41 +86,13 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
       if (error) throw error;
 
-      setSavedDeliveryLocker(null);
-      toast.success("Delivery locker removed from profile");
+      setSavedLocker(null);
+      toast.success("Locker removed from profile");
     } catch (error) {
-      console.error("Error deleting delivery locker:", error);
-      toast.error("Failed to remove delivery locker");
+      console.error("Error deleting locker:", error);
+      toast.error("Failed to remove locker");
     } finally {
-      setIsDeletingDelivery(false);
-    }
-  };
-
-  const handleDeletePickupLocker = async () => {
-    try {
-      setIsDeletingPickup(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          preferred_pickup_locker_data: null,
-          preferred_pickup_locker_saved_at: null,
-        })
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      setSavedPickupLocker(null);
-      toast.success("Pickup locker removed from profile");
-    } catch (error) {
-      console.error("Error deleting pickup locker:", error);
-      toast.error("Failed to remove pickup locker");
-    } finally {
-      setIsDeletingPickup(false);
+      setIsDeleting(false);
     }
   };
 
