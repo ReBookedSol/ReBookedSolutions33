@@ -262,16 +262,14 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   ? "bg-purple-50 border-purple-500"
                   : "bg-gray-50 border-gray-200 hover:border-purple-300"
               }`}
-              onClick={() => {
-                setDeliveryMethod("locker");
-              }}
+              onClick={handleSelectLockerMethod}
               role="radio"
               aria-checked={deliveryMethod === "locker"}
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  setDeliveryMethod("locker");
+                  handleSelectLockerMethod();
                 }
               }}
             >
