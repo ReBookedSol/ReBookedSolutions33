@@ -126,8 +126,8 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
       }
 
       setSavedLocker(selectedLocker);
-      toast.success("Locker saved to your profile! 🎉", {
-        description: `You can use ${selectedLocker.name} for future orders`,
+      toast.success("Locker saved! 🎉", {
+        description: `${selectedLocker.name} is now saved to your profile`,
       });
     } catch (error) {
       console.error("Error saving locker:", error);
