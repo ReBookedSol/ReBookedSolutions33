@@ -472,7 +472,10 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
   };
 
   const handleDeliverySelection = (delivery: DeliveryOption) => {
-    if (!checkoutState.buyer_address) {
+    // For locker delivery, we need the locker; for home delivery, we need the buyer address
+    const isLockerDelivery = checkoutState.delivery_method === "locker" && checkoutState.selected_locker;
+
+    if (!isLockerDelivery && !checkoutState.buyer_address) {
       toast.error("Please set your delivery address first");
       return;
     }
@@ -480,7 +483,13 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     const PLATFORM_FEE = 20; // R20 platform fee
 
     // For locker delivery, show locker location as delivery address
-    let deliveryAddress = checkoutState.buyer_address;
+    let deliveryAddress = checkoutState.buyer_address || {
+      street: "",
+      city: "",
+      province: "",
+      postal_code: "",
+      country: "South Africa",
+    };
     if (checkoutState.delivery_method === "locker" && checkoutState.selected_locker) {
       const locker = checkoutState.selected_locker;
       deliveryAddress = {
