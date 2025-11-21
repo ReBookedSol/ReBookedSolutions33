@@ -32,9 +32,37 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
   useEffect(() => {
     loadSavedLockers();
-    // Reload every 2 seconds to pick up changes from other components
-    const interval = setInterval(loadSavedLockers, 2000);
-    return () => clearInterval(interval);
+
+    const setupRealtimeListener = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) return;
+
+        const subscription = supabase
+          .from("profiles")
+          .on("UPDATE", (payload) => {
+            if (payload.new.id === user.id) {
+              setSavedLocker(payload.new.preferred_delivery_locker_data || null);
+            }
+          })
+          .subscribe();
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Error setting up realtime listener:", error);
+      }
+    };
+
+    setupRealtimeListener().then(unsubscribe => {
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    });
   }, []);
 
   const loadSavedLockers = async () => {
