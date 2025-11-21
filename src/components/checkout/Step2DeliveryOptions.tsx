@@ -74,10 +74,14 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
     setError(null);
 
     try {
-      console.log("📍 Recalculating rates for locker delivery:", {
-        locker: locker.name,
-        locationId: locker.id,
-        providerSlug: locker.provider_slug,
+      if (!locker.id || !locker.provider_slug) {
+        throw new Error("Locker is missing required information (ID or provider slug)");
+      }
+
+      console.log("📍 Calculating rates to locker:", {
+        locker_name: locker.name,
+        location_id: locker.id,
+        provider_slug: locker.provider_slug,
       });
 
       const quotesResp = await getAllDeliveryQuotes({
