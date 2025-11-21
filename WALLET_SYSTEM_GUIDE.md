@@ -71,7 +71,7 @@ When a buyer confirms delivery but seller has no banking details:
 Order Received
     ↓
 Check: Does seller have ACTIVE banking details?
-    ��─ YES → Send "Payment on the way" email
+    ├─ YES → Send "Payment on the way" email
     │         NO wallet entry created
     │         Money goes directly to bank account
     │
@@ -156,8 +156,15 @@ Seller Wallet Balance
 
 ### Monitor Payments:
 - Check `wallet_transactions` table for transaction status
-- Filter by type to see pending bank transfers: `type='scheduled_bank_transfer' AND status='pending'`
+- Filter by type to see wallet credits: `type='credit'` - these are payments to sellers without banking
 - Check `banking_subaccounts` for seller banking verification status
+  - `status='active'` → Seller receiving direct bank transfers (no wallet entries created)
+  - `status='pending'` → Seller banking being verified, payments going to wallet until verified
+  - `status='inactive'` → Seller banking disabled, payments going to wallet
+
+### Audit Trail:
+- Sellers with banking details: Check email logs for "Payment on the way" notifications (no database entries for these transactions)
+- Sellers without banking: Check wallet_transactions with `type='credit'` and `reference_order_id`
 
 ### Common Scenarios:
 
