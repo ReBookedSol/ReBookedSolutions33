@@ -33,6 +33,8 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
   useEffect(() => {
     loadSavedLockers();
 
+    let unsubscribe: (() => void) | null = null;
+
     const setupRealtimeListener = async () => {
       try {
         const {
@@ -42,15 +44,22 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
         if (!user) return;
 
         const subscription = supabase
-          .from("profiles")
-          .on("UPDATE", (payload) => {
-            if (payload.new.id === user.id) {
+          .channel(`profiles:${user.id}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "profiles",
+              filter: `id=eq.${user.id}`,
+            },
+            (payload: any) => {
               setSavedLocker(payload.new.preferred_delivery_locker_data || null);
             }
-          })
+          )
           .subscribe();
 
-        return () => {
+        unsubscribe = () => {
           subscription.unsubscribe();
         };
       } catch (error) {
@@ -58,11 +67,13 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
       }
     };
 
-    setupRealtimeListener().then(unsubscribe => {
-      return () => {
-        if (unsubscribe) unsubscribe();
-      };
-    });
+    setupRealtimeListener();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const loadSavedLockers = async () => {
