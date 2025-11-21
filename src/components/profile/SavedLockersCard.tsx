@@ -177,90 +177,116 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
     return (
       <Card className="border-2 border-purple-200 hover:shadow-lg transition-shadow">
-        <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-purple-600" />
+        <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 py-3 px-4">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="h-4 w-4 text-purple-600" />
             Saved Locker
-            <Badge className="bg-green-100 text-green-800">
+            <Badge className="bg-green-100 text-green-800 text-xs">
               <CheckCircle className="h-3 w-3 mr-1" />
               Saved
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            {/* Main Location Info */}
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <h3 className="font-bold text-lg text-gray-900 mb-1">{locker.name || "—"}</h3>
-              <p className="text-sm text-gray-700">
-                {locker.full_address || locker.address || "—"}
-              </p>
+        <CardContent className="p-4">
+          <div className="flex gap-4">
+            {/* Left: Image Section */}
+            <div className="flex-shrink-0">
+              {(locker.image_url || locker.pickup_point_provider_logo_url) ? (
+                <img
+                  src={locker.image_url || locker.pickup_point_provider_logo_url}
+                  alt={locker.name}
+                  className="h-32 w-32 object-cover rounded-lg border border-gray-200 shadow-sm"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="h-32 w-32 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                  <MapPin className="h-8 w-8 text-gray-400" />
+                </div>
+              )}
             </div>
 
-            {/* All Locker Fields */}
-            {fields.length > 0 && (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {fields.map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="pb-3 border-b border-gray-100 last:border-b-0"
-                  >
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
-                      {key === "phone" || key === "contact_phone" ? (
-                        <>
-                          <Phone className="h-3.5 w-3.5" />
-                          {formatFieldName(key)}
-                        </>
-                      ) : key === "trading_hours" ? (
-                        <>
-                          <Clock className="h-3.5 w-3.5" />
-                          {formatFieldName(key)}
-                        </>
-                      ) : (
-                        formatFieldName(key)
-                      )}
-                    </p>
-                    {key === "phone" || key === "contact_phone" ? (
-                      <a
-                        href={`tel:${value}`}
-                        className="text-sm text-purple-600 hover:text-purple-700 font-medium mt-1"
-                      >
-                        {renderFieldValue(value)}
-                      </a>
-                    ) : typeof value === "object" ? (
-                      <pre className="text-sm text-gray-700 mt-1 bg-gray-50 p-2 rounded border border-gray-200 overflow-x-auto font-mono">
-                        {renderFieldValue(value)}
-                      </pre>
-                    ) : (
-                      <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
-                        {renderFieldValue(value)}
-                      </p>
-                    )}
-                  </div>
-                ))}
+            {/* Right: Information Section */}
+            <div className="flex-1 min-w-0">
+              {/* Main Location Info */}
+              <div className="mb-3">
+                <h3 className="font-bold text-base text-gray-900 mb-0.5 line-clamp-2">{locker.name || "—"}</h3>
+                <p className="text-xs text-gray-600 line-clamp-2">
+                  {locker.full_address || locker.address || "—"}
+                </p>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-2 pt-4 border-t border-gray-100">
-              <Button
-                onClick={onDelete}
-                disabled={isDeleting}
-                variant="outline"
-                className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Removing...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
-                  </>
-                )}
-              </Button>
+              {/* Fields Grid */}
+              {fields.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 text-xs max-h-32 overflow-y-auto pr-2">
+                  {fields.map(([key, value]) => {
+                    // Skip certain verbose fields
+                    if (["description", "lat", "lng", "provider_id", "type"].includes(key)) {
+                      return null;
+                    }
+
+                    return (
+                      <div key={key} className="flex flex-col">
+                        <p className="font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                          {key === "phone" || key === "contact_phone" ? (
+                            <>
+                              <Phone className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{formatFieldName(key)}</span>
+                            </>
+                          ) : key === "trading_hours" ? (
+                            <>
+                              <Clock className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{formatFieldName(key)}</span>
+                            </>
+                          ) : (
+                            <span className="truncate">{formatFieldName(key)}</span>
+                          )}
+                        </p>
+                        {key === "phone" || key === "contact_phone" ? (
+                          <a
+                            href={`tel:${value}`}
+                            className="text-purple-600 hover:text-purple-700 font-medium truncate text-xs"
+                          >
+                            {renderFieldValue(value)}
+                          </a>
+                        ) : typeof value === "object" ? (
+                          <span className="text-gray-600 text-xs truncate">
+                            {JSON.stringify(value).substring(0, 40)}...
+                          </span>
+                        ) : (
+                          <p className="text-gray-700 text-xs truncate">
+                            {renderFieldValue(value)}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                <Button
+                  onClick={onDelete}
+                  disabled={isDeleting}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 border-red-300 text-red-700 hover:bg-red-50 text-xs"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Removing...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Remove
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
