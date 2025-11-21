@@ -19,7 +19,11 @@ import { getBobGoLocations, type BobGoLocation } from "@/services/bobgoLocations
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const BobGoLocationsSection: React.FC = () => {
+interface BobGoLocationsSectionProps {
+  onLockerSaved?: () => void;
+}
+
+const BobGoLocationsSection: React.FC<BobGoLocationsSectionProps> = ({ onLockerSaved }) => {
   const [searchInput, setSearchInput] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
