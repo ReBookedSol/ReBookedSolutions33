@@ -53,6 +53,7 @@ export interface UnifiedQuoteRequest {
   height?: number;
   service_type?: "standard" | "express" | "overnight";
   deliveryLocker?: UnifiedPickupPoint;
+  user_id?: string;
 }
 
 export interface UnifiedQuote {
@@ -139,13 +140,17 @@ export const getAllDeliveryQuotes = async (
   request: UnifiedQuoteRequest,
 ): Promise<UnifiedQuote[]> => {
   try {
+    const provinceCode = toProvinceCode(request.from.province);
+
     const body: any = {
       fromAddress: {
-        suburb: request.from.suburb || request.from.city,
-        province: toProvinceCode(request.from.province),
-        postalCode: request.from.postalCode,
-        streetAddress: request.from.streetAddress,
+        street_address: request.from.streetAddress || "",
+        company: request.from.company || "",
+        local_area: request.from.suburb || request.from.city,
         city: request.from.city,
+        zone: provinceCode,
+        country: "ZA",
+        code: request.from.postalCode,
       },
       parcels: [
         {
@@ -167,63 +172,76 @@ export const getAllDeliveryQuotes = async (
       };
       console.log("🚀 Calculating rates to locker:", request.deliveryLocker);
     } else {
+      const toProvinceCode_value = toProvinceCode(request.to.province);
       body.toAddress = {
-        suburb: request.to.suburb || request.to.city,
-        province: toProvinceCode(request.to.province),
-        postalCode: request.to.postalCode,
-        streetAddress: request.to.streetAddress,
+        street_address: request.to.streetAddress || "",
+        company: request.to.company || "",
+        local_area: request.to.suburb || request.to.city,
         city: request.to.city,
+        zone: toProvinceCode_value,
+        country: "ZA",
+        code: request.to.postalCode,
       };
       console.log("🚀 Calculating rates to address:", request.to.city);
     }
 
+    // Pass user_id for preference lookup
+    if (request.user_id) {
+      body.user_id = request.user_id;
+    }
+
+    console.log("📡 Calling bobgo-get-rates edge function with body:", JSON.stringify(body, null, 2));
+
     const { data, error } = await supabase.functions.invoke("bobgo-get-rates", { body });
-    if (error) throw new Error(error.message);
 
-    // Prefer the raw provider_rate_requests if present, to surface all providers/services
-    let quotes: UnifiedQuote[] = [];
-    const providerRequests = data?.raw?.provider_rate_requests as any[] | undefined;
-    if (Array.isArray(providerRequests)) {
-      quotes = providerRequests
-        .filter((p) => p && p.status === "success" && Array.isArray(p.responses))
-        .flatMap((p) =>
-          p.responses
-            .filter((r: any) => !r.status || r.status === "success")
-            .map((r: any) => ({
-              provider: "bobgo" as const,
-              provider_name: p.provider_name || p.courier_name || "Unknown",
-              provider_slug: p.provider_slug || "unknown",
-              service_level_code: r.service_level?.code || r.service_level_code || "",
-              service_name: r.service_level?.name || r.service_name || "Unknown Service",
-              cost: Number(r.rate_amount) || 0,
-              price_excl: typeof r.rate_amount_excl_vat === "number" ? r.rate_amount_excl_vat : undefined,
-              currency: "ZAR",
-              transit_days: r.service_level?.service_level_days ?? (r.service_level?.type === "express" ? 1 : 3),
-              collection_cutoff: r.service_level?.collection_cut_off_time,
-              features: ["Tracking included", "Door-to-door"],
-              terms: undefined,
-            }))
-        );
+    console.log("📡 Edge function response - error:", error, "data:", JSON.stringify(data, null, 2));
+
+    if (error) {
+      console.error("❌ Edge function error:", error.message);
+      throw new Error(`Edge function error: ${error.message}`);
     }
 
-    // Fallback to simplified quotes mapping if raw not present
+    if (!data) {
+      console.warn("⚠️ Edge function returned no data");
+      return generateFallbackQuotes(request);
+    }
+
+    if (!data.success) {
+      console.error("❌ Edge function returned success: false", data.error);
+      return generateFallbackQuotes(request);
+    }
+
+    console.log("✅ Edge function returned data:", {
+      hasQuotes: !!data.quotes,
+      quotesLength: data.quotes?.length,
+      simulated: data.simulated,
+    });
+
+    // Map the quotes directly from the response
+    let quotes: UnifiedQuote[] = (data.quotes || []).map((q: any) => ({
+      provider: "bobgo" as const,
+      provider_name: q.provider_name || q.carrier || "Bob Go",
+      provider_slug: q.provider_slug || "unknown",
+      service_level_code: q.service_level_code || q.service_code || "",
+      service_name: q.service_name || "Unknown Service",
+      cost: q.cost || 0,
+      price_excl: q.cost_excl_vat,
+      currency: q.currency || "ZAR",
+      transit_days: q.transit_days || 3,
+      collection_cutoff: q.collection_cutoff,
+      features: ["Tracking included"],
+      terms: undefined,
+    }));
+
+    console.log(`✅ Mapped ${quotes.length} quotes from response`);
+
     if (!quotes.length) {
-      quotes = (data?.quotes || []).map((q: any) => ({
-        provider: "bobgo" as const,
-        provider_name: q.carrier || "Bob Go",
-        provider_slug: q.provider_slug,
-        service_level_code: q.service_level_code,
-        service_name: q.service_name,
-        cost: q.cost,
-        currency: q.currency || "ZAR",
-        transit_days: q.transit_days || 3,
-        features: ["Tracking included", "Door-to-door"],
-        terms: undefined,
-      }));
+      console.warn("⚠️ No quotes found, returning fallback quotes");
+      return generateFallbackQuotes(request);
     }
 
-    if (!quotes.length) return generateFallbackQuotes(request);
     quotes.sort((a, b) => a.cost - b.cost);
+    console.log(`✅ Returning ${quotes.length} sorted quotes`);
     return quotes;
   } catch (err) {
     console.error("getAllDeliveryQuotes error:", err);

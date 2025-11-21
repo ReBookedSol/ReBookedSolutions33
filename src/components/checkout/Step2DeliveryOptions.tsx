@@ -20,6 +20,7 @@ import { getAllDeliveryQuotes, type UnifiedQuote } from "@/services/unifiedDeliv
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import BobGoLockerSelector from "@/components/checkout/BobGoLockerSelector";
 import { BobGoLocation } from "@/services/bobgoLocationsService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Step2DeliveryOptionsProps {
   buyerAddress: CheckoutAddress;
@@ -42,6 +43,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   selectedDelivery,
   preSelectedLocker,
 }) => {
+  const { user } = useAuth();
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
   const [quotes, setQuotes] = useState<UnifiedQuote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +106,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
           locationId: locker.id || "",
           providerSlug: locker.provider_slug || "",
         },
+        user_id: user?.id,
       });
 
       setQuotes(quotesResp);
@@ -131,6 +134,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
       toast.warning("Could not update rates for locker");
     } finally {
       setLockerRatesLoading(false);
+      setLoading(false);
     }
   };
 
@@ -160,6 +164,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
           postalCode: buyerAddress.postal_code,
         },
         weight: 1,
+        user_id: user?.id,
       });
 
       setQuotes(quotesResp);

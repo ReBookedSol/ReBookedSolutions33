@@ -196,16 +196,20 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   ? "bg-blue-50 border-blue-500"
                   : "bg-gray-50 border-gray-200 hover:border-blue-300"
               }`}
+              onClick={() => {
+                setDeliveryMethod("home");
+                setSelectedLocker(null);
+              }}
             >
               <RadioGroupItem
                 value="home"
-                className="mt-1 flex-shrink-0"
+                className="mt-1 flex-shrink-0 cursor-pointer"
               />
               <div className="flex-1">
-                <Label className="flex items-center gap-2 font-medium text-base cursor-pointer">
+                <div className="flex items-center gap-2 font-medium text-base">
                   <Home className="w-5 h-5 flex-shrink-0" />
                   <span>Home Delivery</span>
-                </Label>
+                </div>
                 <p className="text-sm text-gray-600 mt-2">
                   The seller will arrange courier pickup from their address. The book will be delivered to your address.
                 </p>
@@ -219,16 +223,19 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   ? "bg-purple-50 border-purple-500"
                   : "bg-gray-50 border-gray-200 hover:border-purple-300"
               }`}
+              onClick={() => {
+                setDeliveryMethod("locker");
+              }}
             >
               <RadioGroupItem
                 value="locker"
-                className="mt-1 flex-shrink-0"
+                className="mt-1 flex-shrink-0 cursor-pointer"
               />
               <div className="flex-1">
-                <Label className="flex items-center gap-2 font-medium text-base cursor-pointer">
+                <div className="flex items-center gap-2 font-medium text-base">
                   <MapPin className="w-5 h-5 flex-shrink-0" />
                   <span>BobGo Locker Drop-Off</span>
-                </Label>
+                </div>
                 <p className="text-sm text-gray-600 mt-2">
                   The seller will drop the book at a nearby BobGo pickup location. You'll collect it from there.
                 </p>
