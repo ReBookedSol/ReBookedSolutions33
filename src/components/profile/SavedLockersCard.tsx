@@ -297,9 +297,9 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
   if (isLoading || isLoadingLockers) {
     return (
       <Card className="border-2 border-gray-100">
-        <CardContent className="p-8">
+        <CardContent className="p-4">
           <div className="flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
           </div>
         </CardContent>
       </Card>
@@ -309,16 +309,16 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
   if (!savedLocker) {
     return (
       <Card className="border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-gray-600" />
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 py-3 px-4">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="h-4 w-4 text-gray-600" />
             Saved Locker
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <Alert>
+        <CardContent className="p-4">
+          <Alert className="py-2 px-3">
             <Info className="h-4 w-4" />
-            <AlertDescription>
+            <AlertDescription className="text-xs">
               No saved locker yet. Search and save a locker location to see it here.
             </AlertDescription>
           </Alert>
