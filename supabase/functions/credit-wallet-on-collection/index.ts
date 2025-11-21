@@ -1,12 +1,13 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
-import { parseRequestBody } from "../_shared/safe-body-parser.ts";
-import { jsonResponse, errorResponse, handleCorsPreflightRequest, safeErrorResponse } from "../_shared/response-utils.ts";
-import { validateUUIDs, createUUIDErrorResponse } from "../_shared/uuid-validator.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 const EMAIL_STYLES = `<style>
   body {
@@ -146,7 +147,7 @@ function generateSellerCreditEmailHTML(data: {
     <h3>🚀 Ready to Make More Sales?</h3>
     <p style="text-align: center; margin: 30px 0;">
       <a href="https://rebookedsolutions.co.za/profile?tab=overview" class="btn">
-        View Your Wallet & Profile
+        View Your Wallet &amp; Profile
       </a>
     </p>
 
@@ -161,83 +162,162 @@ function generateSellerCreditEmailHTML(data: {
 </html>`;
 }
 
+// UUID validation helper
+function isValidUUID(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return handleCorsPreflightRequest();
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const bodyParseResult = await parseRequestBody(req, corsHeaders);
-    if (!bodyParseResult.success) {
-      return bodyParseResult.errorResponse!;
+    // Parse request body
+    let requestData;
+    try {
+      const bodyText = await req.text();
+      requestData = bodyText ? JSON.parse(bodyText) : {};
+    } catch (parseError) {
+      console.error("❌ Error parsing request body:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "INVALID_JSON",
+          message: "Request body must be valid JSON"
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-    const requestData = bodyParseResult.data;
 
-    const {
-      order_id,
-      seller_id,
-    } = requestData;
+    const { order_id, seller_id } = requestData;
 
     // Validate required fields
-    const validationErrors = [];
-    if (!order_id) validationErrors.push("order_id is required");
-    if (!seller_id) validationErrors.push("seller_id is required");
-
-    // Use UUID validator
-    const validation = validateUUIDs({ order_id, seller_id });
-    if (!validation.isValid) {
-      return createUUIDErrorResponse(validation.errors, corsHeaders);
+    if (!order_id) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "VALIDATION_FAILED",
+          message: "order_id is required"
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    if (validationErrors.length > 0) {
-      return errorResponse(
-        "VALIDATION_FAILED",
-        {
-          validation_errors: validationErrors,
-        },
-        { status: 400 }
+    if (!seller_id) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "VALIDATION_FAILED",
+          message: "seller_id is required"
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate UUIDs
+    if (!isValidUUID(order_id)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "INVALID_UUID",
+          message: "order_id must be a valid UUID"
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!isValidUUID(seller_id)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "INVALID_UUID",
+          message: "seller_id must be a valid UUID"
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Get order and book details
+    // Get order details
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select(`
-        id,
-        total_amount,
-        book_id,
-        status,
-        delivery_status,
-        books(id, price, title)
-      `)
+      .select("id, total_amount, book_id, status, delivery_status")
       .eq("id", order_id)
       .single();
 
     if (orderError || !order) {
-      return errorResponse(
-        "ORDER_NOT_FOUND",
-        {
-          order_id,
-          error_message: orderError?.message || "Order not found"
-        },
-        { status: 404 }
+      console.error("❌ Error fetching order:", orderError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "ORDER_NOT_FOUND",
+          message: orderError?.message || "Order not found",
+          order_id
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Only process if order is marked as delivered/collected
-    if (order.delivery_status !== "collected" && order.delivery_status !== "delivered") {
-      return errorResponse(
-        "INVALID_DELIVERY_STATUS",
-        {
-          current_status: order.delivery_status,
-          expected_status: "collected or delivered"
-        },
-        { status: 400 }
+    console.log("📦 Order found:", { order_id, book_id: order.book_id, delivery_status: order.delivery_status, status: order.status });
+
+    // Check if book_id exists
+    if (!order.book_id) {
+      console.error("❌ Order has no book_id");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "NO_BOOK_ID",
+          message: "Order does not have a book_id",
+          order_id
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Fetch the book details separately to ensure we get the correct book price
+    const { data: book, error: bookError } = await supabase
+      .from("books")
+      .select("id, price, title")
+      .eq("id", order.book_id)
+      .single();
+
+    if (bookError || !book) {
+      console.error("❌ Error fetching book:", bookError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "BOOK_NOT_FOUND",
+          message: bookError?.message || "Book not found",
+          book_id: order.book_id
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log("📚 Book found:", { book_id: book.id, title: book.title, price: book.price });
+
+    // CRITICAL: Use the book's price directly (not order total_amount)
+    // This ensures we calculate 90% of the BOOK VALUE
+    const bookPrice = book.price;
+
+    if (!bookPrice || bookPrice <= 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "INVALID_BOOK_PRICE",
+          message: "Book price is invalid or zero",
+          book_id: book.id,
+          book_price: bookPrice
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log("💰 Calculating credit: Book price =", bookPrice, "(90% =", (bookPrice * 0.9), ")");
 
     // Check if payment has already been processed for this order
     const { data: existingTransaction } = await supabase
@@ -248,14 +328,15 @@ serve(async (req) => {
       .single();
 
     if (existingTransaction) {
-      return jsonResponse(
-        {
+      console.log("⚠️ Payment already processed for order:", order_id);
+      return new Response(
+        JSON.stringify({
           success: true,
           message: "Payment already processed for this order",
           order_id,
-          seller_id,
-        },
-        { status: 200 }
+          seller_id
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -268,24 +349,25 @@ serve(async (req) => {
       .single();
 
     // If seller has active banking details, payment will be sent directly to their bank account
-    // Email notification is already sent in the OrderCompletionCard component
     if (bankingDetails) {
-      return jsonResponse(
-        {
+      console.log("🏦 Seller has banking details - payment via direct transfer");
+      return new Response(
+        JSON.stringify({
           success: true,
           message: "Seller has banking details. Payment will be sent directly to their account.",
           order_id,
           seller_id,
           payment_method: "direct_bank_transfer",
-        },
-        { status: 200 }
+          book_price: bookPrice
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // No banking details - credit wallet as fallback payment method
-    const bookPrice = order.books?.price || 0;
-    const creditAmount = (bookPrice * 90) / 100; // 90% of book price
-
+    // Pass the BOOK PRICE (not total_amount) to ensure 90% calculation is correct
+    console.log("💳 Crediting wallet with book price:", bookPrice);
+    
     const { data: creditResult, error: creditError } = await supabase
       .rpc('credit_wallet_on_collection', {
         p_seller_id: seller_id,
@@ -294,107 +376,123 @@ serve(async (req) => {
       });
 
     if (creditError || !creditResult) {
-      console.error("Error crediting wallet:", creditError);
-      return errorResponse(
-        "WALLET_CREDIT_FAILED",
-        {
-          error_message: creditError?.message || "Failed to credit wallet",
+      console.error("❌ Error crediting wallet:", creditError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "WALLET_CREDIT_FAILED",
+          message: creditError?.message || "Failed to credit wallet",
           order_id,
           seller_id,
-        },
-        { status: 500 }
+          book_price: bookPrice
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get seller details and create notifications
-    try {
-      const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+    console.log("✅ Wallet credited successfully");
 
-      if (userError) {
-        console.error("Error fetching seller details:", userError);
-      } else {
-        const seller = users?.find(u => u.id === seller_id);
-        const sellerEmail = seller?.email;
-        const sellerName = seller?.user_metadata?.first_name || seller?.user_metadata?.name || "Seller";
+    // Calculate amounts for display (assuming prices are stored in cents)
+    const creditAmount = (bookPrice * 90) / 100;
+    const bookPriceRands = bookPrice / 100;
+    const creditAmountRands = creditAmount / 100;
 
-        if (seller?.id && sellerEmail) {
-          // Get updated wallet balance
-          const { data: walletData } = await supabase
-            .from("user_wallets")
-            .select("available_balance")
-            .eq("user_id", seller_id)
-            .single();
+    // Get seller details for notifications
+    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
 
-          const newBalance = walletData?.available_balance || creditAmount;
-          const creditAmountRands = creditAmount / 100;
-          const newBalanceRands = newBalance / 100;
-          const bookPriceRands = bookPrice / 100;
+    if (userError) {
+      console.error("⚠️ Error fetching seller details:", userError);
+    } else {
+      const seller = users?.find(u => u.id === seller_id);
+      const sellerEmail = seller?.email;
+      const sellerName = seller?.user_metadata?.first_name || seller?.user_metadata?.name || "Seller";
 
-          // Create in-app notification for seller
-          try {
-            const { error: notifError } = await supabase.from("notifications").insert({
-              user_id: seller_id,
-              type: "success",
-              title: "💰 Payment Received!",
-              message: `Credit of R${creditAmountRands.toFixed(2)} has been added to your wallet for "${order.books?.title || 'Unknown Book'}". New balance: R${newBalanceRands.toFixed(2)}`,
-              order_id: order_id,
-              action_required: false
-            });
+      if (seller?.id && sellerEmail) {
+        console.log("👤 Seller found:", sellerName, sellerEmail);
 
-            if (notifError) {
-              console.error("Error creating in-app notification:", notifError);
-            } else {
-              console.log("✅ In-app notification created successfully");
-            }
-          } catch (notificationError) {
-            console.error("Error creating in-app notification:", notificationError);
+        // Get updated wallet balance
+        const { data: walletData } = await supabase
+          .from("user_wallets")
+          .select("available_balance")
+          .eq("user_id", seller_id)
+          .single();
+
+        const newBalance = walletData?.available_balance || creditAmount;
+        const newBalanceRands = newBalance / 100;
+
+        console.log("💰 New wallet balance:", newBalanceRands);
+
+        // Create in-app notification for seller (using only valid columns)
+        try {
+          const { error: notifError } = await supabase.from("notifications").insert({
+            user_id: seller_id,
+            type: "success",
+            title: "💰 Payment Received!",
+            message: `Credit of R${creditAmountRands.toFixed(2)} has been added to your wallet for "${book.title}". New balance: R${newBalanceRands.toFixed(2)}`
+          });
+
+          if (notifError) {
+            console.error("❌ Error creating in-app notification:", notifError);
+          } else {
+            console.log("✅ In-app notification created successfully");
           }
-
-          // Send email notification using supabase.functions.invoke like everywhere else
-          try {
-            await supabase.functions.invoke("send-email", {
-              body: {
-                to: sellerEmail,
-                subject: '💰 Payment Received - Credit Added to Your Account - ReBooked Solutions',
-                html: generateSellerCreditEmailHTML({
-                  sellerName,
-                  bookTitle: order.books?.title || 'Unknown Book',
-                  bookPrice: bookPriceRands,
-                  creditAmount: creditAmountRands,
-                  orderId: order_id,
-                  newBalance: newBalanceRands,
-                }),
-              },
-            });
-            console.log("✅ Credit notification email sent successfully");
-          } catch (emailError) {
-            console.error("Error sending credit notification email:", emailError);
-            // Don't fail the whole operation if email fails
-          }
+        } catch (notificationError) {
+          console.error("❌ Exception creating in-app notification:", notificationError);
         }
+
+        // Send email notification
+        try {
+          const emailResult = await supabase.functions.invoke("send-email", {
+            body: {
+              to: sellerEmail,
+              subject: '💰 Payment Received - Credit Added to Your Account - ReBooked Solutions',
+              html: generateSellerCreditEmailHTML({
+                sellerName,
+                bookTitle: book.title,
+                bookPrice: bookPriceRands,
+                creditAmount: creditAmountRands,
+                orderId: order_id,
+                newBalance: newBalanceRands,
+              }),
+            },
+          });
+
+          if (emailResult.error) {
+            console.error("❌ Error sending email:", emailResult.error);
+          } else {
+            console.log("✅ Credit notification email sent successfully");
+          }
+        } catch (emailError) {
+          console.error("❌ Exception sending email:", emailError);
+        }
+      } else {
+        console.log("⚠️ Seller email not found");
       }
-    } catch (error) {
-      console.error("Error in email and notification process:", error);
-      // Don't fail the whole operation if email/notification fails
     }
 
-    return jsonResponse(
-      {
+    return new Response(
+      JSON.stringify({
         success: true,
-        message: "Wallet credited successfully",
+        message: "Wallet credited successfully with 90% of book price",
         order_id,
         seller_id,
         payment_method: "wallet_credit",
-      },
-      { status: 200 }
+        book_price: bookPrice,
+        credit_amount: creditAmount,
+        percentage: "90%"
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error("Error in credit-wallet-on-collection:", error);
-    return safeErrorResponse(
-      error,
-      "INTERNAL_SERVER_ERROR",
-      corsHeaders,
+    console.error("❌ Error in credit-wallet-on-collection:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "INTERNAL_SERVER_ERROR",
+        message: error instanceof Error ? error.message : "An unexpected error occurred"
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

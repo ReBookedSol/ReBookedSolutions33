@@ -152,34 +152,62 @@ export class WalletService {
   }
 
   /**
-   * Credit wallet when book is received (called from edge function)
+   * Credit wallet when book is received (calls edge function which handles everything)
    */
   static async creditWalletOnCollection(
     orderId: string,
     sellerId: string,
-    bookPrice: number
-  ): Promise<{ success: boolean; error?: string }> {
+    _bookPriceInRands?: number
+  ): Promise<{ success: boolean; error?: string; creditAmount?: number }> {
     try {
-      // Call the database function directly
-      const { data, error } = await supabase.rpc("add_funds_to_wallet", {
-        p_seller_id: sellerId,
-        p_amount: Math.round(bookPrice * 90 / 100),
-        p_order_id: orderId,
-        p_reason: "Book received",
+      // Call the edge function which handles:
+      // 1. Fetching order and book details
+      // 2. Calculating correct 90% credit amount
+      // 3. Crediting the wallet via RPC
+      // 4. Creating notifications
+      // 5. Sending emails
+      const { data, error } = await supabase.functions.invoke('credit-wallet-on-collection', {
+        body: {
+          order_id: orderId,
+          seller_id: sellerId,
+        },
       });
 
       if (error) {
+        console.error("❌ Edge function error:", error);
+        console.error("Error details:", {
+          message: error.message,
+          status: (error as any).status,
+          context: (error as any).context,
+        });
         return {
           success: false,
           error: error.message || "Failed to credit wallet",
         };
       }
 
+      console.log("Edge function response:", data);
+
+      if (!data || !data.success) {
+        console.error("❌ Wallet credit failed:", data);
+        return {
+          success: false,
+          error: data?.message || data?.error || "Failed to credit wallet",
+        };
+      }
+
+      console.log("✅ Wallet credited successfully");
+
+      // Edge function handles credit_amount calculation (90% of book price)
+      const creditAmount = data.credit_amount ? data.credit_amount / 100 : undefined;
+
       return {
         success: true,
+        creditAmount,
       };
     } catch (error) {
-      console.error("Error in creditWalletOnCollection:", error);
+      console.error("❌ Error in creditWalletOnCollection:", error);
+      console.error("Full error object:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
