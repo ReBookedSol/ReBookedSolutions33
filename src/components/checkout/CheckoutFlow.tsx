@@ -754,33 +754,10 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           <Step1point5DeliveryMethod
             bookTitle={checkoutState.book?.title || "your book"}
             onSelectDeliveryMethod={(method, locker) => {
-              let updatedAddress = checkoutState.buyer_address;
-
-              // If locker is selected, use locker's address as delivery address
-              if (method === "locker" && locker) {
-                const lockerAddress = (locker as any).full_address || (locker as any).address || "";
-                const lockerCity = (locker as any).city || (locker as any).suburb || "Locker Location";
-
-                updatedAddress = {
-                  street: lockerAddress,
-                  city: lockerCity,
-                  province: (locker as any).province || "",
-                  postal_code: (locker as any).postal_code || (locker as any).postalCode || "",
-                  country: "South Africa",
-                  additional_info: `Drop-off at ${locker.name}`,
-                };
-
-                console.log("🔐 Using locker as delivery address:", {
-                  locker_name: locker.name,
-                  address: updatedAddress,
-                });
-              }
-
               setCheckoutState((prev) => ({
                 ...prev,
                 delivery_method: method,
                 selected_locker: locker || null,
-                buyer_address: updatedAddress,
               }));
               goToStep(3);
             }}
