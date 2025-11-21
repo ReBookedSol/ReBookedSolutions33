@@ -42,7 +42,6 @@ import OrderManagementView from "@/components/orders/OrderManagementView";
 import { useCommit } from "@/hooks/useCommit";
 import EnhancedOrderCommitButton from "@/components/orders/EnhancedOrderCommitButton";
 import BankingProfileTab from "@/components/profile/BankingProfileTab";
-import WalletTab from "@/components/profile/WalletTab";
 import ShareProfileDialog from "@/components/ShareProfileDialog";
 import ShareReminderBanner from "@/components/ShareReminderBanner";
 import ProfileEditDialog from "@/components/ProfileEditDialog";
