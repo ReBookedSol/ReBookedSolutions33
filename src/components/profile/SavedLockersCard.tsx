@@ -126,31 +126,45 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
   const LockerCard = ({
     locker,
-    type,
     isDeleting,
     onDelete,
   }: {
     locker: BobGoLocation;
-    type: "delivery" | "pickup";
     isDeleting: boolean;
     onDelete: () => void;
   }) => {
-    const bgColor = type === "delivery" ? "bg-purple-50" : "bg-blue-50";
-    const borderColor = type === "delivery" ? "border-purple-200" : "border-blue-200";
-    const iconColor = type === "delivery" ? "text-purple-600" : "text-blue-600";
-    const headerGradient =
-      type === "delivery"
-        ? "from-purple-50 to-purple-100"
-        : "from-blue-50 to-blue-100";
-    const typeLabel =
-      type === "delivery" ? "Delivery Locker" : "Pickup Locker";
+    const renderFieldValue = (value: any): string => {
+      if (value === null || value === undefined) return "—";
+      if (typeof value === "boolean") return value ? "Yes" : "No";
+      if (typeof value === "number") {
+        if (Number.isFinite(value)) {
+          return value.toString();
+        }
+        return "—";
+      }
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value);
+    };
+
+    // Get all locker fields, excluding empty values and certain fields
+    const excludeFields = ["image_url", "pickup_point_provider_logo_url"];
+    const fields = Object.entries(locker)
+      .filter(
+        ([key, value]) =>
+          !excludeFields.includes(key) &&
+          value !== null &&
+          value !== undefined &&
+          value !== "" &&
+          typeof value !== "object"
+      )
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
 
     return (
-      <Card className={`border-2 ${borderColor} hover:shadow-lg transition-shadow`}>
-        <CardHeader className={`bg-gradient-to-r ${headerGradient}`}>
+      <Card className="border-2 border-purple-200 hover:shadow-lg transition-shadow">
+        <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
           <CardTitle className="flex items-center gap-2">
-            <MapPin className={`h-5 w-5 ${iconColor}`} />
-            {typeLabel}
+            <MapPin className="h-5 w-5 text-purple-600" />
+            Saved Locker
             <Badge className="bg-green-100 text-green-800">
               <CheckCircle className="h-3 w-3 mr-1" />
               Saved
@@ -159,86 +173,56 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-4">
-            {/* Location Name */}
-            <div className={`p-4 ${bgColor} rounded-lg border ${borderColor}`}>
-              <h3 className="font-semibold text-gray-900 mb-2">{locker.name}</h3>
-              {locker.full_address || locker.address ? (
-                <p className="text-sm text-gray-700">
-                  {locker.full_address || locker.address}
-                </p>
-              ) : null}
+            {/* Main Location Info */}
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <h3 className="font-bold text-lg text-gray-900 mb-1">{locker.name || "—"}</h3>
+              <p className="text-sm text-gray-700">
+                {locker.full_address || locker.address || "—"}
+              </p>
             </div>
 
-            {/* Details Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Provider */}
-              {locker.pickup_point_provider_name && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Provider
-                  </p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    {locker.pickup_point_provider_name}
-                  </p>
-                </div>
-              )}
-
-              {/* Trading Hours */}
-              {locker.trading_hours && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    Hours
-                  </p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    {locker.trading_hours}
-                  </p>
-                </div>
-              )}
-
-              {/* Phone */}
-              {(locker.phone || locker.contact_phone) && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
-                    <Phone className="h-3.5 w-3.5" />
-                    Phone
-                  </p>
-                  <a
-                    href={`tel:${locker.phone || locker.contact_phone}`}
-                    className="text-sm text-purple-600 hover:text-purple-700 font-medium mt-1"
+            {/* All Locker Fields */}
+            {fields.length > 0 && (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {fields.map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="pb-3 border-b border-gray-100 last:border-b-0"
                   >
-                    {locker.phone || locker.contact_phone}
-                  </a>
-                </div>
-              )}
-
-              {/* Distance */}
-              {locker.distance && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Distance
-                  </p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    {typeof locker.distance === "number"
-                      ? `${locker.distance.toFixed(1)} km`
-                      : locker.distance}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Description */}
-            {locker.description && (
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Notes
-                </p>
-                <p className="text-sm text-gray-700">{locker.description}</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                      {key === "phone" || key === "contact_phone" ? (
+                        <>
+                          <Phone className="h-3.5 w-3.5" />
+                          {key.replace(/_/g, " ")}
+                        </>
+                      ) : key === "trading_hours" ? (
+                        <>
+                          <Clock className="h-3.5 w-3.5" />
+                          {key.replace(/_/g, " ")}
+                        </>
+                      ) : (
+                        key.replace(/_/g, " ")
+                      )}
+                    </p>
+                    {key === "phone" || key === "contact_phone" ? (
+                      <a
+                        href={`tel:${value}`}
+                        className="text-sm text-purple-600 hover:text-purple-700 font-medium mt-1"
+                      >
+                        {renderFieldValue(value)}
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-700 mt-1">
+                        {renderFieldValue(value)}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-4 border-t border-gray-100">
               <Button
                 onClick={onDelete}
                 disabled={isDeleting}
@@ -257,16 +241,6 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
                   </>
                 )}
               </Button>
-              {onEdit && (
-                <Button
-                  onClick={onEdit}
-                  variant="outline"
-                  className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Change
-                </Button>
-              )}
             </div>
           </div>
         </CardContent>
