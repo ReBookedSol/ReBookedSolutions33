@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   MapPin,
   Loader2,
@@ -11,9 +12,12 @@ import {
   Phone,
   Navigation,
   Info,
+  Save,
 } from "lucide-react";
 import { fetchSuggestions, fetchAddressDetails, type Suggestion } from "@/services/addressAutocompleteService";
 import { getBobGoLocations, type BobGoLocation } from "@/services/bobgoLocationsService";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const BobGoLocationsSection: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
@@ -25,6 +29,7 @@ const BobGoLocationsSection: React.FC = () => {
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [showLocations, setShowLocations] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [savingLockerId, setSavingLockerId] = useState<string | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout>();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +106,40 @@ const BobGoLocationsSection: React.FC = () => {
     }
   }, [showDropdown]);
 
+  // Save locker to profile
+  const handleSaveLockerToProfile = async (location: BobGoLocation) => {
+    try {
+      setSavingLockerId(location.id || "");
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to save a locker");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          preferred_delivery_locker_data: location,
+          preferred_delivery_locker_saved_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Locker saved to your profile! 🎉", {
+        description: `${location.name} is now saved`,
+      });
+    } catch (error) {
+      console.error("Error saving locker:", error);
+      toast.error("Failed to save locker to profile");
+    } finally {
+      setSavingLockerId(null);
+    }
+  };
+
   return (
     <Card className="border-2 border-purple-100 hover:shadow-lg transition-shadow">
       <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
@@ -112,7 +151,7 @@ const BobGoLocationsSection: React.FC = () => {
       <CardContent className="p-6">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Find and select a nearby BobGo pickup location for your deliveries
+            Find and select a nearby BobGo pickup location to save to your profile
           </p>
 
           {/* Address Search Input */}
@@ -345,6 +384,31 @@ const BobGoLocationsSection: React.FC = () => {
                               </Badge>
                             </div>
                           )}
+                        </div>
+
+                        {/* Save to Profile Button */}
+                        <div className="pt-3 border-t border-gray-100">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveLockerToProfile(location);
+                            }}
+                            disabled={savingLockerId === location.id}
+                            variant="outline"
+                            className="w-full border-purple-300 text-purple-700 hover:bg-purple-50"
+                          >
+                            {savingLockerId === location.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="h-4 w-4 mr-2" />
+                                Save to Profile
+                              </>
+                            )}
+                          </Button>
                         </div>
                       </div>
                     </div>

@@ -73,9 +73,7 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
       // Fetch user profile with locker preferences
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select(
-          "preferred_delivery_locker_location_id, preferred_delivery_locker_provider_slug"
-        )
+        .select("preferred_delivery_locker_data")
         .eq("id", user.id)
         .single();
 
@@ -85,24 +83,10 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
         return;
       }
 
-      if (
-        profile?.preferred_delivery_locker_location_id &&
-        profile?.preferred_delivery_locker_provider_slug
-      ) {
-        // For now, create a basic locker object from saved data
-        // In a real scenario, you'd fetch the full locker details from an API
-        const lockerObj: BobGoLocation = {
-          id: profile.preferred_delivery_locker_location_id.toString(),
-          name: `Saved Locker (${profile.preferred_delivery_locker_provider_slug})`,
-          address: "Locker location details saved",
-          full_address: "Locker location details saved",
-          latitude: 0,
-          longitude: 0,
-          provider_slug: profile.preferred_delivery_locker_provider_slug,
-        };
-
-        setSavedLocker(lockerObj);
-        console.log("✅ Loaded saved locker from profile");
+      if (profile?.preferred_delivery_locker_data) {
+        const lockerData = profile.preferred_delivery_locker_data as BobGoLocation;
+        setSavedLocker(lockerData);
+        console.log("✅ Loaded saved locker from profile:", lockerData);
       }
     } catch (error) {
       console.error("Error loading saved locker:", error);
@@ -128,12 +112,12 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
         return;
       }
 
-      // Update user profile with locker preference
+      // Update user profile with full locker data
       const { error } = await supabase
         .from("profiles")
         .update({
-          preferred_delivery_locker_location_id: parseInt(selectedLocker.id || "0"),
-          preferred_delivery_locker_provider_slug: selectedLocker.provider_slug || "bobgo",
+          preferred_delivery_locker_data: selectedLocker,
+          preferred_delivery_locker_saved_at: new Date().toISOString(),
         })
         .eq("id", user.id);
 
@@ -199,66 +183,66 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Home Delivery Option */}
-          <div
-            className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-              deliveryMethod === "home"
-                ? "bg-blue-50 border-blue-500"
-                : "bg-gray-50 border-gray-200 hover:border-blue-300"
-            }`}
-            onClick={() => {
-              setDeliveryMethod("home");
+          <RadioGroup value={deliveryMethod} onValueChange={(value) => {
+            setDeliveryMethod(value as "home" | "locker");
+            if (value === "home") {
               setSelectedLocker(null);
-            }}
-          >
-            <RadioGroupItem
-              value="home"
-              checked={deliveryMethod === "home"}
-              className="mt-1 flex-shrink-0"
-            />
-            <div className="flex-1">
-              <Label className="flex items-center gap-2 font-medium text-base cursor-pointer">
-                <Home className="w-5 h-5 flex-shrink-0" />
-                <span>Home Delivery</span>
-              </Label>
-              <p className="text-sm text-gray-600 mt-2">
-                The seller will arrange courier pickup from their address. The book will be delivered to your address.
-              </p>
+            }
+          }}>
+            {/* Home Delivery Option */}
+            <div
+              className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                deliveryMethod === "home"
+                  ? "bg-blue-50 border-blue-500"
+                  : "bg-gray-50 border-gray-200 hover:border-blue-300"
+              }`}
+            >
+              <RadioGroupItem
+                value="home"
+                className="mt-1 flex-shrink-0"
+              />
+              <div className="flex-1">
+                <Label className="flex items-center gap-2 font-medium text-base cursor-pointer">
+                  <Home className="w-5 h-5 flex-shrink-0" />
+                  <span>Home Delivery</span>
+                </Label>
+                <p className="text-sm text-gray-600 mt-2">
+                  The seller will arrange courier pickup from their address. The book will be delivered to your address.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Locker Drop-Off Option */}
-          <div
-            className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-              deliveryMethod === "locker"
-                ? "bg-purple-50 border-purple-500"
-                : "bg-gray-50 border-gray-200 hover:border-purple-300"
-            }`}
-            onClick={() => setDeliveryMethod("locker")}
-          >
-            <RadioGroupItem
-              value="locker"
-              checked={deliveryMethod === "locker"}
-              className="mt-1 flex-shrink-0"
-            />
-            <div className="flex-1">
-              <Label className="flex items-center gap-2 font-medium text-base cursor-pointer">
-                <MapPin className="w-5 h-5 flex-shrink-0" />
-                <span>BobGo Locker Drop-Off</span>
-              </Label>
-              <p className="text-sm text-gray-600 mt-2">
-                The seller will drop the book at a nearby BobGo pickup location. You'll collect it from there.
-              </p>
+            {/* Locker Drop-Off Option */}
+            <div
+              className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                deliveryMethod === "locker"
+                  ? "bg-purple-50 border-purple-500"
+                  : "bg-gray-50 border-gray-200 hover:border-purple-300"
+              }`}
+            >
+              <RadioGroupItem
+                value="locker"
+                className="mt-1 flex-shrink-0"
+              />
+              <div className="flex-1">
+                <Label className="flex items-center gap-2 font-medium text-base cursor-pointer">
+                  <MapPin className="w-5 h-5 flex-shrink-0" />
+                  <span>BobGo Locker Drop-Off</span>
+                </Label>
+                <p className="text-sm text-gray-600 mt-2">
+                  The seller will drop the book at a nearby BobGo pickup location. You'll collect it from there.
+                </p>
 
-              {/* Show if user has saved locker and locker method is selected */}
-              {savedLocker && deliveryMethod === "locker" && (
-                <Badge className="mt-3 bg-green-100 text-green-800 flex w-fit gap-1">
-                  <CheckCircle className="w-3 h-3" />
-                  You have a saved locker
-                </Badge>
-              )}
+                {/* Show if user has saved locker and locker method is selected */}
+                {savedLocker && deliveryMethod === "locker" && (
+                  <Badge className="mt-3 bg-green-100 text-green-800 flex w-fit gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    You have a saved locker
+                  </Badge>
+                )}
+              </div>
             </div>
-          </div>
+          </RadioGroup>
         </CardContent>
       </Card>
 

@@ -13,9 +13,12 @@ import {
   Navigation,
   Info,
   CheckCircle,
+  Save,
 } from "lucide-react";
 import { fetchSuggestions, fetchAddressDetails, type Suggestion } from "@/services/addressAutocompleteService";
 import { getBobGoLocations, type BobGoLocation } from "@/services/bobgoLocationsService";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface BobGoLockerSelectorProps {
   onLockerSelect: (locker: BobGoLocation) => void;
@@ -41,6 +44,7 @@ const BobGoLockerSelector: React.FC<BobGoLockerSelectorProps> = ({
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [showLocations, setShowLocations] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [savingLockerId, setSavingLockerId] = useState<string | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout>();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -97,6 +101,40 @@ const BobGoLockerSelector: React.FC<BobGoLockerSelectorProps> = ({
       setLocations([]);
     } finally {
       setIsLoadingLocations(false);
+    }
+  };
+
+  // Save locker to profile
+  const handleSaveLockerToProfile = async (location: BobGoLocation) => {
+    try {
+      setSavingLockerId(location.id || "");
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to save a locker");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          preferred_delivery_locker_data: location,
+          preferred_delivery_locker_saved_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Locker saved to your profile! 🎉", {
+        description: `${location.name} is now your preferred delivery locker`,
+      });
+    } catch (error) {
+      console.error("Error saving locker:", error);
+      toast.error("Failed to save locker to profile");
+    } finally {
+      setSavingLockerId(null);
     }
   };
 
@@ -370,6 +408,31 @@ const BobGoLockerSelector: React.FC<BobGoLockerSelectorProps> = ({
                           </Badge>
                         </div>
                       )}
+                    </div>
+
+                    {/* Save to Profile Button */}
+                    <div className="pt-3 border-t border-gray-100">
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveLockerToProfile(location);
+                        }}
+                        disabled={savingLockerId === location.id}
+                        variant="outline"
+                        className="w-full border-purple-300 text-purple-700 hover:bg-purple-50"
+                      >
+                        {savingLockerId === location.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save to Profile
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </div>
