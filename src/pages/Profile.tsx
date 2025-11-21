@@ -30,7 +30,6 @@ import {
   Clock,
   ShoppingBag,
   X,
-  Wallet,
 } from "lucide-react";
 import { getUserBooks } from "@/services/book/bookQueries";
 import { deleteBook } from "@/services/book/bookMutations";
