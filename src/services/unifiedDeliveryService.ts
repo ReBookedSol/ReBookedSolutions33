@@ -183,13 +183,34 @@ export const getAllDeliveryQuotes = async (
       body.user_id = request.user_id;
     }
 
+    console.log("📡 Calling bobgo-get-rates edge function with body:", JSON.stringify(body, null, 2));
+
     const { data, error } = await supabase.functions.invoke("bobgo-get-rates", { body });
-    if (error) throw new Error(error.message);
+
+    console.log("📡 Edge function response - error:", error, "data:", JSON.stringify(data, null, 2));
+
+    if (error) {
+      console.error("❌ Edge function error:", error.message);
+      throw new Error(`Edge function error: ${error.message}`);
+    }
+
+    if (!data) {
+      console.warn("⚠️ Edge function returned no data");
+      return generateFallbackQuotes(request);
+    }
+
+    console.log("✅ Edge function returned data:", {
+      hasRaw: !!data.raw,
+      hasQuotes: !!data.quotes,
+      quotesLength: data.quotes?.length,
+      simulated: data.simulated,
+    });
 
     // Prefer the raw provider_rate_requests if present, to surface all providers/services
     let quotes: UnifiedQuote[] = [];
     const providerRequests = data?.raw?.provider_rate_requests as any[] | undefined;
     if (Array.isArray(providerRequests)) {
+      console.log(`📊 Found ${providerRequests.length} provider requests in raw response`);
       quotes = providerRequests
         .filter((p) => p && p.status === "success" && Array.isArray(p.responses))
         .flatMap((p) =>
@@ -210,10 +231,12 @@ export const getAllDeliveryQuotes = async (
               terms: undefined,
             }))
         );
+      console.log(`✅ Mapped ${quotes.length} quotes from provider_rate_requests`);
     }
 
     // Fallback to simplified quotes mapping if raw not present
     if (!quotes.length) {
+      console.log("🔄 Falling back to simplified quotes mapping");
       quotes = (data?.quotes || []).map((q: any) => ({
         provider: "bobgo" as const,
         provider_name: q.carrier || "Bob Go",
@@ -226,10 +249,16 @@ export const getAllDeliveryQuotes = async (
         features: ["Tracking included", "Door-to-door"],
         terms: undefined,
       }));
+      console.log(`✅ Mapped ${quotes.length} quotes from simplified response`);
     }
 
-    if (!quotes.length) return generateFallbackQuotes(request);
+    if (!quotes.length) {
+      console.warn("⚠️ No quotes found, returning fallback quotes");
+      return generateFallbackQuotes(request);
+    }
+
     quotes.sort((a, b) => a.cost - b.cost);
+    console.log(`✅ Returning ${quotes.length} sorted quotes`);
     return quotes;
   } catch (err) {
     console.error("getAllDeliveryQuotes error:", err);
