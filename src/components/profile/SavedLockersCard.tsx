@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,10 +23,10 @@ interface SavedLockersCardProps {
   onEdit?: () => void;
 }
 
-const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
-  isLoading = false,
-  onEdit,
-}) => {
+const SavedLockersCard = forwardRef<
+  { loadSavedLockers: () => Promise<void> },
+  SavedLockersCardProps
+>(({ isLoading = false, onEdit }, ref) => {
   const [savedLocker, setSavedLocker] = useState<BobGoLocation | null>(null);
   const [isLoadingLockers, setIsLoadingLockers] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -359,6 +359,10 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
     );
   }
 
+  useImperativeHandle(ref, () => ({
+    loadSavedLockers,
+  }), []);
+
   return (
     <>
       <LockerCard
@@ -397,6 +401,8 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
       )}
     </>
   );
-};
+});
+
+SavedLockersCard.displayName = "SavedLockersCard";
 
 export default SavedLockersCard;
