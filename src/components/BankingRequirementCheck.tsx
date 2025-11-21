@@ -43,7 +43,7 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
 
     try {
       setLoading(true);
-      console.log("🔍 Checking banking requirements for user:", user.id, forceRefresh ? "(forced refresh)" : "");
+      console.log("🔍 Checking listing requirements for user:", user.id, forceRefresh ? "(forced refresh)" : "");
 
       // Check banking details directly from banking_subaccounts table (looking for active status)
       const { data: bankingDetails } = await supabase
@@ -68,30 +68,24 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
         status: bankingDetails?.status
       }, "📍 Address result:", requirements);
 
+      // Banking is now optional - sellers can use wallet as fallback payment method
       const status: BankingRequirementsStatus = {
         hasBankingInfo: hasBankingSetup,
         hasPickupAddress: requirements.hasPickupAddress,
         isVerified: hasBankingActive,
-        canListBooks: hasBankingActive && requirements.hasPickupAddress,
+        // Only address is required now (banking is optional due to wallet system)
+        canListBooks: requirements.hasPickupAddress,
         missingRequirements: [
-          ...(hasBankingSetup ? [] : ["Banking details required for payments"]),
           ...(requirements.hasPickupAddress ? [] : ["Pickup address required for book collection"]),
         ],
       };
 
-      console.log("📊 Final banking status:", status);
-
-      // If banking is still missing but user claims they just added it, try one more time
-      if (!status.hasBankingInfo && !forceRefresh) {
-        console.log("🔄 Banking not detected, trying forced refresh...");
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
-        return checkRequirements(true);
-      }
+      console.log("📊 Final listing requirements status:", status);
 
       setBankingStatus(status);
       onCanProceed(status.canListBooks);
     } catch (error) {
-      console.error("Error checking banking requirements:", error);
+      console.error("Error checking listing requirements:", error);
       onCanProceed(false);
     } finally {
       setLoading(false);
@@ -136,9 +130,7 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-orange-700">
-            To ensure secure transactions and proper payment processing, you
-            need to complete the following requirements before listing books for
-            sale:
+            To list books for sale, you need to add a pickup address for collection and delivery:
           </p>
 
           <div className="space-y-3">
@@ -147,13 +139,13 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
                 {bankingStatus.hasBankingInfo ? (
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 ) : (
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
+                  <AlertTriangle className="h-5 w-5 text-blue-600" />
                 )}
               </div>
               <div className="flex-1">
                 <h4 className="font-medium">Banking Information</h4>
                 <p className="text-sm text-gray-600">
-                  Required for receiving payments (90% of sale price)
+                  {bankingStatus.hasBankingInfo ? "Set up for direct bank transfers" : "Optional - use wallet as payment fallback"}
                 </p>
               </div>
               <div className="flex-shrink-0">
@@ -178,9 +170,9 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
                 ) : (
                   <Badge
                     variant="outline"
-                    className="border-red-500 text-red-700"
+                    className="border-blue-500 text-blue-700"
                   >
-                    Missing
+                    Optional
                   </Badge>
                 )}
               </div>
@@ -240,11 +232,11 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/profile?tab=addresses")}
               className="bg-book-600 hover:bg-book-700 flex-1 btn-mobile"
             >
-              <CreditCard className="btn-mobile-icon" />
-              <span className="btn-mobile-text">Set Up Banking & Address</span>
+              <MapPin className="btn-mobile-icon" />
+              <span className="btn-mobile-text">Add Pickup Address</span>
               <ArrowRight className="btn-mobile-icon" />
             </Button>
             <Button
@@ -258,13 +250,12 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
 
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">
-              Why is this required?
+              Payment Methods
             </h4>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Secure payment processing through Paystack</li>
-              <li>• 90/10 revenue split automation</li>
-              <li>• Fraud prevention and buyer protection</li>
-              <li>• Compliance with financial regulations</li>
+              <li>• <strong>With Banking:</strong> Direct bank transfers when buyers confirm delivery</li>
+              <li>• <strong>Without Banking:</strong> Payments added to your wallet (viewable in Settings → Banking Information)</li>
+              <li>• All payments are 90% of sale price (10% platform fee)</li>
             </ul>
           </div>
         </CardContent>

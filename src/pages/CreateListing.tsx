@@ -80,7 +80,6 @@ const CreateListing = () => {
   const [sellerPolicyAccepted, setSellerPolicyAccepted] = useState(false);
   const [canListBooks, setCanListBooks] = useState<boolean | null>(null);
   const [isCheckingAddress, setIsCheckingAddress] = useState(true);
-  const [canProceedWithBanking, setCanProceedWithBanking] = useState(false);
 
   // Check if user can list books on component mount
   useEffect(() => {
@@ -195,17 +194,10 @@ const CreateListing = () => {
       return;
     }
 
-    // Check if user can list books before validating form
+    // Check if user can list books before validating form (address is required)
     if (canListBooks === false) {
       toast.error("❌ Please add a pickup address before listing your book.");
-      navigate("/profile");
-      return;
-    }
-
-    // Check banking requirements
-    if (!canProceedWithBanking) {
-      toast.error("❌ Please complete banking setup and address verification before listing your book.");
-      navigate("/profile");
+      navigate("/profile?tab=addresses");
       return;
     }
 
@@ -420,7 +412,7 @@ const CreateListing = () => {
           {isMobile ? "" : "Back"}
         </BackButton>
 
-        <BankingRequirementCheck onCanProceed={setCanProceedWithBanking}>
+        <BankingRequirementCheck onCanProceed={() => {}}>
           <div
             className={`bg-white rounded-lg shadow-md ${isMobile ? "p-4" : "p-8"}`}
           >
@@ -546,7 +538,6 @@ const CreateListing = () => {
                   isSubmitting ||
                   isCheckingAddress ||
                   canListBooks === false ||
-                  !canProceedWithBanking ||
                   !sellerPolicyAccepted
                 }
                 className="w-full transition-all duration-200 font-semibold bg-book-600 hover:bg-book-700 hover:shadow-lg active:scale-[0.98] text-white py-4 h-12 md:h-14 md:text-lg touch-manipulation rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -563,8 +554,6 @@ const CreateListing = () => {
                   </>
                 ) : canListBooks === false ? (
                   "❌ Pickup Address Required"
-                ) : !canProceedWithBanking ? (
-                  "❌ Banking Setup Required"
                 ) : !sellerPolicyAccepted ? (
                   "Accept Policy to Continue"
                 ) : (

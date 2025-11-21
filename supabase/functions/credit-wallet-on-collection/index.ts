@@ -85,7 +85,7 @@ serve(async (req) => {
       );
     }
 
-    // Check if wallet was already credited for this order
+    // Check if payment has already been processed for this order
     const { data: existingTransaction } = await supabase
       .from("wallet_transactions")
       .select("id")
@@ -97,7 +97,7 @@ serve(async (req) => {
       return jsonResponse(
         {
           success: true,
-          message: "Wallet already credited for this order",
+          message: "Payment already processed for this order",
           order_id,
           seller_id,
         },
@@ -105,11 +105,32 @@ serve(async (req) => {
       );
     }
 
-    // Get book price (total_amount is in cents, 90% goes to seller)
-    const bookPrice = order.total_amount || 0;
-    const amountToCredit = Math.floor((bookPrice * 90) / 100);
+    // Check if seller has active banking details
+    const { data: bankingDetails } = await supabase
+      .from("banking_subaccounts")
+      .select("id, status")
+      .eq("user_id", seller_id)
+      .eq("status", "active")
+      .single();
 
-    // Credit the wallet using the database function
+    // If seller has active banking details, payment will be sent directly to their bank account
+    // Email notification is already sent in the OrderCompletionCard component
+    if (bankingDetails) {
+      return jsonResponse(
+        {
+          success: true,
+          message: "Seller has banking details. Payment will be sent directly to their account.",
+          order_id,
+          seller_id,
+          payment_method: "direct_bank_transfer",
+        },
+        { status: 200 }
+      );
+    }
+
+    // No banking details - credit wallet as fallback payment method
+    const bookPrice = order.total_amount || 0;
+
     const { data: creditResult, error: creditError } = await supabase
       .rpc('credit_wallet_on_collection', {
         p_seller_id: seller_id,
@@ -136,8 +157,7 @@ serve(async (req) => {
         message: "Wallet credited successfully",
         order_id,
         seller_id,
-        amount_credited: amountToCredit,
-        currency: "ZAR",
+        payment_method: "wallet_credit",
       },
       { status: 200 }
     );
