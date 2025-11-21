@@ -775,14 +775,14 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
               buyerAddress={checkoutState.buyer_address}
               sellerAddress={checkoutState.seller_address}
               onSelectDelivery={handleDeliverySelection}
-              onBack={() => goToStep(1)}
+              onBack={() => goToStep(2)}
               onCancel={handleCancelCheckout}
               onEditAddress={handleEditAddress}
               selectedDelivery={checkoutState.selected_delivery}
             />
           )}
 
-        {checkoutState.step.current === 2 && !checkoutState.buyer_address && (
+        {checkoutState.step.current === 3 && !checkoutState.buyer_address && (
           <AddressInput
             title="Enter Your Delivery Address"
             onAddressSubmit={handleAddressSubmit}
@@ -791,7 +791,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 2 &&
+        {checkoutState.step.current === 3 &&
           checkoutState.buyer_address &&
           isEditingAddress && (
           <AddressInput
@@ -804,17 +804,17 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 3 && checkoutState.order_summary && (
+        {checkoutState.step.current === 4 && checkoutState.order_summary && (
           <Step3Payment
             orderSummary={checkoutState.order_summary}
-            onBack={() => goToStep(2)}
+            onBack={() => goToStep(3)}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
             userId={user.id}
           />
         )}
 
-        {checkoutState.step.current === 4 && orderConfirmation && (
+        {checkoutState.step.current === 5 && orderConfirmation && (
           <Step4Confirmation
             orderData={orderConfirmation}
             onViewOrders={handleViewOrders}
