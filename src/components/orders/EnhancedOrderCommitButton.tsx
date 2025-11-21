@@ -380,8 +380,8 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
                     <BobGoLockerSelector
                       onLockerSelect={setSelectedLocker}
                       selectedLockerId={selectedLocker?.id}
-                      title="Select Pickup Location"
-                      description="Search for an address and select a nearby BobGo location for drop-off"
+                      title="Select a Locker Location"
+                      description="Search for an address and select a nearby locker location for drop-off"
                       showCardLayout={false}
                     />
 
