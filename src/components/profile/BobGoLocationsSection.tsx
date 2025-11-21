@@ -119,19 +119,18 @@ const BobGoLocationsSection: React.FC = () => {
         return;
       }
 
-      const column = saveType === "delivery"
-        ? { preferred_delivery_locker_data: location, preferred_delivery_locker_saved_at: new Date().toISOString() }
-        : { preferred_pickup_locker_data: location, preferred_pickup_locker_saved_at: new Date().toISOString() };
-
       const { error } = await supabase
         .from("profiles")
-        .update(column)
+        .update({
+          preferred_delivery_locker_data: location,
+          preferred_delivery_locker_saved_at: new Date().toISOString(),
+        })
         .eq("id", user.id);
 
       if (error) throw error;
 
       toast.success("Locker saved to your profile! 🎉", {
-        description: `${location.name} is now saved as your ${saveType} locker`,
+        description: `${location.name} is now saved`,
       });
     } catch (error) {
       console.error("Error saving locker:", error);
