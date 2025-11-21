@@ -70,9 +70,20 @@ export interface OrderConfirmation {
   status: string;
 }
 
+export interface BobGoLocker {
+  id: string;
+  name: string;
+  address?: string;
+  full_address?: string;
+  latitude?: number;
+  longitude?: number;
+  provider_slug?: string;
+  [key: string]: any;
+}
+
 export interface CheckoutState {
   step: {
-    current: 1 | 2 | 3 | 4;
+    current: 1 | 2 | 3 | 4 | 5;
     completed: number[];
   };
   book: CheckoutBook | null;
@@ -81,6 +92,8 @@ export interface CheckoutState {
   delivery_options: DeliveryOption[];
   selected_delivery: DeliveryOption | null;
   order_summary: OrderSummary | null;
+  delivery_method: "home" | "locker" | null;
+  selected_locker: BobGoLocker | null;
   loading: boolean;
   error: string | null;
 }
