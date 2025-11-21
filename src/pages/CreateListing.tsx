@@ -412,7 +412,7 @@ const CreateListing = () => {
           {isMobile ? "" : "Back"}
         </BackButton>
 
-        <BankingRequirementCheck onCanProceed={setCanProceedWithBanking}>
+        <BankingRequirementCheck onCanProceed={() => {}}>
           <div
             className={`bg-white rounded-lg shadow-md ${isMobile ? "p-4" : "p-8"}`}
           >
