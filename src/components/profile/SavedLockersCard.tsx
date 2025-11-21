@@ -242,14 +242,19 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
               {/* Image */}
               <div className="flex-shrink-0">
                 {(locker.image_url || locker.pickup_point_provider_logo_url) ? (
-                  <img
-                    src={locker.image_url || locker.pickup_point_provider_logo_url}
-                    alt={locker.name}
-                    className="h-24 w-24 object-cover rounded-lg border border-gray-200 shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                  <div
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => onImageSelect(locker.image_url || locker.pickup_point_provider_logo_url || "")}
+                  >
+                    <img
+                      src={locker.image_url || locker.pickup_point_provider_logo_url}
+                      alt={locker.name}
+                      className="h-24 w-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="h-24 w-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
                     <MapPin className="h-6 w-6 text-gray-400" />
