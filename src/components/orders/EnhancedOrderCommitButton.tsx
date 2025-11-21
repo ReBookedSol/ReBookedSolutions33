@@ -444,7 +444,11 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
             ) : (
               <>
                 <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">Commit with Home Pick-Up</span>
+                <span className="truncate">
+                  {deliveryMethod === "home"
+                    ? "Commit with Home Pick-Up"
+                    : "Commit with Locker Drop-Off"}
+                </span>
               </>
             )}
           </AlertDialogAction>
