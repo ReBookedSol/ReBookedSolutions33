@@ -26,6 +26,7 @@ import {
 } from "@/services/checkoutValidationService";
 import { supabase } from "@/integrations/supabase/client";
 import Step1OrderSummary from "./Step1OrderSummary";
+import Step1point5DeliveryMethod from "./Step1point5DeliveryMethod";
 import Step2DeliveryOptions from "./Step2DeliveryOptions";
 import Step3Payment from "./Step3Payment";
 import Step4Confirmation from "./Step4Confirmation";
@@ -50,6 +51,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     delivery_options: [],
     selected_delivery: null,
     order_summary: null,
+    delivery_method: null,
+    selected_locker: null,
     loading: true,
     error: null,
   });
@@ -456,7 +459,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     }
   };
 
-  const goToStep = (step: 1 | 2 | 3 | 4) => {
+  const goToStep = (step: 1 | 2 | 3 | 4 | 5) => {
     setCheckoutState((prev) => ({
       ...prev,
       step: {
@@ -492,7 +495,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       order_summary: orderSummary,
     }));
 
-    goToStep(3);
+    goToStep(4);
   };
 
   const handlePaymentSuccess = async (orderData: OrderConfirmation) => {
@@ -555,7 +558,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       });
     }
 
-    goToStep(4);
+    goToStep(5);
   };
 
     const handlePaymentError = (error: string) => {
@@ -649,12 +652,14 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
   const getProgressValue = () => {
     switch (checkoutState.step.current) {
       case 1:
-        return 25;
+        return 20;
       case 2:
-        return 50;
+        return 40;
       case 3:
-        return 75;
+        return 60;
       case 4:
+        return 80;
+      case 5:
         return 100;
       default:
         return 0;
@@ -666,10 +671,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       case 1:
         return "Order Summary";
       case 2:
-        return "Delivery Options";
+        return "Delivery Method";
       case 3:
-        return "Payment";
+        return "Delivery Options";
       case 4:
+        return "Payment";
+      case 5:
         return "Confirmation";
       default:
         return "Checkout";
@@ -725,7 +732,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           <Progress value={getProgressValue()} className="h-2 mx-2 sm:mx-0" />
           <div className="flex justify-between mt-2 text-xs sm:text-sm text-gray-500 px-2 sm:px-0">
             <span className="text-center flex-1">Summary</span>
-            <span className="text-center flex-1">Delivery</span>
+            <span className="text-center flex-1">Method</span>
+            <span className="text-center flex-1">Options</span>
             <span className="text-center flex-1">Payment</span>
             <span className="text-center flex-1">Complete</span>
           </div>
@@ -742,7 +750,24 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 2 &&
+        {checkoutState.step.current === 2 && (
+          <Step1point5DeliveryMethod
+            bookTitle={checkoutState.book?.title || "your book"}
+            onSelectDeliveryMethod={(method, locker) => {
+              setCheckoutState((prev) => ({
+                ...prev,
+                delivery_method: method,
+                selected_locker: locker || null,
+              }));
+              goToStep(3);
+            }}
+            onBack={() => goToStep(1)}
+            onCancel={handleCancelCheckout}
+            loading={checkoutState.loading}
+          />
+        )}
+
+        {checkoutState.step.current === 3 &&
           checkoutState.buyer_address &&
           checkoutState.seller_address &&
           !isEditingAddress && (
@@ -750,14 +775,14 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
               buyerAddress={checkoutState.buyer_address}
               sellerAddress={checkoutState.seller_address}
               onSelectDelivery={handleDeliverySelection}
-              onBack={() => goToStep(1)}
+              onBack={() => goToStep(2)}
               onCancel={handleCancelCheckout}
               onEditAddress={handleEditAddress}
               selectedDelivery={checkoutState.selected_delivery}
             />
           )}
 
-        {checkoutState.step.current === 2 && !checkoutState.buyer_address && (
+        {checkoutState.step.current === 3 && !checkoutState.buyer_address && (
           <AddressInput
             title="Enter Your Delivery Address"
             onAddressSubmit={handleAddressSubmit}
@@ -766,7 +791,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 2 &&
+        {checkoutState.step.current === 3 &&
           checkoutState.buyer_address &&
           isEditingAddress && (
           <AddressInput
@@ -779,17 +804,17 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 3 && checkoutState.order_summary && (
+        {checkoutState.step.current === 4 && checkoutState.order_summary && (
           <Step3Payment
             orderSummary={checkoutState.order_summary}
-            onBack={() => goToStep(2)}
+            onBack={() => goToStep(3)}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
             userId={user.id}
           />
         )}
 
-        {checkoutState.step.current === 4 && orderConfirmation && (
+        {checkoutState.step.current === 5 && orderConfirmation && (
           <Step4Confirmation
             orderData={orderConfirmation}
             onViewOrders={handleViewOrders}

@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { 
-  Loader2, 
-  CheckCircle, 
-  AlertCircle, 
-  Home, 
-  Package, 
-  Clock, 
+import {
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Home,
+  Package,
+  Clock,
   DollarSign,
   Info,
   QrCode,
@@ -32,7 +32,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FallbackCommitService from "@/services/fallbackCommitService";
-// import { lockerService, LockerLocation } from "@/services/lockerService"; // DISABLED - Locker functionality removed
+import BobGoLockerSelector from "@/components/checkout/BobGoLockerSelector";
+import { BobGoLocation } from "@/services/bobgoLocationsService";
 
 interface EnhancedOrderCommitButtonProps {
   orderId: string;
@@ -44,8 +45,6 @@ interface EnhancedOrderCommitButtonProps {
   disabled?: boolean;
   className?: string;
 }
-
-// DISABLED - Locker interfaces removed
 
 const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
   orderId,
@@ -59,11 +58,9 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
 }) => {
   const [isCommitting, setIsCommitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [deliveryMethod, setDeliveryMethod] = useState<"home">("home"); // DISABLED - Locker option removed
-  // const [selectedLockerId, setSelectedLockerId] = useState<string>(""); // DISABLED
-  // const [lockers, setLockers] = useState<LockerLocation[]>([]); // DISABLED
-  // const [loadingLockers, setLoadingLockers] = useState(false); // DISABLED
-  
+  const [deliveryMethod, setDeliveryMethod] = useState<"home" | "locker">("home");
+  const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
+
   // Pre-commit checklist states
   const [isPackagedSecurely, setIsPackagedSecurely] = useState(false);
   const [canFulfillOrder, setCanFulfillOrder] = useState(false);
@@ -74,18 +71,11 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     orderStatus === "courier_scheduled" ||
     orderStatus === "shipped";
 
-  // Check if form is valid - SIMPLIFIED: Only home delivery available
-  const isFormValid = isPackagedSecurely && canFulfillOrder;
-
-  // DISABLED - Locker loading functionality removed
-  // useEffect(() => {
-  //   if (deliveryMethod === "locker" && lockers.length === 0) {
-  //     loadLockers();
-  //   }
-  // }, [deliveryMethod]);
-
-  // DISABLED - Locker loading function removed
-  // const loadLockers = async () => { ... }
+  // Check if form is valid
+  const isFormValid =
+    isPackagedSecurely &&
+    canFulfillOrder &&
+    (deliveryMethod === "home" || (deliveryMethod === "locker" && selectedLocker));
 
   const handleCommit = async () => {
     setIsCommitting(true);
@@ -94,12 +84,20 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     try {
       console.log(`🚀 Committing to sale for order: ${orderId} with delivery method: ${deliveryMethod}`);
 
-      // Prepare the commit data with delivery method
+      if (deliveryMethod === "locker" && selectedLocker) {
+        console.log(`📍 Using locker: ${selectedLocker.id} - ${selectedLocker.name}`);
+      }
+
+      // Prepare the commit data with delivery method and locker info
       const commitData = {
         order_id: orderId,
         seller_id: sellerId,
-        delivery_method: deliveryMethod
-        // DISABLED - Locker options removed
+        delivery_method: deliveryMethod,
+        ...(deliveryMethod === "locker" && selectedLocker ? {
+          locker_id: selectedLocker.id,
+          locker_name: selectedLocker.name,
+          locker_address: selectedLocker.address || selectedLocker.full_address,
+        } : {}),
       };
 
       let data, error;
@@ -131,7 +129,9 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
           order_id: orderId,
           seller_id: sellerId,
           delivery_method: deliveryMethod,
-          // DISABLED - Locker ID removed
+          ...(deliveryMethod === "locker" && selectedLocker ? {
+            locker_id: selectedLocker.id,
+          } : {}),
         });
 
         if (fallbackResult.success) {
@@ -169,17 +169,30 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
 
       console.log("Commit successful:", data);
 
-      // Show success message for home delivery
-      toast.success("Order committed! Courier pickup will be scheduled automatically.", {
-        duration: 5000,
-      });
+      // Show success message based on delivery method
+      if (deliveryMethod === "locker") {
+        toast.success(`Order committed! Drop-off at ${selectedLocker?.name}`, {
+          duration: 5000,
+        });
 
-      toast.info(
-        "Pickup details sent to your email.",
-        {
-          duration: 7000,
-        },
-      );
+        toast.info(
+          `Seller to drop book at: ${selectedLocker?.address || selectedLocker?.full_address}. Details sent to email.`,
+          {
+            duration: 7000,
+          },
+        );
+      } else {
+        toast.success("Order committed! Courier pickup will be scheduled automatically.", {
+          duration: 5000,
+        });
+
+        toast.info(
+          "Pickup details sent to your email.",
+          {
+            duration: 7000,
+          },
+        );
+      }
 
       // Call success callback
       onCommitSuccess?.();
@@ -315,11 +328,22 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* SIMPLIFIED - Only home delivery available, locker functionality disabled */}
               <div className="space-y-4">
-                <div className="flex items-start space-x-3 p-3 sm:p-4 border rounded-lg bg-blue-50 border-blue-200">
+                {/* Home Pick-Up Option */}
+                <div
+                  className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    deliveryMethod === "home"
+                      ? "bg-blue-50 border-blue-500"
+                      : "bg-gray-50 border-gray-200 hover:border-blue-300"
+                  }`}
+                  onClick={() => {
+                    setDeliveryMethod("home");
+                    setSelectedLocker(null);
+                  }}
+                >
+                  <RadioGroupItem value="home" checked={deliveryMethod === "home"} className="mt-1 flex-shrink-0" />
                   <div className="flex-1">
-                    <Label className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                    <Label className="flex items-center gap-2 font-medium text-sm sm:text-base cursor-pointer">
                       <Home className="w-4 h-4 flex-shrink-0" />
                       <span>Home Pick-Up (Courier Collection)</span>
                     </Label>
@@ -328,6 +352,53 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
                     </p>
                   </div>
                 </div>
+
+                {/* Locker Drop-Off Option */}
+                <div
+                  className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    deliveryMethod === "locker"
+                      ? "bg-purple-50 border-purple-500"
+                      : "bg-gray-50 border-gray-200 hover:border-purple-300"
+                  }`}
+                  onClick={() => setDeliveryMethod("locker")}
+                >
+                  <RadioGroupItem value="locker" checked={deliveryMethod === "locker"} className="mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <Label className="flex items-center gap-2 font-medium text-sm sm:text-base cursor-pointer">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span>BobGo Locker Drop-Off</span>
+                    </Label>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                      Drop the book at a nearby BobGo location. Buyer will collect from there.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Locker Selection UI - Only show if locker method is selected */}
+                {deliveryMethod === "locker" && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <BobGoLockerSelector
+                      onLockerSelect={setSelectedLocker}
+                      selectedLockerId={selectedLocker?.id}
+                      title="Select Pickup Location"
+                      description="Search for an address and select a nearby BobGo location for drop-off"
+                      showCardLayout={false}
+                    />
+
+                    {/* Selected Locker Summary */}
+                    {selectedLocker && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm font-medium text-green-800 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          Selected: {selectedLocker.name}
+                        </p>
+                        <p className="text-xs text-green-700 mt-1">
+                          {selectedLocker.address || selectedLocker.full_address}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -373,7 +444,11 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
             ) : (
               <>
                 <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">Commit with Home Pick-Up</span>
+                <span className="truncate">
+                  {deliveryMethod === "home"
+                    ? "Commit with Home Pick-Up"
+                    : "Commit with Locker Drop-Off"}
+                </span>
               </>
             )}
           </AlertDialogAction>

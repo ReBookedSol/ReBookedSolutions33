@@ -12,11 +12,14 @@ import {
   AlertTriangle,
   X,
   Edit3,
+  CheckCircle,
 } from "lucide-react";
 import { CheckoutAddress, DeliveryOption } from "@/types/checkout";
 import { toast } from "sonner";
 import { getAllDeliveryQuotes, type UnifiedQuote } from "@/services/unifiedDeliveryService";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import BobGoLockerSelector from "@/components/checkout/BobGoLockerSelector";
+import { BobGoLocation } from "@/services/bobgoLocationsService";
 
 interface Step2DeliveryOptionsProps {
   buyerAddress: CheckoutAddress;
@@ -41,6 +44,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   const [quotes, setQuotes] = useState<UnifiedQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
 
   useEffect(() => {
     fetchDeliveryOptions();
@@ -310,6 +314,44 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
           Note: “Same day delivery” refers to the courier service level. The seller must first confirm/commit the order before pickup can be scheduled.
         </AlertDescription>
       </Alert>
+
+      {/* BobGo Locker Selection - Show when BobGo delivery is selected */}
+      {selectedDelivery && selectedDelivery.courier === "bobgo" && (
+        <Card className="border-purple-200 bg-purple-50">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-purple-600" />
+              Optional: Select Pickup Point
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-700">
+              If you'd like the seller to drop off at a BobGo locker instead of home delivery, search below to find and select a nearby location.
+            </p>
+
+            <BobGoLockerSelector
+              onLockerSelect={setSelectedLocker}
+              selectedLockerId={selectedLocker?.id}
+              title="Find Nearby BobGo Pickup Points"
+              description="Search for an address to find nearby BobGo pickup locations where the seller can drop off your order."
+              showCardLayout={false}
+            />
+
+            {/* Selected Locker Summary */}
+            {selectedLocker && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-medium text-green-800 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Selected: {selectedLocker.name}
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  {selectedLocker.address || selectedLocker.full_address}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {!selectedDelivery && (
         <Alert>
