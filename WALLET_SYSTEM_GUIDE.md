@@ -129,27 +129,34 @@ Seller Wallet Balance
 - encrypted_bank_details
 ```
 
+## Listing Requirements
+
+**Banking is now optional!** Sellers only need:
+- ✅ **Pickup Address** (required for book collection and delivery)
+- ⚠️ Banking Details (optional - use wallet as fallback)
+
 ## Seller Experience Timeline
 
-### Seller WITH Banking Setup:
+### Seller WITH Banking Setup (Recommended):
 ```
-1. Seller sets up banking details ✓
-2. Buyer purchases book
-3. Buyer confirms delivery
-   → Platform schedules bank transfer
-   → Money automatically sent to seller's bank account within 24-48 hours
-4. Seller receives payment directly (no extra steps)
+1. Add pickup address ✓
+2. Set up banking details ✓
+3. List books
+4. Buyer purchases and confirms delivery
+   → Payment sent directly to seller's bank account within 24-48 hours
+5. Seller receives payment with no extra steps
 ```
 
-### Seller WITHOUT Banking Setup:
+### Seller WITHOUT Banking Setup (Use Wallet):
 ```
-1. Seller lists book (no banking required yet)
-2. Buyer purchases book
-3. Buyer confirms delivery
-   → Money added to seller's wallet
-4. Seller can now either:
+1. Add pickup address ✓
+2. List books (no banking required!)
+3. Buyer purchases and confirms delivery
+   → Money added to seller's wallet immediately
+4. Seller can either:
    a) Set up banking → Request payout from wallet
-   b) Keep in wallet for future purchases or transfers
+   b) Keep balance in wallet for future use
+   c) Use wallet credit towards future purchases
 ```
 
 ## For Platform Admin
