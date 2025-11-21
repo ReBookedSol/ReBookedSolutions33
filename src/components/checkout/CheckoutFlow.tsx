@@ -402,7 +402,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           const { getUserAddresses } = await import("@/services/addressService");
           const full = await getUserAddresses(user.id);
           const sa: any = full?.shipping_address || full?.pickup_address;
-          if (sa?.street && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
+          if ((sa?.street || sa?.streetAddress) && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
             buyerAddress = {
               street: sa.street || sa.streetAddress,
               city: sa.city,
