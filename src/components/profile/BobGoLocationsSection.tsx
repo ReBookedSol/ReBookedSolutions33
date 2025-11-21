@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   MapPin,
   Loader2,
@@ -11,9 +12,12 @@ import {
   Phone,
   Navigation,
   Info,
+  Save,
 } from "lucide-react";
 import { fetchSuggestions, fetchAddressDetails, type Suggestion } from "@/services/addressAutocompleteService";
 import { getBobGoLocations, type BobGoLocation } from "@/services/bobgoLocationsService";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const BobGoLocationsSection: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
