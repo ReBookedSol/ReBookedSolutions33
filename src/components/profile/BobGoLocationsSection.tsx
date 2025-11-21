@@ -161,6 +161,11 @@ const BobGoLocationsSection: React.FC<BobGoLocationsSectionProps> = ({ onLockerS
       toast.success("Locker saved! 🎉", {
         description: `${location.name} is now saved to your profile`,
       });
+
+      // Trigger parent component to reload saved locker
+      if (onLockerSaved) {
+        setTimeout(() => onLockerSaved(), 100);
+      }
     } catch (error) {
       console.error("Error saving locker:", error);
       toast.error("Failed to save locker to profile");
