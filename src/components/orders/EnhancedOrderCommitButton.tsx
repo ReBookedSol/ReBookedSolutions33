@@ -140,8 +140,11 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     try {
       console.log(`🚀 Committing to sale for order: ${orderId} with delivery method: ${deliveryMethod}`);
 
-      if (deliveryMethod === "locker" && selectedLocker) {
-        console.log(`📍 Using locker: ${selectedLocker.id} - ${selectedLocker.name}`);
+      // Use saved locker if no custom locker selected and we're not changing
+      const lockerToUse = selectedLocker || (savedLocker && !wantToChangeLocker ? savedLocker : null);
+
+      if (deliveryMethod === "locker" && lockerToUse) {
+        console.log(`📍 Using locker: ${lockerToUse.id} - ${lockerToUse.name}`);
       }
 
       // Prepare the commit data with delivery method and locker info
@@ -149,10 +152,10 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
         order_id: orderId,
         seller_id: sellerId,
         delivery_method: deliveryMethod,
-        ...(deliveryMethod === "locker" && selectedLocker ? {
-          locker_id: selectedLocker.id,
-          locker_name: selectedLocker.name,
-          locker_address: selectedLocker.address || selectedLocker.full_address,
+        ...(deliveryMethod === "locker" && lockerToUse ? {
+          locker_id: lockerToUse.id,
+          locker_name: lockerToUse.name,
+          locker_address: lockerToUse.address || lockerToUse.full_address,
         } : {}),
       };
 
