@@ -139,20 +139,13 @@ export const getAllDeliveryQuotes = async (
   request: UnifiedQuoteRequest,
 ): Promise<UnifiedQuote[]> => {
   try {
-    const body = {
+    const body: any = {
       fromAddress: {
         suburb: request.from.suburb || request.from.city,
         province: toProvinceCode(request.from.province),
         postalCode: request.from.postalCode,
         streetAddress: request.from.streetAddress,
         city: request.from.city,
-      },
-      toAddress: {
-        suburb: request.to.suburb || request.to.city,
-        province: toProvinceCode(request.to.province),
-        postalCode: request.to.postalCode,
-        streetAddress: request.to.streetAddress,
-        city: request.to.city,
       },
       parcels: [
         {
@@ -165,6 +158,24 @@ export const getAllDeliveryQuotes = async (
       ],
       serviceType: request.service_type || "standard",
     };
+
+    // If delivery locker is specified, use it instead of toAddress
+    if (request.deliveryLocker) {
+      body.deliveryPickupPoint = {
+        locationId: request.deliveryLocker.locationId,
+        providerSlug: request.deliveryLocker.providerSlug,
+      };
+      console.log("🚀 Calculating rates to locker:", request.deliveryLocker);
+    } else {
+      body.toAddress = {
+        suburb: request.to.suburb || request.to.city,
+        province: toProvinceCode(request.to.province),
+        postalCode: request.to.postalCode,
+        streetAddress: request.to.streetAddress,
+        city: request.to.city,
+      };
+      console.log("🚀 Calculating rates to address:", request.to.city);
+    }
 
     const { data, error } = await supabase.functions.invoke("bobgo-get-rates", { body });
     if (error) throw new Error(error.message);
