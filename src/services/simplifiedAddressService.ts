@@ -78,7 +78,8 @@ const decryptAddress = async (params: { table: string; target_id: string; addres
       .maybeSingle();
 
     if (fetchError) {
-      console.error("❌ Error fetching encrypted data:", fetchError);
+      const errorMsg = fetchError instanceof Error ? fetchError.message : JSON.stringify(fetchError);
+      console.error("❌ Error fetching encrypted data:", errorMsg);
       return null;
     }
 
