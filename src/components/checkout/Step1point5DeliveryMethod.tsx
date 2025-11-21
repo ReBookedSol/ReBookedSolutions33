@@ -169,11 +169,14 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
     if (deliveryMethod === "home") {
       onSelectDeliveryMethod("home", null);
     } else if (deliveryMethod === "locker") {
-      if (!selectedLocker) {
+      // Use saved locker if no custom locker selected and we're not changing
+      const lockerToUse = selectedLocker || (savedLocker && !wantToChangeLocker ? savedLocker : null);
+
+      if (!lockerToUse) {
         toast.error("Please select a locker location");
         return;
       }
-      onSelectDeliveryMethod("locker", selectedLocker);
+      onSelectDeliveryMethod("locker", lockerToUse);
     }
   };
 
