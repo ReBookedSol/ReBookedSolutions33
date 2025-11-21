@@ -306,7 +306,7 @@ serve(async (req) => {
       );
     }
 
-    // Get seller details for email notification
+    // Get seller details and create notifications
     try {
       const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
 
@@ -326,6 +326,21 @@ serve(async (req) => {
             .single();
 
           const newBalance = walletData?.available_balance || creditAmount;
+
+          // Create in-app notification for seller
+          try {
+            await supabase.from("notifications").insert({
+              user_id: seller_id,
+              type: "success",
+              title: "💰 Payment Received!",
+              message: `Credit of R${(creditAmount / 100).toFixed(2)} has been added to your wallet for "${order.books?.title || 'Unknown Book'}". New balance: R${(newBalance / 100).toFixed(2)}`,
+              order_id: order_id,
+              action_required: false
+            });
+          } catch (notificationError) {
+            console.error("Error creating in-app notification:", notificationError);
+            // Don't fail the whole operation if notification fails
+          }
 
           // Send email notification
           try {
@@ -355,8 +370,8 @@ serve(async (req) => {
         }
       }
     } catch (error) {
-      console.error("Error in email notification process:", error);
-      // Don't fail the whole operation if email notification fails
+      console.error("Error in email and notification process:", error);
+      // Don't fail the whole operation if email/notification fails
     }
 
     return jsonResponse(
