@@ -190,19 +190,17 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
             }
           }}>
             {/* Home Delivery Option */}
-            <div
+            <Label
               className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
                 deliveryMethod === "home"
                   ? "bg-blue-50 border-blue-500"
                   : "bg-gray-50 border-gray-200 hover:border-blue-300"
               }`}
-              onClick={() => {
-                setDeliveryMethod("home");
-                setSelectedLocker(null);
-              }}
+              htmlFor="home-delivery"
             >
               <RadioGroupItem
                 value="home"
+                id="home-delivery"
                 className="mt-1 flex-shrink-0 cursor-pointer"
               />
               <div className="flex-1">
@@ -214,21 +212,20 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   The seller will arrange courier pickup from their address. The book will be delivered to your address.
                 </p>
               </div>
-            </div>
+            </Label>
 
             {/* Locker Drop-Off Option */}
-            <div
+            <Label
               className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
                 deliveryMethod === "locker"
                   ? "bg-purple-50 border-purple-500"
                   : "bg-gray-50 border-gray-200 hover:border-purple-300"
               }`}
-              onClick={() => {
-                setDeliveryMethod("locker");
-              }}
+              htmlFor="locker-delivery"
             >
               <RadioGroupItem
                 value="locker"
+                id="locker-delivery"
                 className="mt-1 flex-shrink-0 cursor-pointer"
               />
               <div className="flex-1">
@@ -248,7 +245,7 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   </Badge>
                 )}
               </div>
-            </div>
+            </Label>
           </RadioGroup>
         </CardContent>
       </Card>
