@@ -45,10 +45,21 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
+  const [lockerRatesLoading, setLockerRatesLoading] = useState(false);
 
   useEffect(() => {
     fetchDeliveryOptions();
   }, [buyerAddress, sellerAddress]);
+
+  useEffect(() => {
+    // Recalculate rates when a locker is selected
+    if (selectedLocker && selectedDelivery?.courier === "bobgo") {
+      recalculateRatesForLocker(selectedLocker);
+    } else if (!selectedLocker && selectedDelivery?.courier === "bobgo") {
+      // Revert to original home delivery rates if locker is deselected
+      fetchDeliveryOptions();
+    }
+  }, [selectedLocker]);
 
   const fetchDeliveryOptions = async () => {
     setLoading(true);
