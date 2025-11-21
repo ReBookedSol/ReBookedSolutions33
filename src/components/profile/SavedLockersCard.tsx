@@ -31,7 +31,6 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
   const [isLoadingLockers, setIsLoadingLockers] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     loadSavedLockers();
