@@ -39,6 +39,11 @@ export interface UnifiedShipmentRequest {
   service_level_code?: string; // from quote
 }
 
+export interface UnifiedPickupPoint {
+  locationId: string;
+  providerSlug: string;
+}
+
 export interface UnifiedQuoteRequest {
   from: UnifiedAddress;
   to: UnifiedAddress;
@@ -47,6 +52,7 @@ export interface UnifiedQuoteRequest {
   width?: number;
   height?: number;
   service_type?: "standard" | "express" | "overnight";
+  deliveryLocker?: UnifiedPickupPoint;
 }
 
 export interface UnifiedQuote {
