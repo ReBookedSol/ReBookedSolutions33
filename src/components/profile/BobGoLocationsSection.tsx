@@ -129,8 +129,8 @@ const BobGoLocationsSection: React.FC = () => {
 
       if (error) throw error;
 
-      toast.success("Locker saved to your profile! 🎉", {
-        description: `${location.name} is now saved`,
+      toast.success("Locker saved! 🎉", {
+        description: `${location.name} is now saved to your profile`,
       });
     } catch (error) {
       console.error("Error saving locker:", error);
