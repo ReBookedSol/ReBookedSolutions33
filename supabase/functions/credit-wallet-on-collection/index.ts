@@ -380,19 +380,16 @@ serve(async (req) => {
 
           // Send email notification
           try {
-            await supabase.functions.invoke('send-email', {
-              body: {
+            await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+              },
+              body: JSON.stringify({
                 to: sellerEmail,
                 subject: '💰 Payment Received - Credit Added to Your Account - ReBooked Solutions',
                 html: generateSellerCreditEmailHTML({
-                  sellerName,
-                  bookTitle: order.books?.title || 'Unknown Book',
-                  bookPrice,
-                  creditAmount,
-                  orderId: order_id,
-                  newBalance: newBalance / 100, // Convert from cents to rands
-                }),
-                text: generateSellerCreditEmailText({
                   sellerName,
                   bookTitle: order.books?.title || 'Unknown Book',
                   bookPrice: bookPrice / 100, // Convert from cents to rands
@@ -400,7 +397,7 @@ serve(async (req) => {
                   orderId: order_id,
                   newBalance: newBalance / 100, // Convert from cents to rands
                 }),
-              },
+              }),
             });
           } catch (emailError) {
             console.error("Error sending credit notification email:", emailError);
