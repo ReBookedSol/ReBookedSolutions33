@@ -398,8 +398,15 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-gray-700">
-              If you'd like the seller to drop off at a BobGo locker instead of home delivery, search below to find and select a nearby location.
+              If you'd like the seller to drop off at a BobGo locker instead of home delivery, search below to find and select a nearby location. Rates will be updated to reflect the locker location.
             </p>
+
+            {lockerRatesLoading && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                <span className="text-sm text-blue-700">Updating rates for locker location...</span>
+              </div>
+            )}
 
             <BobGoLockerSelector
               onLockerSelect={setSelectedLocker}
@@ -419,6 +426,11 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
                 <p className="text-xs text-green-700 mt-1">
                   {selectedLocker.address || selectedLocker.full_address}
                 </p>
+                {selectedLocker.provider_slug && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Provider: {selectedLocker.pickup_point_provider_name || selectedLocker.provider_slug}
+                  </p>
+                )}
               </div>
             )}
           </CardContent>
