@@ -47,23 +47,22 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("preferred_delivery_locker_data, preferred_pickup_locker_data")
+        .select("preferred_delivery_locker_data")
         .eq("id", user.id)
         .single();
 
       if (error) {
-        console.warn("Failed to load saved lockers:", error);
+        console.warn("Failed to load saved locker:", error);
         return;
       }
 
       if (profile?.preferred_delivery_locker_data) {
-        setSavedDeliveryLocker(profile.preferred_delivery_locker_data as BobGoLocation);
-      }
-      if (profile?.preferred_pickup_locker_data) {
-        setSavedPickupLocker(profile.preferred_pickup_locker_data as BobGoLocation);
+        setSavedLocker(profile.preferred_delivery_locker_data as BobGoLocation);
+      } else {
+        setSavedLocker(null);
       }
     } catch (error) {
-      console.error("Error loading saved lockers:", error);
+      console.error("Error loading saved locker:", error);
     } finally {
       setIsLoadingLockers(false);
     }
