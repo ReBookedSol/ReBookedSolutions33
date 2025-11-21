@@ -71,10 +71,11 @@ When a buyer confirms delivery but seller has no banking details:
 Order Received
     ↓
 Check: Does seller have ACTIVE banking details?
-    ├─ YES → Schedule bank transfer (no wallet credit)
-    │         Transaction: type='scheduled_bank_transfer', status='pending'
+    ├─ YES → Send "Payment on the way" email
+    │         NO wallet entry created
+    │         Money goes directly to bank account
     │
-    └─ NO → Add to wallet (fallback)
+    └─ NO → Add credit to wallet (fallback)
             Transaction: type='credit', status='completed'
             Available Balance increases
 ```
