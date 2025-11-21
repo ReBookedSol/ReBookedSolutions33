@@ -107,6 +107,41 @@ const BobGoLocationsSection: React.FC = () => {
     }
   }, [showDropdown]);
 
+  // Save locker to profile
+  const handleSaveLockerToProfile = async (location: BobGoLocation) => {
+    try {
+      setSavingLockerId(location.id || "");
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to save a locker");
+        return;
+      }
+
+      const column = saveType === "delivery"
+        ? { preferred_delivery_locker_data: location, preferred_delivery_locker_saved_at: new Date().toISOString() }
+        : { preferred_pickup_locker_data: location, preferred_pickup_locker_saved_at: new Date().toISOString() };
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(column)
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Locker saved to your profile! 🎉", {
+        description: `${location.name} is now saved as your ${saveType} locker`,
+      });
+    } catch (error) {
+      console.error("Error saving locker:", error);
+      toast.error("Failed to save locker to profile");
+    } finally {
+      setSavingLockerId(null);
+    }
+  };
+
   return (
     <Card className="border-2 border-purple-100 hover:shadow-lg transition-shadow">
       <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
