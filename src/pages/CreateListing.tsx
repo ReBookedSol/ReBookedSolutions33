@@ -195,17 +195,10 @@ const CreateListing = () => {
       return;
     }
 
-    // Check if user can list books before validating form
+    // Check if user can list books before validating form (address is required)
     if (canListBooks === false) {
       toast.error("❌ Please add a pickup address before listing your book.");
-      navigate("/profile");
-      return;
-    }
-
-    // Check banking requirements
-    if (!canProceedWithBanking) {
-      toast.error("❌ Please complete banking setup and address verification before listing your book.");
-      navigate("/profile");
+      navigate("/profile?tab=addresses");
       return;
     }
 
