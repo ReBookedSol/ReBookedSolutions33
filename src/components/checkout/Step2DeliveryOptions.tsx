@@ -106,6 +106,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
           locationId: locker.id || "",
           providerSlug: locker.provider_slug || "",
         },
+        user_id: user?.id,
       });
 
       setQuotes(quotesResp);
