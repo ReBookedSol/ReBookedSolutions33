@@ -23,15 +23,15 @@ Example:
 When a buyer confirms delivery (clicks "Yes, I received it"):
 
 1. System checks if seller has **active banking details** set up
-2. If YES → Payment is **scheduled for direct bank transfer**
-   - Amount is recorded as `scheduled_bank_transfer` in wallet_transactions
-   - Status: `pending` (waiting to be processed)
-   - Money goes DIRECTLY to their bank account
-   - No wallet credit is created
+2. If YES:
+   - Email sent: "Payment on the way" notification to seller
+   - **No wallet credit is added**
+   - Money will be sent directly to their registered bank account
+   - No additional database entries needed
 
 **Timeline:**
-- Buyer confirms delivery → Bank transfer scheduled
-- Platform processes → Money sent to seller's bank account
+- Buyer confirms delivery → "Payment on the way" email sent
+- Platform processes → Money sent directly to seller's bank account
 - Seller receives payment directly (no wallet step needed)
 
 #### Route B: Seller NO Banking Details ⚠️
