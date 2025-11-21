@@ -44,6 +44,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   const [quotes, setQuotes] = useState<UnifiedQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
 
   useEffect(() => {
     fetchDeliveryOptions();
