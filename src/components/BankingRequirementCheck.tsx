@@ -43,7 +43,7 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
 
     try {
       setLoading(true);
-      console.log("🔍 Checking banking requirements for user:", user.id, forceRefresh ? "(forced refresh)" : "");
+      console.log("🔍 Checking listing requirements for user:", user.id, forceRefresh ? "(forced refresh)" : "");
 
       // Check banking details directly from banking_subaccounts table (looking for active status)
       const { data: bankingDetails } = await supabase
@@ -68,30 +68,24 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
         status: bankingDetails?.status
       }, "📍 Address result:", requirements);
 
+      // Banking is now optional - sellers can use wallet as fallback payment method
       const status: BankingRequirementsStatus = {
         hasBankingInfo: hasBankingSetup,
         hasPickupAddress: requirements.hasPickupAddress,
         isVerified: hasBankingActive,
-        canListBooks: hasBankingActive && requirements.hasPickupAddress,
+        // Only address is required now (banking is optional due to wallet system)
+        canListBooks: requirements.hasPickupAddress,
         missingRequirements: [
-          ...(hasBankingSetup ? [] : ["Banking details required for payments"]),
           ...(requirements.hasPickupAddress ? [] : ["Pickup address required for book collection"]),
         ],
       };
 
-      console.log("📊 Final banking status:", status);
-
-      // If banking is still missing but user claims they just added it, try one more time
-      if (!status.hasBankingInfo && !forceRefresh) {
-        console.log("🔄 Banking not detected, trying forced refresh...");
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
-        return checkRequirements(true);
-      }
+      console.log("📊 Final listing requirements status:", status);
 
       setBankingStatus(status);
       onCanProceed(status.canListBooks);
     } catch (error) {
-      console.error("Error checking banking requirements:", error);
+      console.error("Error checking listing requirements:", error);
       onCanProceed(false);
     } finally {
       setLoading(false);
