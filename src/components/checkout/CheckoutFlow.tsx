@@ -651,12 +651,14 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
   const getProgressValue = () => {
     switch (checkoutState.step.current) {
       case 1:
-        return 25;
+        return 20;
       case 2:
-        return 50;
+        return 40;
       case 3:
-        return 75;
+        return 60;
       case 4:
+        return 80;
+      case 5:
         return 100;
       default:
         return 0;
@@ -668,10 +670,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       case 1:
         return "Order Summary";
       case 2:
-        return "Delivery Options";
+        return "Delivery Method";
       case 3:
-        return "Payment";
+        return "Delivery Options";
       case 4:
+        return "Payment";
+      case 5:
         return "Confirmation";
       default:
         return "Checkout";
