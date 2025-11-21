@@ -438,26 +438,65 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
 
                   {/* Locker Selection UI - Only show if locker method is selected */}
                   {deliveryMethod === "locker" && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <BobGoLockerSelector
-                      onLockerSelect={setSelectedLocker}
-                      selectedLockerId={selectedLocker?.id}
-                      title="Select a Locker Location"
-                      description="Search for an address and select a nearby locker location for drop-off"
-                      showCardLayout={false}
-                    />
-
-                    {/* Selected Locker Summary */}
-                    {selectedLocker && (
-                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm font-medium text-green-800 flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4" />
-                          Selected: {selectedLocker.name}
-                        </p>
-                        <p className="text-xs text-green-700 mt-1">
-                          {selectedLocker.address || selectedLocker.full_address}
-                        </p>
+                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                    {isLoadingSavedLocker ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
                       </div>
+                    ) : (
+                      <>
+                        {/* Show saved locker if available and not changing */}
+                        {savedLocker && !wantToChangeLocker && (
+                          <div className="p-4 bg-white border-2 border-green-300 rounded-lg">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
+                                  <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                  Your Saved Locker
+                                </p>
+                                <p className="text-sm text-gray-700 mt-2">{savedLocker.name}</p>
+                                <p className="text-xs text-gray-500 mt-1">{savedLocker.address || savedLocker.full_address}</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setWantToChangeLocker(true)}
+                              className="mt-3 w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                            >
+                              Change Locker
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Search for lockers if no saved locker or user wants to change */}
+                        {!savedLocker || wantToChangeLocker ? (
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium text-gray-700">
+                              {savedLocker && wantToChangeLocker ? "Search for a different locker:" : "Search for a locker near you:"}
+                            </p>
+                            <BobGoLockerSelector
+                              onLockerSelect={setSelectedLocker}
+                              selectedLockerId={selectedLocker?.id}
+                              title="Select a Locker Location"
+                              description="Search for an address and select a nearby locker location for drop-off"
+                              showCardLayout={false}
+                            />
+                          </div>
+                        ) : null}
+
+                        {/* Selected Locker Summary - Only show if searching for different locker */}
+                        {selectedLocker && selectedLocker.id !== savedLocker?.id && (
+                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm font-medium text-blue-800 flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4" />
+                              Selected: {selectedLocker.name}
+                            </p>
+                            <p className="text-xs text-blue-700 mt-1">
+                              {selectedLocker.address || selectedLocker.full_address}
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                   )}
