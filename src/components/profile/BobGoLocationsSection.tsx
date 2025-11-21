@@ -153,8 +153,35 @@ const BobGoLocationsSection: React.FC = () => {
       <CardContent className="p-6">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Find and select a nearby BobGo pickup location for your deliveries
+            Find and select a nearby BobGo pickup location to save to your profile
           </p>
+
+          {/* Locker Type Selector */}
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-sm font-medium text-gray-700">Save as:</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSaveType("delivery")}
+                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                  saveType === "delivery"
+                    ? "bg-purple-600 text-white"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                Delivery Locker
+              </button>
+              <button
+                onClick={() => setSaveType("pickup")}
+                className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                  saveType === "pickup"
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                Pickup Locker
+              </button>
+            </div>
+          </div>
 
           {/* Address Search Input */}
           <div className="relative" ref={dropdownRef}>
