@@ -232,20 +232,20 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
     );
   }
 
-  if (!savedDeliveryLocker && !savedPickupLocker) {
+  if (!savedLocker) {
     return (
       <Card className="border-2 border-gray-100">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-gray-600" />
-            Saved Lockers
+            Saved Locker
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              No saved locker locations yet. Save a locker during checkout to see it here.
+              No saved locker location yet. Save a locker during checkout or search to see it here.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -254,47 +254,11 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
   }
 
   return (
-    <Card className="border-2 border-gray-100">
-      <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-gray-600" />
-          Saved Lockers
-          <Badge className="bg-blue-100 text-blue-800">
-            {(savedDeliveryLocker ? 1 : 0) + (savedPickupLocker ? 1 : 0)}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="space-y-6">
-          {savedDeliveryLocker && (
-            <LockerCard
-              locker={savedDeliveryLocker}
-              type="delivery"
-              isDeleting={isDeletingDelivery}
-              onDelete={handleDeleteDeliveryLocker}
-            />
-          )}
-
-          {savedPickupLocker && (
-            <LockerCard
-              locker={savedPickupLocker}
-              type="pickup"
-              isDeleting={isDeletingPickup}
-              onDelete={handleDeletePickupLocker}
-            />
-          )}
-
-          {(savedDeliveryLocker || savedPickupLocker) && (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                These saved lockers will be suggested during checkout for faster ordering.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <LockerCard
+      locker={savedLocker}
+      isDeleting={isDeleting}
+      onDelete={handleDeleteLocker}
+    />
   );
 };
 
