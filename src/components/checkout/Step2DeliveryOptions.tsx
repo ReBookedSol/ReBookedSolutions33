@@ -43,6 +43,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   selectedDelivery,
   preSelectedLocker,
 }) => {
+  const { user } = useAuth();
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
   const [quotes, setQuotes] = useState<UnifiedQuote[]>([]);
   const [loading, setLoading] = useState(true);
