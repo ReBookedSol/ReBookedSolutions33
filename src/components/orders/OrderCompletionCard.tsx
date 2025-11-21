@@ -16,6 +16,8 @@ interface OrderCompletionCardProps {
   sellerName: string;
   deliveredDate?: string;
   onFeedbackSubmitted?: (feedback: any) => void;
+  totalAmount?: number;
+  sellerId?: string;
 }
 
 const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
@@ -24,6 +26,8 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
   sellerName,
   deliveredDate,
   onFeedbackSubmitted,
+  totalAmount = 0,
+  sellerId = "",
 }) => {
   const [receivedStatus, setReceivedStatus] = useState<"received" | "not_received" | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -185,11 +189,12 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
       toast.success("Feedback submitted successfully!");
 
       // Credit seller wallet if order is marked as received
-      if (receivedStatus === "received") {
+      if (receivedStatus === "received" && sellerId && totalAmount) {
         try {
           const walletResult = await WalletService.creditWalletOnCollection(
             orderId,
-            order.seller_id
+            sellerId,
+            totalAmount
           );
 
           if (walletResult.success) {
