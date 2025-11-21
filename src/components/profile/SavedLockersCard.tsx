@@ -198,15 +198,15 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
                       {key === "phone" || key === "contact_phone" ? (
                         <>
                           <Phone className="h-3.5 w-3.5" />
-                          {key.replace(/_/g, " ")}
+                          {formatFieldName(key)}
                         </>
                       ) : key === "trading_hours" ? (
                         <>
                           <Clock className="h-3.5 w-3.5" />
-                          {key.replace(/_/g, " ")}
+                          {formatFieldName(key)}
                         </>
                       ) : (
-                        key.replace(/_/g, " ")
+                        formatFieldName(key)
                       )}
                     </p>
                     {key === "phone" || key === "contact_phone" ? (
@@ -216,8 +216,12 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
                       >
                         {renderFieldValue(value)}
                       </a>
+                    ) : typeof value === "object" ? (
+                      <pre className="text-sm text-gray-700 mt-1 bg-gray-50 p-2 rounded border border-gray-200 overflow-x-auto font-mono">
+                        {renderFieldValue(value)}
+                      </pre>
                     ) : (
-                      <p className="text-sm text-gray-700 mt-1">
+                      <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
                         {renderFieldValue(value)}
                       </p>
                     )}
