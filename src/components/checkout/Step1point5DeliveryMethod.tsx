@@ -52,11 +52,11 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
   }, []);
 
   // Auto-select delivery method and locker when clicking locker option
-  const handleSelectLockerMethod = () => {
+  const handleSelectLockerMethod = (currentSavedLocker: BobGoLocation | null) => {
     setDeliveryMethod("locker");
     // Automatically select the saved locker if it exists
-    if (savedLocker && !wantToChangeLocker) {
-      setSelectedLocker(savedLocker);
+    if (currentSavedLocker) {
+      setSelectedLocker(currentSavedLocker);
     }
   };
 
