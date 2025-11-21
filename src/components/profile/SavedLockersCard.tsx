@@ -188,38 +188,38 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             {/* Left: Image Section */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex justify-center sm:justify-start">
               {(locker.image_url || locker.pickup_point_provider_logo_url) ? (
                 <img
                   src={locker.image_url || locker.pickup_point_provider_logo_url}
                   alt={locker.name}
-                  className="h-32 w-32 object-cover rounded-lg border border-gray-200 shadow-sm"
+                  className="h-28 w-28 sm:h-32 sm:w-32 object-cover rounded-lg border border-gray-200 shadow-sm"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
               ) : (
-                <div className="h-32 w-32 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                <div className="h-28 w-28 sm:h-32 sm:w-32 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0">
                   <MapPin className="h-8 w-8 text-gray-400" />
                 </div>
               )}
             </div>
 
             {/* Right: Information Section */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1">
               {/* Main Location Info */}
               <div className="mb-3">
-                <h3 className="font-bold text-base text-gray-900 mb-0.5 line-clamp-2">{locker.name || "—"}</h3>
-                <p className="text-xs text-gray-600 line-clamp-2">
+                <h3 className="font-bold text-base text-gray-900 mb-1 break-words">{locker.name || "—"}</h3>
+                <p className="text-xs text-gray-600 break-words">
                   {locker.full_address || locker.address || "—"}
                 </p>
               </div>
 
               {/* Fields Grid */}
               {fields.length > 0 && (
-                <div className="grid grid-cols-2 gap-3 text-xs max-h-32 overflow-y-auto pr-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-3">
                   {fields.map(([key, value]) => {
                     // Skip certain verbose fields
                     if (["description", "lat", "lng", "provider_id", "type"].includes(key)) {
@@ -227,35 +227,35 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
                     }
 
                     return (
-                      <div key={key} className="flex flex-col">
-                        <p className="font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                      <div key={key} className="flex flex-col min-w-0">
+                        <p className="font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1 mb-1 flex-wrap">
                           {key === "phone" || key === "contact_phone" ? (
                             <>
                               <Phone className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{formatFieldName(key)}</span>
+                              <span>{formatFieldName(key)}</span>
                             </>
                           ) : key === "trading_hours" ? (
                             <>
                               <Clock className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{formatFieldName(key)}</span>
+                              <span>{formatFieldName(key)}</span>
                             </>
                           ) : (
-                            <span className="truncate">{formatFieldName(key)}</span>
+                            <span>{formatFieldName(key)}</span>
                           )}
                         </p>
                         {key === "phone" || key === "contact_phone" ? (
                           <a
                             href={`tel:${value}`}
-                            className="text-purple-600 hover:text-purple-700 font-medium truncate text-xs"
+                            className="text-purple-600 hover:text-purple-700 font-medium break-words text-xs"
                           >
                             {renderFieldValue(value)}
                           </a>
                         ) : typeof value === "object" ? (
-                          <span className="text-gray-600 text-xs truncate">
-                            {JSON.stringify(value).substring(0, 40)}...
+                          <span className="text-gray-600 text-xs break-words">
+                            {JSON.stringify(value)}
                           </span>
                         ) : (
-                          <p className="text-gray-700 text-xs truncate">
+                          <p className="text-gray-700 text-xs break-words">
                             {renderFieldValue(value)}
                           </p>
                         )}
@@ -266,7 +266,7 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+              <div className="flex gap-2 pt-3 border-t border-gray-100">
                 <Button
                   onClick={onDelete}
                   disabled={isDeleting}
