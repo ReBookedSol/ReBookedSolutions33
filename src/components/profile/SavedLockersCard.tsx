@@ -26,14 +26,15 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
   isLoading = false,
   onEdit,
 }) => {
-  const [savedDeliveryLocker, setSavedDeliveryLocker] = useState<BobGoLocation | null>(null);
-  const [savedPickupLocker, setSavedPickupLocker] = useState<BobGoLocation | null>(null);
+  const [savedLocker, setSavedLocker] = useState<BobGoLocation | null>(null);
   const [isLoadingLockers, setIsLoadingLockers] = useState(true);
-  const [isDeletingDelivery, setIsDeletingDelivery] = useState(false);
-  const [isDeletingPickup, setIsDeletingPickup] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadSavedLockers();
+    // Reload every 2 seconds to pick up changes from other components
+    const interval = setInterval(loadSavedLockers, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadSavedLockers = async () => {
