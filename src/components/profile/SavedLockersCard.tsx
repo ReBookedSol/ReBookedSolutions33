@@ -142,8 +142,14 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
         }
         return "—";
       }
-      if (typeof value === "object") return JSON.stringify(value);
+      if (typeof value === "object") return JSON.stringify(value, null, 2);
       return String(value);
+    };
+
+    const formatFieldName = (key: string): string => {
+      return key
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
     };
 
     // Get all locker fields, excluding empty values and certain fields
@@ -154,8 +160,7 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
           !excludeFields.includes(key) &&
           value !== null &&
           value !== undefined &&
-          value !== "" &&
-          typeof value !== "object"
+          value !== ""
       )
       .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
 
