@@ -44,21 +44,21 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
   const [savedLocker, setSavedLocker] = useState<BobGoLocation | null>(null);
   const [isLoadingSavedLocker, setIsLoadingSavedLocker] = useState(true);
   const [isSavingLocker, setIsSavingLocker] = useState(false);
-  const [hasAutoSelectedLocker, setHasAutoSelectedLocker] = useState(false);
+  const [wantToChangeLocker, setWantToChangeLocker] = useState(false);
 
   // Load saved locker from profile on mount
   useEffect(() => {
     loadSavedLocker();
   }, []);
 
-  // Auto-select delivery method based on saved locker - only on first load
-  useEffect(() => {
-    if (savedLocker && !hasAutoSelectedLocker) {
-      setDeliveryMethod("locker");
-      setSelectedLocker(savedLocker);
-      setHasAutoSelectedLocker(true);
+  // Auto-select delivery method and locker when clicking locker option
+  const handleSelectLockerMethod = (currentSavedLocker: BobGoLocation | null) => {
+    setDeliveryMethod("locker");
+    // Automatically select the saved locker if it exists
+    if (currentSavedLocker) {
+      setSelectedLocker(currentSavedLocker);
     }
-  }, [savedLocker]);
+  };
 
   const loadSavedLocker = async () => {
     try {
@@ -168,11 +168,14 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
     if (deliveryMethod === "home") {
       onSelectDeliveryMethod("home", null);
     } else if (deliveryMethod === "locker") {
-      if (!selectedLocker) {
+      // Use saved locker if no custom locker selected and we're not changing
+      const lockerToUse = selectedLocker || (savedLocker && !wantToChangeLocker ? savedLocker : null);
+
+      if (!lockerToUse) {
         toast.error("Please select a locker location");
         return;
       }
-      onSelectDeliveryMethod("locker", selectedLocker);
+      onSelectDeliveryMethod("locker", lockerToUse);
     }
   };
 
@@ -261,16 +264,14 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   ? "bg-purple-50 border-purple-500"
                   : "bg-gray-50 border-gray-200 hover:border-purple-300"
               }`}
-              onClick={() => {
-                setDeliveryMethod("locker");
-              }}
+              onClick={() => handleSelectLockerMethod(savedLocker)}
               role="radio"
               aria-checked={deliveryMethod === "locker"}
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  setDeliveryMethod("locker");
+                  handleSelectLockerMethod(savedLocker);
                 }
               }}
             >
@@ -312,49 +313,51 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <MapPin className="w-5 h-5 text-purple-600" />
-              Select Your Pickup Location
+              {savedLocker && !wantToChangeLocker ? "Your Pickup Location" : "Select Your Pickup Location"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Show saved locker option if available */}
-            {savedLocker && (
+            {/* Show saved locker option if available and not changing */}
+            {savedLocker && !wantToChangeLocker && (
               <div className="p-4 bg-white border-2 border-green-300 rounded-lg">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
                       Your Saved Locker
                     </p>
-                    <p className="text-sm text-gray-700 mt-1">{savedLocker.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">{savedLocker.address}</p>
+                    <p className="text-sm text-gray-700 mt-2">{savedLocker.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">{savedLocker.address || savedLocker.full_address}</p>
                   </div>
-                  <Button
-                    variant={selectedLocker?.id === savedLocker.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedLocker(savedLocker)}
-                    className="flex-shrink-0"
-                  >
-                    {selectedLocker?.id === savedLocker.id ? "Selected" : "Use This"}
-                  </Button>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setWantToChangeLocker(true)}
+                  className="mt-4 w-full"
+                >
+                  Change Locker
+                </Button>
               </div>
             )}
 
-            {/* Search for other lockers */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">
-                {savedLocker ? "Search for a different locker:" : "Search for a locker near you:"}
-              </p>
-              <BobGoLockerSelector
-                onLockerSelect={setSelectedLocker}
-                selectedLockerId={selectedLocker?.id}
-                title="Find a Locker Location"
-                description="Enter an address and we'll show you nearby locker locations where you can pick up your order."
-                showCardLayout={false}
-              />
-            </div>
+            {/* Search for lockers if no saved locker or user wants to change */}
+            {!savedLocker || wantToChangeLocker ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">
+                  {savedLocker && wantToChangeLocker ? "Search for a different locker:" : "Search for a locker near you:"}
+                </p>
+                <BobGoLockerSelector
+                  onLockerSelect={setSelectedLocker}
+                  selectedLockerId={selectedLocker?.id}
+                  title="Find a Locker Location"
+                  description="Enter an address and we'll show you nearby locker locations where you can pick up your order."
+                  showCardLayout={false}
+                />
+              </div>
+            ) : null}
 
-            {/* Selected Locker Summary */}
+            {/* Selected Locker Summary - Only show if searching for different locker */}
             {selectedLocker && selectedLocker.id !== savedLocker?.id && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm font-medium text-blue-900 flex items-center gap-2">
@@ -394,7 +397,9 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                You can update your saved locker anytime by selecting a different location and clicking "Save to My Profile".
+                {savedLocker && !wantToChangeLocker
+                  ? "Your saved locker will be used for this delivery. Click 'Change Locker' to choose a different location."
+                  : "You can update your saved locker anytime by selecting a different location and clicking 'Save to My Profile'."}
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -417,7 +422,7 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
 
         <Button
           onClick={handleProceed}
-          disabled={loading || (deliveryMethod === "locker" && !selectedLocker)}
+          disabled={loading || (deliveryMethod === "locker" && !selectedLocker && !(savedLocker && !wantToChangeLocker))}
         >
           Next: Select Address
           <ArrowRight className="w-4 h-4 ml-2" />
