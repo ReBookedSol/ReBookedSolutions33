@@ -129,7 +129,7 @@ serve(async (req) => {
     }
 
     // No banking details - credit wallet as fallback payment method
-    const bookPrice = order.total_amount || 0;
+    const bookPrice = order.books?.price || 0;
 
     const { data: creditResult, error: creditError } = await supabase
       .rpc('credit_wallet_on_collection', {
