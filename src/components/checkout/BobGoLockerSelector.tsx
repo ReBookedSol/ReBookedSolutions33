@@ -31,8 +31,8 @@ interface BobGoLockerSelectorProps {
 const BobGoLockerSelector: React.FC<BobGoLockerSelectorProps> = ({
   onLockerSelect,
   selectedLockerId,
-  title = "BobGo Pickup Locations",
-  description = "Find and select a nearby BobGo pickup location for your deliveries",
+  title = "Select a Locker Location",
+  description = "Find and select a nearby locker location",
   showCardLayout = true,
 }) => {
   const [searchInput, setSearchInput] = useState("");
@@ -127,8 +127,8 @@ const BobGoLockerSelector: React.FC<BobGoLockerSelectorProps> = ({
 
       if (error) throw error;
 
-      toast.success("Locker saved to your profile! 🎉", {
-        description: `${location.name} is now your preferred delivery locker`,
+      toast.success("Locker saved! 🎉", {
+        description: `${location.name} is now saved to your profile`,
       });
     } catch (error) {
       console.error("Error saving locker:", error);

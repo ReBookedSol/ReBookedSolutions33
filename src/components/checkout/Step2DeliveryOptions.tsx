@@ -45,10 +45,82 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
+  const [lockerRatesLoading, setLockerRatesLoading] = useState(false);
 
   useEffect(() => {
     fetchDeliveryOptions();
   }, [buyerAddress, sellerAddress]);
+
+  useEffect(() => {
+    // Recalculate rates when a locker is selected
+    if (selectedLocker && selectedDelivery?.courier === "bobgo") {
+      recalculateRatesForLocker(selectedLocker);
+    } else if (!selectedLocker && selectedDelivery?.courier === "bobgo") {
+      // Revert to original home delivery rates if locker is deselected
+      fetchDeliveryOptions();
+    }
+  }, [selectedLocker]);
+
+  const recalculateRatesForLocker = async (locker: BobGoLocation) => {
+    setLockerRatesLoading(true);
+    setError(null);
+
+    try {
+      console.log("📍 Recalculating rates for locker delivery:", {
+        locker: locker.name,
+        locationId: locker.id,
+        providerSlug: locker.provider_slug,
+      });
+
+      const quotesResp = await getAllDeliveryQuotes({
+        from: {
+          streetAddress: sellerAddress.street,
+          suburb: sellerAddress.city,
+          city: sellerAddress.city,
+          province: sellerAddress.province,
+          postalCode: sellerAddress.postal_code,
+        },
+        to: {
+          streetAddress: buyerAddress.street,
+          suburb: buyerAddress.city,
+          city: buyerAddress.city,
+          province: buyerAddress.province,
+          postalCode: buyerAddress.postal_code,
+        },
+        weight: 1,
+        deliveryLocker: {
+          locationId: locker.id || "",
+          providerSlug: locker.provider_slug || "",
+        },
+      });
+
+      setQuotes(quotesResp);
+
+      const DELIVERY_MARKUP = 15;
+      const options: DeliveryOption[] = quotesResp.map((q) => ({
+        courier: "bobgo",
+        service_name: q.service_name,
+        price: q.cost + DELIVERY_MARKUP,
+        estimated_days: q.transit_days,
+        description: `${q.provider_name} - ${q.features?.join(", ") || "Tracked"}`,
+        zone_type: "locker",
+        provider_name: q.provider_name,
+        provider_slug: q.provider_slug,
+        service_level_code: q.service_level_code,
+      }));
+
+      if (options.length > 0) {
+        console.log("✅ Updated rates for locker delivery:", options);
+        setDeliveryOptions(options);
+      }
+    } catch (err) {
+      console.error("Error recalculating locker rates:", err);
+      setError("Failed to recalculate rates for locker delivery");
+      toast.warning("Could not update rates for locker");
+    } finally {
+      setLockerRatesLoading(false);
+    }
+  };
 
   const fetchDeliveryOptions = async () => {
     setLoading(true);
@@ -326,8 +398,15 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-gray-700">
-              If you'd like the seller to drop off at a BobGo locker instead of home delivery, search below to find and select a nearby location.
+              If you'd like the seller to drop off at a BobGo locker instead of home delivery, search below to find and select a nearby location. Rates will be updated to reflect the locker location.
             </p>
+
+            {lockerRatesLoading && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                <span className="text-sm text-blue-700">Updating rates for locker location...</span>
+              </div>
+            )}
 
             <BobGoLockerSelector
               onLockerSelect={setSelectedLocker}
@@ -347,6 +426,11 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
                 <p className="text-xs text-green-700 mt-1">
                   {selectedLocker.address || selectedLocker.full_address}
                 </p>
+                {selectedLocker.provider_slug && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Provider: {selectedLocker.pickup_point_provider_name || selectedLocker.provider_slug}
+                  </p>
+                )}
               </div>
             )}
           </CardContent>

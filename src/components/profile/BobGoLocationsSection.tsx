@@ -129,8 +129,8 @@ const BobGoLocationsSection: React.FC = () => {
 
       if (error) throw error;
 
-      toast.success("Locker saved to your profile! 🎉", {
-        description: `${location.name} is now saved`,
+      toast.success("Locker saved! 🎉", {
+        description: `${location.name} is now saved to your profile`,
       });
     } catch (error) {
       console.error("Error saving locker:", error);
@@ -145,13 +145,13 @@ const BobGoLocationsSection: React.FC = () => {
       <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
         <CardTitle className="flex items-center gap-2">
           <Navigation className="h-5 w-5 text-purple-600" />
-          BobGo Pickup Locations
+          Save a Locker Location
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Find and select a nearby BobGo pickup location to save to your profile
+            Find and save a nearby locker location for deliveries
           </p>
 
           {/* Address Search Input */}
