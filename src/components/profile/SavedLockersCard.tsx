@@ -86,11 +86,13 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
   const loadSavedLockers = async () => {
     try {
-      setIsLoadingLockers(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setIsLoadingLockers(false);
+        return;
+      }
 
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -100,6 +102,7 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
       if (error) {
         console.warn("Failed to load saved locker:", error);
+        setIsLoadingLockers(false);
         return;
       }
 
@@ -108,9 +111,9 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
       } else {
         setSavedLocker(null);
       }
+      setIsLoadingLockers(false);
     } catch (error) {
       console.error("Error loading saved locker:", error);
-    } finally {
       setIsLoadingLockers(false);
     }
   };
