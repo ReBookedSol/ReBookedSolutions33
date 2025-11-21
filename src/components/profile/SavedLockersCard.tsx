@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import {
   Loader2,
   Info,
   CheckCircle,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,68 +23,34 @@ interface SavedLockersCardProps {
   onEdit?: () => void;
 }
 
-const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
-  isLoading = false,
-  onEdit,
-}) => {
+const SavedLockersCard = forwardRef<
+  { loadSavedLockers: () => Promise<void> },
+  SavedLockersCardProps
+>(({ isLoading = false, onEdit }, ref) => {
   const [savedLocker, setSavedLocker] = useState<BobGoLocation | null>(null);
   const [isLoadingLockers, setIsLoadingLockers] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Expose loadSavedLockers function to parent component
+  useImperativeHandle(ref, () => ({
+    loadSavedLockers,
+  }), []);
+
+  // Load saved locker on mount
   useEffect(() => {
     loadSavedLockers();
-
-    let subscription: any = null;
-
-    const setupRealtimeListener = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) return;
-
-        // Create unique channel name with timestamp to avoid conflicts
-        const channelName = `profiles:${user.id}:${Date.now()}`;
-
-        subscription = supabase
-          .channel(channelName)
-          .on(
-            "postgres_changes",
-            {
-              event: "UPDATE",
-              schema: "public",
-              table: "profiles",
-              filter: `id=eq.${user.id}`,
-            },
-            (payload: any) => {
-              setSavedLocker(payload.new.preferred_delivery_locker_data || null);
-            }
-          )
-          .subscribe();
-      } catch (error) {
-        console.error("Error setting up realtime listener:", error instanceof Error ? error.message : String(error));
-      }
-    };
-
-    setupRealtimeListener();
-
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe().catch((err: any) => {
-          console.debug("Error unsubscribing from channel:", err instanceof Error ? err.message : String(err));
-        });
-      }
-    };
   }, []);
 
   const loadSavedLockers = async () => {
     try {
-      setIsLoadingLockers(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setIsLoadingLockers(false);
+        return;
+      }
 
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -93,6 +60,7 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
 
       if (error) {
         console.warn("Failed to load saved locker:", error);
+        setIsLoadingLockers(false);
         return;
       }
 
@@ -101,9 +69,9 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
       } else {
         setSavedLocker(null);
       }
+      setIsLoadingLockers(false);
     } catch (error) {
       console.error("Error loading saved locker:", error);
-    } finally {
       setIsLoadingLockers(false);
     }
   };
@@ -140,10 +108,12 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
     locker,
     isDeleting,
     onDelete,
+    onImageSelect,
   }: {
     locker: BobGoLocation;
     isDeleting: boolean;
     onDelete: () => void;
+    onImageSelect: (imageUrl: string) => void;
   }) => {
     const renderFieldValue = (value: any): string => {
       if (value === null || value === undefined) return "—";
@@ -168,7 +138,7 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
     const excludeFields = [
       "image_url",
       "pickup_point_provider_logo_url",
-      "address",  // Use full_address instead
+      "address",
       "compartment_errors",
       "human_name",
       "provider_slug",
@@ -209,14 +179,19 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
               {/* Image */}
               <div className="flex-shrink-0">
                 {(locker.image_url || locker.pickup_point_provider_logo_url) ? (
-                  <img
-                    src={locker.image_url || locker.pickup_point_provider_logo_url}
-                    alt={locker.name}
-                    className="h-24 w-24 object-cover rounded-lg border border-gray-200 shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                  <div
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => onImageSelect(locker.image_url || locker.pickup_point_provider_logo_url || "")}
+                  >
+                    <img
+                      src={locker.image_url || locker.pickup_point_provider_logo_url}
+                      alt={locker.name}
+                      className="h-24 w-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="h-24 w-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
                     <MapPin className="h-6 w-6 text-gray-400" />
@@ -342,12 +317,45 @@ const SavedLockersCard: React.FC<SavedLockersCardProps> = ({
   }
 
   return (
-    <LockerCard
-      locker={savedLocker}
-      isDeleting={isDeleting}
-      onDelete={handleDeleteLocker}
-    />
+    <>
+      <LockerCard
+        locker={savedLocker}
+        isDeleting={isDeleting}
+        onDelete={handleDeleteLocker}
+        onImageSelect={setSelectedImage}
+      />
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="bg-white rounded-lg max-w-2xl w-full shadow-xl">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Locker Image</h3>
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-light"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4 flex flex-col items-center justify-center max-h-96 overflow-auto">
+              <img
+                src={selectedImage}
+                alt="Locker location"
+                className="w-full h-auto rounded-lg"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
-};
+});
+
+SavedLockersCard.displayName = "SavedLockersCard";
 
 export default SavedLockersCard;

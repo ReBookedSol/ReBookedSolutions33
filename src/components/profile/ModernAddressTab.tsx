@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -40,6 +40,7 @@ const ModernAddressTab = ({
   onSaveAddresses,
   isLoading = false,
 }: ModernAddressTabProps) => {
+  const savedLockersCardRef = useRef<{ loadSavedLockers: () => Promise<void> } | null>(null);
   const [editMode, setEditMode] = useState<
     "none" | "pickup" | "shipping" | "both"
   >("none");
@@ -579,10 +580,10 @@ const ModernAddressTab = ({
       </div>
 
       {/* Saved Lockers Section */}
-      <SavedLockersCard isLoading={isLoading} />
+      <SavedLockersCard ref={savedLockersCardRef} isLoading={isLoading} />
 
       {/* BobGo Locations Section */}
-      <BobGoLocationsSection />
+      <BobGoLocationsSection onLockerSaved={() => savedLockersCardRef.current?.loadSavedLockers()} />
 
       {/* Action Buttons for Edit Mode */}
       {editMode !== "none" && (

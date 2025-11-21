@@ -19,7 +19,11 @@ import { getBobGoLocations, type BobGoLocation } from "@/services/bobgoLocations
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const BobGoLocationsSection: React.FC = () => {
+interface BobGoLocationsSectionProps {
+  onLockerSaved?: () => void;
+}
+
+const BobGoLocationsSection: React.FC<BobGoLocationsSectionProps> = ({ onLockerSaved }) => {
   const [searchInput, setSearchInput] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -119,6 +123,31 @@ const BobGoLocationsSection: React.FC = () => {
         return;
       }
 
+      // Check if a locker is already saved
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("preferred_delivery_locker_data")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      const hasSavedLocker = profile?.preferred_delivery_locker_data;
+
+      // If a locker is already saved, show confirmation
+      if (hasSavedLocker) {
+        const oldLockerName = (hasSavedLocker as any)?.name || "your saved locker";
+        const proceed = window.confirm(
+          `You already have "${oldLockerName}" saved as your locker.\n\nDo you want to replace it with "${location.name}"?`
+        );
+        if (!proceed) {
+          setSavingLockerId(null);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -132,6 +161,11 @@ const BobGoLocationsSection: React.FC = () => {
       toast.success("Locker saved! 🎉", {
         description: `${location.name} is now saved to your profile`,
       });
+
+      // Trigger parent component to reload saved locker
+      if (onLockerSaved) {
+        setTimeout(() => onLockerSaved(), 100);
+      }
     } catch (error) {
       console.error("Error saving locker:", error);
       toast.error("Failed to save locker to profile");
