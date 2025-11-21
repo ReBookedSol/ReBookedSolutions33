@@ -68,6 +68,59 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
   const [isPackagedSecurely, setIsPackagedSecurely] = useState(false);
   const [canFulfillOrder, setCanFulfillOrder] = useState(false);
 
+  // Load saved locker when dialog opens
+  useEffect(() => {
+    if (isDialogOpen) {
+      loadSavedLocker();
+    }
+  }, [isDialogOpen]);
+
+  const loadSavedLocker = async () => {
+    try {
+      setIsLoadingSavedLocker(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoadingSavedLocker(false);
+        return;
+      }
+
+      // Fetch user profile with locker preferences
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("preferred_delivery_locker_data")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.warn("Failed to load saved locker:", error);
+        setIsLoadingSavedLocker(false);
+        return;
+      }
+
+      if (profile?.preferred_delivery_locker_data) {
+        const lockerData = profile.preferred_delivery_locker_data as BobGoLocation;
+        setSavedLocker(lockerData);
+        console.log("✅ Loaded saved locker from profile:", lockerData);
+      }
+    } catch (error) {
+      console.error("Error loading saved locker:", error);
+    } finally {
+      setIsLoadingSavedLocker(false);
+    }
+  };
+
+  // Auto-select locker method with saved locker
+  const handleSelectLockerMethod = (currentSavedLocker: BobGoLocation | null) => {
+    setDeliveryMethod("locker");
+    // Automatically select the saved locker if it exists
+    if (currentSavedLocker) {
+      setSelectedLocker(currentSavedLocker);
+    }
+  };
+
   // Check if order is already committed
   const isAlreadyCommitted =
     orderStatus === "committed" ||
@@ -78,7 +131,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
   const isFormValid =
     isPackagedSecurely &&
     canFulfillOrder &&
-    (deliveryMethod === "home" || (deliveryMethod === "locker" && selectedLocker));
+    (deliveryMethod === "home" || (deliveryMethod === "locker" && (selectedLocker || (savedLocker && !wantToChangeLocker))));
 
   const handleCommit = async () => {
     setIsCommitting(true);
