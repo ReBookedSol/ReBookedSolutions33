@@ -166,30 +166,31 @@ export class WalletService {
       // 3. Crediting the wallet via RPC
       // 4. Creating notifications
       // 5. Sending emails
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/credit-wallet-on-collection`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('credit-wallet-on-collection', {
+        body: {
           order_id: orderId,
           seller_id: sellerId,
-        }),
+        },
       });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        console.error("Error crediting wallet:", result);
+      if (error) {
+        console.error("Error crediting wallet:", error);
         return {
           success: false,
-          error: result.message || result.error || "Failed to credit wallet",
+          error: error.message || "Failed to credit wallet",
+        };
+      }
+
+      if (!data || !data.success) {
+        console.error("Wallet credit failed:", data);
+        return {
+          success: false,
+          error: data?.message || data?.error || "Failed to credit wallet",
         };
       }
 
       // Edge function handles credit_amount calculation (90% of book price)
-      const creditAmount = result.credit_amount ? result.credit_amount / 100 : undefined;
+      const creditAmount = data.credit_amount ? data.credit_amount / 100 : undefined;
 
       return {
         success: true,
