@@ -68,10 +68,12 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
   const [isPackagedSecurely, setIsPackagedSecurely] = useState(false);
   const [canFulfillOrder, setCanFulfillOrder] = useState(false);
 
-  // Load saved locker when dialog opens
+  // Load saved locker when dialog opens and reset state when closing
   useEffect(() => {
     if (isDialogOpen) {
       loadSavedLocker();
+      setWantToChangeLocker(false);
+      setSelectedLocker(null);
     }
   }, [isDialogOpen]);
 
