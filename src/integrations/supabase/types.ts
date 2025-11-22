@@ -2241,6 +2241,15 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: string
       }
+      credit_wallet_on_collection: {
+        Args: { p_book_price: number; p_order_id: string; p_seller_id: string }
+        Returns: {
+          credit_amount: number
+          error_message: string
+          new_balance: number
+          success: boolean
+        }[]
+      }
       delete_user_address: {
         Args: { address_type: string; target_user_id: string }
         Returns: Json
