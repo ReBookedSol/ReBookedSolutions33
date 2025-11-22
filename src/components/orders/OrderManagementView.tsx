@@ -475,39 +475,39 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
         </CardHeader>
         
         {isExpanded && (
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2 px-4 py-2">
             {order.delivery_status === "pickup_failed" && userRole === "seller" && (
-              <Alert className="border-orange-200 bg-orange-50">
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-                <AlertDescription className="text-orange-800">
-                  <strong>Action Required:</strong> Courier attempted pickup but you were unavailable. Please reschedule or cancel within 24 hours.
+              <Alert className="border-orange-200 bg-orange-50 py-2 px-3">
+                <AlertTriangle className="h-3 w-3 text-orange-600 mt-0.5" />
+                <AlertDescription className="text-xs text-orange-800 ml-2">
+                  <strong>Action Required:</strong> Courier attempted pickup but unavailable. Reschedule or cancel within 24 hours.
                 </AlertDescription>
               </Alert>
             )}
 
             {order.delivery_status === "pickup_failed" && userRole === "buyer" && (
-              <Alert className="border-blue-200 bg-blue-50">
-                <Clock className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
-                  <strong>Pickup Delayed:</strong> The seller missed the scheduled pickup. We'll update you once they take action.
+              <Alert className="border-blue-200 bg-blue-50 py-2 px-3">
+                <Clock className="h-3 w-3 text-blue-600 mt-0.5" />
+                <AlertDescription className="text-xs text-blue-800 ml-2">
+                  <strong>Pickup Delayed:</strong> Seller missed pickup. We'll update you once they take action.
                 </AlertDescription>
               </Alert>
             )}
 
             {order.delivery_status === "rescheduled_by_seller" && (
-              <Alert className="border-blue-200 bg-blue-50">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
+              <Alert className="border-blue-200 bg-blue-50 py-2 px-3">
+                <Calendar className="h-3 w-3 text-blue-600 mt-0.5" />
+                <AlertDescription className="text-xs text-blue-800 ml-2">
                   <strong>Pickup Rescheduled</strong>
                 </AlertDescription>
               </Alert>
             )}
 
-            <Separator />
+            <div className="pt-1" />
             <OrderTimeline order={order} />
-            <Separator />
+            <div className="pt-1" />
             <OrderShipmentSummary order={order} />
-            <Separator />
+            <div className="pt-1" />
 
             <OrderActionsPanel order={order} userRole={userRole} onOrderUpdate={fetchOrders} />
 
