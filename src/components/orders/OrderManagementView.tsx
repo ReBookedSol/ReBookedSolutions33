@@ -506,8 +506,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
             <OrderActionsPanel order={order} userRole={userRole} onOrderUpdate={fetchOrders} />
 
             {userRole === "buyer" && (["delivered", "completed"].includes(order.status) || order.delivery_status === "delivered") && (
-              <>
-                <Separator />
+              <div className="pt-1">
                 <OrderCompletionCard
                   orderId={order.id}
                   bookTitle={order.book?.title || "Book"}
@@ -517,15 +516,14 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
                   totalAmount={order.total_amount || 0}
                   sellerId={order.seller_id || ""}
                 />
-              </>
+              </div>
             )}
 
-            <Separator />
             {["delivered", "completed"].includes(order.status) && userRole === "seller" && (
-              <div className="text-xs text-gray-500">Completed on {formatDate(order.updated_at)}</div>
+              <div className="text-xs text-gray-500 pt-1">Completed on {formatDate(order.updated_at)}</div>
             )}
             {order.status === "cancelled" && (
-              <div className="text-xs text-red-600">Cancelled: {order.cancellation_reason || "Cancelled"} {order.cancelled_at ? `• ${formatDate(order.cancelled_at)}` : ""}</div>
+              <div className="text-xs text-red-600 pt-1">Cancelled: {order.cancellation_reason || "Cancelled"} {order.cancelled_at ? `• ${formatDate(order.cancelled_at)}` : ""}</div>
             )}
           </CardContent>
         )}
