@@ -286,68 +286,62 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     const tracking = order.tracking_number || order.tracking_data?.tracking_number;
     const deliveryProgress = (order.delivery_status || "").toLowerCase();
     return (
-      <div className="space-y-3 text-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <div className="text-gray-500">Order status</div>
-            <div className="font-medium capitalize flex items-center gap-2">
-              <Badge variant="secondary" className="capitalize">{order.status.replaceAll("_", " ")}</Badge>
-            </div>
+      <div className="space-y-2 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="space-y-0.5">
+            <div className="text-gray-500 font-medium">Order Status</div>
+            <Badge variant="secondary" className="capitalize text-xs">{order.status.replaceAll("_", " ")}</Badge>
           </div>
-          <div className="space-y-1">
-            <div className="text-gray-500">Tracking</div>
-            <div className="font-mono text-gray-700 break-all">{tracking || "—"}</div>
-            {tracking && (
-              <div className="text-xs mt-1">
+          <div className="space-y-0.5">
+            <div className="text-gray-500 font-medium">Tracking</div>
+            {tracking ? (
+              <div className="space-y-0.5">
+                <div className="font-mono text-gray-700 break-all text-xs">{tracking}</div>
                 <a
                   href={`https://track.bobgo.co.za/${encodeURIComponent(tracking)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-700 underline"
+                  className="text-blue-600 underline text-xs inline-block"
                 >
                   Open in BobGo
                 </a>
               </div>
+            ) : (
+              <span className="text-gray-500">Pending</span>
             )}
           </div>
-          <div className="space-y-1">
-            <div className="text-gray-500">Courier / Service</div>
-            <div className="font-medium flex flex-wrap items-center gap-2">
-              {courier ? <Badge variant="outline">{courier}</Badge> : <span>—</span>}
-              {service ? <Badge variant="outline">{service}</Badge> : null}
+          <div className="space-y-0.5">
+            <div className="text-gray-500 font-medium">Courier / Service</div>
+            <div className="flex flex-wrap items-center gap-1">
+              {courier ? <Badge variant="outline" className="text-xs">{courier}</Badge> : <span>—</span>}
+              {service ? <Badge variant="outline" className="text-xs">{service}</Badge> : null}
             </div>
           </div>
         </div>
 
-        <div>
-          <div className="text-gray-500">Delivery progress</div>
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${deliveryProgress === "delivered" ? "bg-green-500" : deliveryProgress === "in_transit" ? "bg-blue-500" : deliveryProgress === "pickup_failed" ? "bg-red-500" : "bg-amber-500"}`} />
-            <span className="capitalize">{deliveryProgress || "pending"}</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${deliveryProgress === "delivered" ? "bg-green-500" : deliveryProgress === "in_transit" ? "bg-blue-500" : deliveryProgress === "pickup_failed" ? "bg-red-500" : "bg-amber-500"}`} />
+          <span className="capitalize font-medium text-gray-700">{deliveryProgress || "pending"}</span>
         </div>
 
         {order.tracking_data?.events && Array.isArray(order.tracking_data.events) && order.tracking_data.events.length > 0 && (
-          <div>
-            <div className="text-xs text-gray-500 mb-1">Recent tracking events</div>
-            <ul className="text-xs space-y-1 max-h-32 overflow-auto pr-1">
-              {order.tracking_data.events.slice(-5).reverse().map((ev: any, idx: number) => (
-                <li key={idx} className="flex items-center gap-2 text-gray-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                  <span className="whitespace-nowrap">{formatDate(ev.timestamp || ev.date_time)}</span>
-                  <span className="capitalize">{(ev.status || ev.description || "").toString().toLowerCase()}</span>
-                  {ev.location && <span className="text-gray-400">• {ev.location}</span>}
+          <div className="pt-1">
+            <div className="text-xs text-gray-600 font-medium mb-1">Recent events</div>
+            <ul className="text-xs space-y-0.5 max-h-24 overflow-auto pr-1">
+              {order.tracking_data.events.slice(-4).reverse().map((ev: any, idx: number) => (
+                <li key={idx} className="flex items-start gap-1.5 text-gray-600">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 flex-shrink-0 mt-1" />
+                  <span className="flex-1">
+                    <span className="whitespace-nowrap">{formatDate(ev.timestamp || ev.date_time)}</span>
+                    {" • "}
+                    <span className="capitalize">{(ev.status || ev.description || "").toString().toLowerCase()}</span>
+                    {ev.location && <span className="text-gray-500"> • {ev.location}</span>}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
         )}
-
-        <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2">
-          {!tracking && (
-            <span>Tracking link will appear once assigned</span>
-          )}
-        </div>
       </div>
     );
   };
