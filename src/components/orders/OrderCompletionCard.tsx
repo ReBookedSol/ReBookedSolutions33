@@ -268,8 +268,10 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
           }
 
           if (receivedStatus === "received") {
+            console.log("📬 Order marked as received, sending emails...");
             // Buyer: Thank you and next steps
             if (buyerEmail) {
+              console.log("📧 Sending buyer thank you email to:", buyerEmail);
               const html = `<!DOCTYPE html>
 <html>
 <head>
