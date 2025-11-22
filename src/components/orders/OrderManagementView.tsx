@@ -239,11 +239,11 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     const hasMultipleImages = bookImages.length > 1;
 
     return (
-      <div className="flex gap-4">
+      <div className="flex gap-3 items-start">
         <button
           onClick={() => hasMultipleImages && setSelectedOrderForGallery(order)}
-          className={`w-16 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all ${
-            hasMultipleImages ? 'cursor-pointer hover:shadow-md hover:ring-2 hover:ring-book-600' : ''
+          className={`w-14 h-18 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all ${
+            hasMultipleImages ? 'cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400' : ''
           }`}
           title={hasMultipleImages ? "Click to view all photos" : undefined}
           disabled={!hasMultipleImages}
@@ -255,22 +255,22 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
           />
         </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-lg font-semibold">
+        <div className="flex-1 min-w-0 py-0.5">
+          <div className="grid grid-cols-3 gap-3 items-start">
+            <div className="col-span-2">
+              <h3 className="text-base font-semibold text-gray-900 leading-tight">
                 {order.book?.title || "Unknown Book"}
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-0.5">
-                {order.book?.author ? `by ${order.book.author}` : ""}
+              </h3>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {order.book?.author || "No author"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Order #{order.id.slice(-8)} • {role === "buyer" ? "Seller" : "Buyer"}: {otherPartyName}
+              <p className="text-xs text-gray-500 mt-1">
+                Order #{order.id.slice(-8)} • {otherPartyName}
               </p>
             </div>
             <div className="text-right">
               {typeof order.book?.price === "number" && (
-                <div className="text-lg font-semibold text-emerald-600">R{order.book.price}</div>
+                <div className="text-base font-semibold text-emerald-600">R{order.book.price}</div>
               )}
               <div className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</div>
             </div>
