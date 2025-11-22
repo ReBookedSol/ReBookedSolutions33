@@ -401,6 +401,63 @@ serve(async (req) => {
       value: Number(item?.price) || 100
     }));
 
+    // If seller is using locker pickup, recalculate rates for locker-to-locker route
+    let selectedCourierSlug = order.selected_courier_slug;
+    let selectedServiceCode = order.selected_service_code;
+    let selectedShippingCost = order.selected_shipping_cost;
+    let selectedCourierName = order.selected_courier_name;
+    let selectedServiceName = order.selected_service_name;
+    let rateQuote: any = null;
+
+    if (pickupType === 'locker' && deliveryType === 'locker') {
+      console.log(`[commit-to-sale] Locker-to-locker shipment detected. Recalculating rates...`);
+
+      try {
+        const getRatesResponse = await supabase.functions.invoke("bobgo-get-rates", {
+          body: {
+            collectionPickupPoint: {
+              locationId: pickupData.location_id,
+              providerSlug: pickupData.provider_slug
+            },
+            deliveryPickupPoint: {
+              locationId: deliveryData.location_id,
+              providerSlug: deliveryData.provider_slug
+            },
+            parcels: parcels.map(p => ({
+              weight: p.weight,
+              length: p.length,
+              width: p.width,
+              height: p.height,
+              value: p.value,
+              description: p.description
+            })),
+            declaredValue: parcels.reduce((sum, p) => sum + (p.value || 0), 0)
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!getRatesResponse.error && getRatesResponse.data?.quotes && getRatesResponse.data.quotes.length > 0) {
+          const quotes = getRatesResponse.data.quotes;
+
+          rateQuote = quotes.find((q: any) => q.provider_slug === pickupData.provider_slug) || quotes[0];
+
+          selectedCourierSlug = rateQuote.provider_slug;
+          selectedServiceCode = rateQuote.service_level_code;
+          selectedShippingCost = rateQuote.cost;
+          selectedCourierName = rateQuote.provider_name || rateQuote.carrier;
+          selectedServiceName = rateQuote.service_name;
+
+          console.log(`[commit-to-sale] Locker-to-locker rate recalculated: ${selectedCourierName} - ${selectedServiceName} @ R${(selectedShippingCost / 100).toFixed(2)}`);
+        } else {
+          console.warn(`[commit-to-sale] Failed to get locker-to-locker rates, using original rates`);
+        }
+      } catch (e) {
+        console.warn(`[commit-to-sale] Error recalculating locker-to-locker rates:`, e);
+      }
+    }
+
     // Build shipment payload based on pickup and delivery types
     const shipmentPayload: any = {
       order_id,
