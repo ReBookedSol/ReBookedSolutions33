@@ -353,6 +353,25 @@ const BookFilters = ({
             </div>
           )}
 
+          {/* Genre Filter - for Reader books */}
+          {bookType === "reader" && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Genre</h3>
+              <Select value={selectedGenre} onValueChange={(value) => setSelectedGenre(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select genre" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {ALL_READER_GENRES.map((genre) => (
+                    <SelectItem key={genre} value={genre}>
+                      {genre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Category Filter */}
           <div className="mb-6">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Category</h3>
