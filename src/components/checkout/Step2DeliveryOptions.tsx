@@ -73,9 +73,15 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   }, [selectedLocker]);
 
   useEffect(() => {
+    // Sync prop selection to local state
+    setLocalSelectedDelivery(selectedDelivery);
+  }, [selectedDelivery]);
+
+  useEffect(() => {
     // Auto-select first delivery option when locker options are loaded and none is selected yet
-    if (deliveryOptions.length > 0 && !selectedDelivery && preSelectedLocker) {
-      setSelectedDelivery(deliveryOptions[0]);
+    if (deliveryOptions.length > 0 && !localSelectedDelivery && preSelectedLocker) {
+      const firstOption = deliveryOptions[0];
+      setLocalSelectedDelivery(firstOption);
     }
   }, [deliveryOptions, preSelectedLocker]);
 
