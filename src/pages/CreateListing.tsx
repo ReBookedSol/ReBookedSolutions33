@@ -137,12 +137,16 @@ const CreateListing = () => {
     }
   };
 
-  const handleBookTypeChange = (type: "school" | "university") => {
+  const handleBookTypeChange = (type: "school" | "university" | "reader") => {
     setBookType(type);
+    let newItemType: "textbook" | "reader" = type === "reader" ? "reader" : "textbook";
+
     if (type === "school") {
-      setFormData({ ...formData, universityYear: "", university: "" });
-    } else {
-      setFormData({ ...formData, grade: "" });
+      setFormData({ ...formData, universityYear: "", university: "", itemType: newItemType });
+    } else if (type === "university") {
+      setFormData({ ...formData, grade: "", itemType: newItemType });
+    } else if (type === "reader") {
+      setFormData({ ...formData, grade: "", universityYear: "", university: "", itemType: newItemType });
     }
   };
 
