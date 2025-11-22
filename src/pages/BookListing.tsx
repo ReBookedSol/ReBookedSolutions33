@@ -146,7 +146,7 @@ const BookListing = () => {
 
   // Initial load
   useEffect(() => {
-    console.log("�� BookListing: Component mounted, starting initial book load...");
+    console.log("🎬 BookListing: Component mounted, starting initial book load...");
     loadBooks();
   }, [loadBooks]);
 
@@ -199,6 +199,7 @@ const BookListing = () => {
     setSelectedCategory("");
     setSelectedCondition("");
     setSelectedGrade("");
+    setSelectedGenre("");
     setSelectedUniversityYear("");
     setSelectedCurriculum("");
     setSelectedUniversity("");
