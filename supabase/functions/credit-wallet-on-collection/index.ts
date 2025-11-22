@@ -453,10 +453,16 @@ serve(async (req) => {
 
         // Create a service role client for function invocation
         const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+          global: {
+            headers: {
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+              apikey: SUPABASE_SERVICE_KEY,
+            },
+          },
           auth: {
             autoRefreshToken: false,
-            persistSession: false
-          }
+            persistSession: false,
+          },
         });
 
         const { data: emailResult, error: emailError } = await serviceClient.functions.invoke("send-email", {
