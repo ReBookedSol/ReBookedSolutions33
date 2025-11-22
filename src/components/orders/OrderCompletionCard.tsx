@@ -762,9 +762,11 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
             }
           }
         } catch (e) {
-          console.warn("Error sending transactional emails:", e);
+          console.error("❌ CRITICAL: Error sending transactional emails:", e);
         }
       })();
+
+      console.log("✨ Email sending process initiated (async, may continue in background)");
 
       if (onFeedbackSubmitted) {
         onFeedbackSubmitted({
