@@ -223,6 +223,7 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
       // Send transactional emails based on buyer response
       (async () => {
         try {
+          console.log("🚀 Starting email sending process...");
           const { emailService } = await import("@/services/emailService");
           const { createWalletCreditNotificationEmail } = await import(
             "@/utils/emailTemplates/walletCreditNotificationTemplate"
@@ -234,6 +235,8 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
           let sellerFullName = sellerName || "Seller";
           let buyerFullName = (order as any).buyer_name || "Buyer";
 
+          console.log("📧 Initial emails - buyer:", buyerEmail, "seller:", sellerEmail);
+
           if (!buyerEmail && order.buyer_id) {
             try {
               const { data: buyerData } = await supabase
@@ -243,6 +246,7 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
                 .single();
               buyerEmail = buyerData?.email || buyerEmail;
               buyerFullName = buyerData?.full_name || buyerFullName;
+              console.log("✅ Fetched buyer email:", buyerEmail);
             } catch (e) {
               console.warn("Failed to fetch buyer email:", e);
             }
@@ -257,6 +261,7 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
                 .single();
               sellerEmail = sellerData?.email || sellerEmail;
               sellerFullName = sellerData?.full_name || sellerFullName;
+              console.log("✅ Fetched seller email:", sellerEmail);
             } catch (e) {
               console.warn("Failed to fetch seller email:", e);
             }
