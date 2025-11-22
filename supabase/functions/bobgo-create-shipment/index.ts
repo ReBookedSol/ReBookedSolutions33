@@ -6,24 +6,14 @@ import { parseRequestBody } from "../_shared/safe-body-parser.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-interface CreateShipmentRequest {
-  order_id: string;
-  provider_slug: string;
-  service_level_code: string;
-  pickup_address: any;
-  delivery_address: any;
-  parcels: any[];
-  reference?: string;
-  special_instructions?: string;
-}
-
-serve(async (req) => {
+serve(async (req): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
   try {
-    const bodyResult = await parseRequestBody<CreateShipmentRequest>(req, corsHeaders);
-    if (!bodyResult.success) return bodyResult.errorResponse!;
+    const bodyResult = await parseRequestBody(req, corsHeaders);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const {
       order_id,
@@ -33,20 +23,17 @@ serve(async (req) => {
       delivery_address,
       parcels,
       reference,
-      special_instructions,
-    } = bodyResult.data!;
+      special_instructions
+    } = bodyResult.data;
 
-    if (!order_id || !pickup_address || !delivery_address || !parcels || parcels.length === 0) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Missing required fields: order_id, pickup_address, delivery_address, parcels" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    if (!provider_slug || !service_level_code) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Missing provider_slug and service_level_code - must call bobgo-get-rates first to get available rates" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!order_id || !parcels || parcels.length === 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Missing required fields: order_id, parcels"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -65,6 +52,41 @@ serve(async (req) => {
     }
     const BOBGO_BASE_URL = resolveBaseUrl();
 
+    // Fetch order to get shipment details
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", order_id)
+      .single();
+
+    if (orderError || !order) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Order not found"
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Determine pickup and delivery types from order
+    const pickupType = order.pickup_type || 'door';
+    const deliveryType = order.delivery_type || 'door';
+
+    // Use provider_slug and service_level_code from request, or fall back to order data
+    const finalProviderSlug = provider_slug || order.selected_courier_slug;
+    const finalServiceLevelCode = service_level_code || order.selected_service_code;
+
+    if (!finalProviderSlug || !finalServiceLevelCode) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Missing provider_slug and service_level_code - must call bobgo-get-rates first"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     let shipmentResult: any = null;
     let simulated = false;
 
@@ -79,59 +101,111 @@ serve(async (req) => {
         estimated_delivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
         carrier: "simulated",
         cost: 0,
-        simulated: true,
+        simulated: true
       };
     } else {
       try {
-        const payload = {
-          collection_address: {
-            company: pickup_address.company || "Seller",
-            street_address: pickup_address.streetAddress || pickup_address.street_address || "",
-            local_area: pickup_address.suburb || pickup_address.local_area,
-            city: pickup_address.city || pickup_address.suburb,
-            zone: pickup_address.province || pickup_address.zone,
-            country: "ZA",
-            code: pickup_address.postalCode || pickup_address.postal_code || pickup_address.code,
-          },
-          collection_contact_name: pickup_address.contact_name || "Seller",
-          collection_contact_mobile_number: pickup_address.contact_phone || "0000000000",
-          collection_contact_email: pickup_address.contact_email || "seller@example.com",
-          delivery_address: {
-            company: delivery_address.company || "",
-            street_address: delivery_address.streetAddress || delivery_address.street_address || "",
-            local_area: delivery_address.suburb || delivery_address.local_area,
-            city: delivery_address.city || delivery_address.suburb,
-            zone: delivery_address.province || delivery_address.zone,
-            country: "ZA",
-            code: delivery_address.postalCode || delivery_address.postal_code || delivery_address.code,
-          },
-          delivery_contact_name: delivery_address.contact_name || "Buyer",
-          delivery_contact_mobile_number: delivery_address.contact_phone || "0000000000",
-          delivery_contact_email: delivery_address.contact_email || "buyer@example.com",
+        // Build base payload
+        const payload: any = {
           parcels: parcels.map((p: any) => ({
             description: p.description || "Book",
             submitted_length_cm: p.length || 10,
             submitted_width_cm: p.width || 10,
             submitted_height_cm: p.height || 10,
             submitted_weight_kg: p.weight || 1,
-            custom_parcel_reference: p.reference || "",
+            custom_parcel_reference: p.reference || ""
           })),
           declared_value: parcels.reduce((sum: number, p: any) => sum + (p.value || 100), 0),
           custom_tracking_reference: reference || `ORDER-${order_id}`,
           instructions_collection: special_instructions || "",
           instructions_delivery: special_instructions || "",
-          service_level_code: service_level_code,
-          provider_slug: provider_slug,
+          service_level_code: finalServiceLevelCode,
+          provider_slug: finalProviderSlug
         };
+
+        // Handle pickup location - CRITICAL: For lockers, ONLY send location_id, NOT address
+        if (pickupType === 'locker') {
+          // Locker pickup - use location_id from order or locker data
+          const pickupLocationId = order.pickup_locker_location_id ||
+            order.pickup_locker_data?.id;
+
+          if (!pickupLocationId) {
+            throw new Error("Pickup locker location_id is required for locker pickup");
+          }
+
+          payload.collection_location_id = pickupLocationId;
+          payload.collection_contact_name = order.seller_full_name || "Seller";
+          payload.collection_contact_mobile_number = order.seller_phone_number || "0000000000";
+          payload.collection_contact_email = order.seller_email || "seller@example.com";
+
+          // DO NOT send collection_address for locker pickup
+        } else {
+          // Door pickup - use address
+          const pickupAddr = pickup_address || {};
+          payload.collection_address = {
+            company: pickupAddr.company || "Seller",
+            street_address: pickupAddr.streetAddress || pickupAddr.street_address || "",
+            local_area: pickupAddr.suburb || pickupAddr.local_area || "",
+            city: pickupAddr.city || pickupAddr.suburb || "",
+            zone: pickupAddr.province || pickupAddr.zone || "",
+            country: "ZA",
+            code: pickupAddr.postalCode || pickupAddr.postal_code || pickupAddr.code || ""
+          };
+          payload.collection_contact_name = pickupAddr.contact_name || order.seller_full_name || "Seller";
+          payload.collection_contact_mobile_number = pickupAddr.contact_phone || order.seller_phone_number || "0000000000";
+          payload.collection_contact_email = pickupAddr.contact_email || order.seller_email || "seller@example.com";
+        }
+
+        // Handle delivery location - CRITICAL: For lockers, ONLY send location_id, NOT address
+        if (deliveryType === 'locker') {
+          // Locker delivery - use location_id from order or locker data
+          const deliveryLocationId = order.delivery_locker_location_id ||
+            order.delivery_locker_data?.id;
+
+          if (!deliveryLocationId) {
+            throw new Error("Delivery locker location_id is required for locker delivery");
+          }
+
+          payload.delivery_location_id = deliveryLocationId;
+          payload.delivery_contact_name = order.buyer_full_name || "Buyer";
+          payload.delivery_contact_mobile_number = order.buyer_phone_number || "0000000000";
+          payload.delivery_contact_email = order.buyer_email || "buyer@example.com";
+
+          // DO NOT send delivery_address for locker delivery
+        } else {
+          // Door delivery - use address
+          const deliveryAddr = delivery_address || {};
+          payload.delivery_address = {
+            company: deliveryAddr.company || "",
+            street_address: deliveryAddr.streetAddress || deliveryAddr.street_address || "",
+            local_area: deliveryAddr.suburb || deliveryAddr.local_area || "",
+            city: deliveryAddr.city || deliveryAddr.suburb || "",
+            zone: deliveryAddr.province || deliveryAddr.zone || "",
+            country: "ZA",
+            code: deliveryAddr.postalCode || deliveryAddr.postal_code || deliveryAddr.code || ""
+          };
+          payload.delivery_contact_name = deliveryAddr.contact_name || order.buyer_full_name || "Buyer";
+          payload.delivery_contact_mobile_number = deliveryAddr.contact_phone || order.buyer_phone_number || "0000000000";
+          payload.delivery_contact_email = deliveryAddr.contact_email || order.buyer_email || "buyer@example.com";
+        }
+
+        console.log("📦 Creating BobGo shipment:", {
+          pickupType,
+          deliveryType,
+          collection_location_id: payload.collection_location_id,
+          delivery_location_id: payload.delivery_location_id,
+          has_collection_address: !!payload.collection_address,
+          has_delivery_address: !!payload.delivery_address
+        });
 
         const resp = await fetch(`${BOBGO_BASE_URL}/shipments`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${BOBGO_API_KEY}`,
+            "Authorization": `Bearer ${BOBGO_API_KEY}`,
             "Content-Type": "application/json",
-            Accept: "application/json",
+            "Accept": "application/json"
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         });
 
         if (!resp.ok) {
@@ -152,7 +226,9 @@ serve(async (req) => {
           carrier: data.provider_slug,
           service_level: data.service_level_code,
           cost: data.rate || data.charged_amount || 0,
-          raw: data,
+          pickup_type: pickupType,
+          delivery_type: deliveryType,
+          raw: data
         };
       } catch (err: any) {
         console.error("Bobgo create shipment failed:", err?.message || err);
@@ -165,63 +241,71 @@ serve(async (req) => {
           estimated_delivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
           carrier: "simulated",
           api_error: err.message,
-          simulated: true,
+          simulated: true
         };
       }
     }
 
+    // Update order with shipment details
     try {
       const updateObj: any = {
         tracking_number: shipmentResult.tracking_number,
         delivery_provider: "bobgo",
-        delivery_data: { ...shipmentResult, updated_at: new Date().toISOString() },
+        delivery_data: {
+          ...shipmentResult,
+          pickup_type: pickupType,
+          delivery_type: deliveryType,
+          updated_at: new Date().toISOString()
+        },
         status: "shipped",
         delivery_status: "shipped",
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
+
       await supabase.from("orders").update(updateObj).eq("id", order_id);
     } catch (e) {
       console.error("DB update error:", e);
     }
 
+    // Send notification to buyer
     try {
-      const { data: orderInfo } = await supabase
-        .from("orders")
-        .select("buyer_id, buyer_email")
-        .eq("id", order_id)
-        .single();
-      if (orderInfo?.buyer_id && shipmentResult.tracking_number) {
+      if (order.buyer_id && shipmentResult.tracking_number) {
         await supabase.from("notifications").insert({
-          user_id: orderInfo.buyer_id,
+          user_id: order.buyer_id,
           type: "info",
           title: "📦 Your Order Has Shipped!",
-          message: `Your order has been shipped via ${shipmentResult.carrier}. Tracking: ${shipmentResult.tracking_number}`,
-          order_id,
+          message: `Your order has been shipped via ${shipmentResult.carrier}${deliveryType === 'locker' ? ' to your selected locker' : ''
+            }. Tracking: ${shipmentResult.tracking_number}`,
+          order_id
         });
       }
     } catch (notifyErr) {
       console.warn("Notification failed:", notifyErr);
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        simulated,
-        tracking_number: shipmentResult.tracking_number,
-        shipment_id: shipmentResult.shipment_id,
-        waybill_url: shipmentResult.waybill_url,
-        estimated_delivery: shipmentResult.estimated_delivery,
-        carrier: shipmentResult.carrier,
-        cost: shipmentResult.cost,
-        raw: shipmentResult.raw,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      simulated,
+      tracking_number: shipmentResult.tracking_number,
+      shipment_id: shipmentResult.shipment_id,
+      waybill_url: shipmentResult.waybill_url,
+      estimated_delivery: shipmentResult.estimated_delivery,
+      carrier: shipmentResult.carrier,
+      cost: shipmentResult.cost,
+      pickup_type: pickupType,
+      delivery_type: deliveryType,
+      raw: shipmentResult.raw
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   } catch (error: any) {
     console.error("bobgo-create-shipment error:", error);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message || "Failed to create shipment" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || "Failed to create shipment"
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 });
