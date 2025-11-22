@@ -62,6 +62,7 @@ const BookListing = () => {
       const searchQuery = searchParams.get("search") || "";
       const category = searchParams.get("category") || "";
       const grade = searchParams.get("grade") || "";
+      const genre = searchParams.get("genre") || "";
       const curriculum = searchParams.get("curriculum") || "";
       const universityYear = searchParams.get("universityYear") || "";
       const province = searchParams.get("province") || "";
