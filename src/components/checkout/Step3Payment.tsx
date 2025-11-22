@@ -95,30 +95,40 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       const buyerFullName = buyerProfile.full_name || buyerProfile.name || `${buyerProfile.first_name || ''} ${buyerProfile.last_name || ''}`.trim() || 'Buyer';
       const sellerFullName = sellerProfile.full_name || sellerProfile.name || `${sellerProfile.first_name || ''} ${sellerProfile.last_name || ''}`.trim() || 'Seller';
 
-      // Step 2: Encrypt the shipping address
-      console.log("🔐 Encrypting shipping address...");
-      const shippingObject = {
-        streetAddress: orderSummary.buyer_address.street,
-        city: orderSummary.buyer_address.city,
-        province: orderSummary.buyer_address.province,
-        postalCode: orderSummary.buyer_address.postal_code,
-        country: orderSummary.buyer_address.country,
-        phone: orderSummary.buyer_address.phone,
-        additional_info: orderSummary.buyer_address.additional_info,
-      };
+      // Prepare locker data if delivery method is locker
+      const deliveryType = orderSummary.delivery_method === "locker" ? "locker" : "door";
+      const deliveryLockerData = orderSummary.delivery_method === "locker" ? orderSummary.selected_locker : null;
+      const deliveryLockerLocationId = orderSummary.delivery_method === "locker" ? orderSummary.selected_locker?.id : null;
 
-      const { data: encResult, error: encError } = await supabase.functions.invoke(
-        'encrypt-address',
-        { body: { object: shippingObject } }
-      );
+      // Step 2: Encrypt the shipping address (only for door deliveries)
+      let shipping_address_encrypted = "";
+      if (deliveryType === "door") {
+        console.log("🔐 Encrypting shipping address...");
+        const shippingObject = {
+          streetAddress: orderSummary.buyer_address.street,
+          city: orderSummary.buyer_address.city,
+          province: orderSummary.buyer_address.province,
+          postalCode: orderSummary.buyer_address.postal_code,
+          country: orderSummary.buyer_address.country,
+          phone: orderSummary.buyer_address.phone,
+          additional_info: orderSummary.buyer_address.additional_info,
+        };
 
-      if (encError || !encResult?.success || !encResult?.data) {
-        throw new Error(encError?.message || 'Failed to encrypt shipping address');
+        const { data: encResult, error: encError } = await supabase.functions.invoke(
+          'encrypt-address',
+          { body: { object: shippingObject } }
+        );
+
+        if (encError || !encResult?.success || !encResult?.data) {
+          throw new Error(encError?.message || 'Failed to encrypt shipping address');
+        }
+
+        shipping_address_encrypted = JSON.stringify(encResult.data);
+      } else {
+        console.log("📦 Locker delivery selected - skipping address encryption");
       }
 
-      const shipping_address_encrypted = JSON.stringify(encResult.data);
-
-      // Step 3: Create the order with encrypted address (before payment)
+      // Step 3: Create the order (before payment)
       console.log("📦 Creating order before payment initialization...");
 
       const { data: createdOrder, error: orderError } = await supabase
@@ -162,6 +172,7 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
               estimated_days: orderSummary.delivery.estimated_days,
               pickup_address: orderSummary.seller_address,
               delivery_quote: orderSummary.delivery,
+              delivery_type: deliveryType,
             },
 
             metadata: {
@@ -179,6 +190,9 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
             selected_service_code: orderSummary.delivery.service_level_code || "",
             selected_service_name: orderSummary.delivery.service_name,
             selected_shipping_cost: orderSummary.delivery_price,
+            delivery_type: deliveryType,
+            delivery_locker_data: deliveryLockerData,
+            delivery_locker_location_id: deliveryLockerLocationId,
           },
         ])
         .select()
@@ -1142,10 +1156,29 @@ Time: ${new Date().toISOString()}
 
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between pt-6">
+      <div className="flex justify-between items-center pt-6">
         <Button variant="outline" onClick={onBack} disabled={processing}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
+        </Button>
+
+        <Button
+          onClick={handleBobPayPayment}
+          disabled={processing}
+          className="bg-green-600 hover:bg-green-700"
+          size="lg"
+        >
+          {processing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Complete Order - R{orderSummary.total_price.toFixed(2)}
+            </>
+          )}
         </Button>
       </div>
     </div>

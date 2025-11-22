@@ -50,6 +50,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
   const [lockerRatesLoading, setLockerRatesLoading] = useState(false);
+  const [localSelectedDelivery, setLocalSelectedDelivery] = useState<DeliveryOption | undefined>(selectedDelivery);
 
   useEffect(() => {
     // If a locker was pre-selected in Step1.5, automatically calculate locker rates
@@ -70,6 +71,19 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
       fetchDeliveryOptions();
     }
   }, [selectedLocker]);
+
+  useEffect(() => {
+    // Sync prop selection to local state
+    setLocalSelectedDelivery(selectedDelivery);
+  }, [selectedDelivery]);
+
+  useEffect(() => {
+    // Auto-select first delivery option when locker options are loaded and none is selected yet
+    if (deliveryOptions.length > 0 && !localSelectedDelivery && preSelectedLocker) {
+      const firstOption = deliveryOptions[0];
+      setLocalSelectedDelivery(firstOption);
+    }
+  }, [deliveryOptions, preSelectedLocker]);
 
   const recalculateRatesForLocker = async (locker: BobGoLocation) => {
     setLockerRatesLoading(true);
@@ -351,16 +365,16 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
                     provider_slug: q.provider_slug,
                     service_level_code: q.service_level_code,
                   };
-                  const isSelected = !!selectedDelivery &&
-                    selectedDelivery.service_name === option.service_name &&
-                    selectedDelivery.price === option.price;
+                  const isSelected = !!localSelectedDelivery &&
+                    localSelectedDelivery.service_name === option.service_name &&
+                    localSelectedDelivery.price === option.price;
                   return (
                     <div
                       key={idx}
                       className={`flex items-center justify-between gap-4 p-4 transition-colors ${
                         isSelected ? "bg-blue-50" : "hover:bg-gray-50"
                       }`}
-                      onClick={() => onSelectDelivery(option)}
+                      onClick={() => { setLocalSelectedDelivery(option); onSelectDelivery(option); }}
                     >
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -405,7 +419,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
       </Alert>
 
       {/* BobGo Locker Selection - Show when BobGo delivery is selected */}
-      {selectedDelivery && selectedDelivery.courier === "bobgo" && (
+      {localSelectedDelivery && localSelectedDelivery.courier === "bobgo" && (
         <Card className="border-purple-200 bg-purple-50">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -454,7 +468,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
         </Card>
       )}
 
-      {!selectedDelivery && (
+      {!localSelectedDelivery && (
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
@@ -479,8 +493,8 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
         </div>
 
         <Button
-          onClick={() => selectedDelivery && onSelectDelivery(selectedDelivery)}
-          disabled={!selectedDelivery}
+          onClick={() => localSelectedDelivery && onSelectDelivery(localSelectedDelivery)}
+          disabled={!localSelectedDelivery}
         >
           Next: Payment
           <ArrowRight className="w-4 h-4 ml-2" />

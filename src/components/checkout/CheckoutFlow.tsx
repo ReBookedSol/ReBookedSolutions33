@@ -511,6 +511,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       delivery_price: delivery.price,
       platform_fee: PLATFORM_FEE,
       total_price: checkoutState.book!.price + delivery.price + PLATFORM_FEE,
+      delivery_method: checkoutState.delivery_method,
+      selected_locker: checkoutState.selected_locker,
     };
 
     setCheckoutState((prev) => ({
@@ -796,25 +798,16 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           !isEditingAddress && (
             <>
               {checkoutState.delivery_method === "locker" && checkoutState.selected_locker ? (
-                checkoutState.buyer_address ? (
-                  <Step2DeliveryOptions
-                    buyerAddress={checkoutState.buyer_address}
-                    sellerAddress={checkoutState.seller_address}
-                    onSelectDelivery={handleDeliverySelection}
-                    onBack={() => goToStep(2)}
-                    onCancel={handleCancelCheckout}
-                    onEditAddress={handleEditAddress}
-                    selectedDelivery={checkoutState.selected_delivery}
-                    preSelectedLocker={checkoutState.selected_locker}
-                  />
-                ) : (
-                  <AddressInput
-                    title="Enter Your Delivery Address"
-                    onAddressSubmit={handleAddressSubmit}
-                    onSaveToProfile={handleSaveAddressToProfile}
-                    loading={checkoutState.loading}
-                  />
-                )
+                <Step2DeliveryOptions
+                  buyerAddress={checkoutState.buyer_address || { street: "", city: "", province: "", postal_code: "", country: "" }}
+                  sellerAddress={checkoutState.seller_address}
+                  onSelectDelivery={handleDeliverySelection}
+                  onBack={() => goToStep(2)}
+                  onCancel={handleCancelCheckout}
+                  onEditAddress={handleEditAddress}
+                  selectedDelivery={checkoutState.selected_delivery}
+                  preSelectedLocker={checkoutState.selected_locker}
+                />
               ) : checkoutState.buyer_address ? (
                 <Step2DeliveryOptions
                   buyerAddress={checkoutState.buyer_address}
@@ -824,7 +817,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
                   onCancel={handleCancelCheckout}
                   onEditAddress={handleEditAddress}
                   selectedDelivery={checkoutState.selected_delivery}
-                  preSelectedLocker={checkoutState.delivery_method === "locker" ? checkoutState.selected_locker : null}
+                  preSelectedLocker={null}
                 />
               ) : (
                 <AddressInput
