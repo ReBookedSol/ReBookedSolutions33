@@ -200,7 +200,7 @@ export const BookTypeSection = ({
             <p className="text-sm text-red-500 mt-1">{errors.grade}</p>
           )}
         </div>
-      ) : (
+      ) : bookType === "university" ? (
         <>
           {/* University Year Selection - Required */}
           <div>
@@ -271,7 +271,7 @@ export const BookTypeSection = ({
             </Select>
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 };
