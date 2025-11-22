@@ -532,6 +532,7 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
                 console.error("❌ Error checking banking details:", bankingCheckErr);
                 // If there's an error checking banking details, default to wallet credit email
                 try {
+                  console.log("⚠️ Banking check failed, defaulting to wallet credit email");
                   const creditAmount = totalAmount * 0.9;
                   const walletTemplate = createWalletCreditNotificationEmail({
                     sellerName: sellerFullName,
@@ -542,14 +543,16 @@ const OrderCompletionCard: React.FC<OrderCompletionCardProps> = ({
                     newBalance: creditAmount,
                   });
 
+                  console.log("📤 Sending fallback wallet credit email to:", sellerEmail);
                   await emailService.sendEmail({
                     to: sellerEmail,
                     subject: walletTemplate.subject,
                     html: walletTemplate.html,
                     text: walletTemplate.text,
                   });
+                  console.log("✅ Fallback wallet credit email sent successfully");
                 } catch (emailErr) {
-                  console.warn("Failed to send wallet credit email:", emailErr);
+                  console.error("❌ Failed to send fallback wallet credit email:", emailErr);
                 }
               }
             }
