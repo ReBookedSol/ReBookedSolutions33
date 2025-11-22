@@ -3,6 +3,7 @@ export interface BookFilters {
   category?: string;
   condition?: string;
   grade?: string;
+  genre?: string;
   universityYear?: string;
   university?: string;
   province?: string;
