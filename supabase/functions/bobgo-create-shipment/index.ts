@@ -183,14 +183,25 @@ serve(async (req) => {
       }
 
       bobgoPayload.delivery_address = formattedDeliveryAddress;
-      if (delivery_contact_name) bobgoPayload.delivery_contact_name = delivery_contact_name.toString().trim();
-      if (delivery_contact_phone) bobgoPayload.delivery_contact_mobile_number = delivery_contact_phone.toString().trim();
-      if (delivery_contact_email) bobgoPayload.delivery_contact_email = delivery_contact_email.toString().trim();
-
       console.log(`[bobgo-create-shipment] Delivery: Door address - ${formattedDeliveryAddress.local_area}, ${formattedDeliveryAddress.city}`);
     } else {
       throw new Error("Either delivery address or locker location required");
     }
+
+    // Always include delivery contact details (required by BobGo, even for locker deliveries)
+    if (!delivery_contact_name) {
+      throw new Error("Delivery contact name is required");
+    }
+    if (!delivery_contact_phone) {
+      throw new Error("Delivery contact phone is required");
+    }
+    if (!delivery_contact_email) {
+      throw new Error("Delivery contact email is required");
+    }
+
+    bobgoPayload.delivery_contact_name = delivery_contact_name.toString().trim();
+    bobgoPayload.delivery_contact_mobile_number = delivery_contact_phone.toString().trim();
+    bobgoPayload.delivery_contact_email = delivery_contact_email.toString().trim();
 
     // Add tracking reference if provided
     if (reference) {
