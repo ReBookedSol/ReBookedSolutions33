@@ -121,6 +121,11 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       // Step 3: Create the order with encrypted address (before payment)
       console.log("📦 Creating order before payment initialization...");
 
+      // Prepare locker data if delivery method is locker
+      const deliveryType = orderSummary.delivery_method === "locker" ? "locker" : "door";
+      const deliveryLockerData = orderSummary.delivery_method === "locker" ? orderSummary.selected_locker : null;
+      const deliveryLockerLocationId = orderSummary.delivery_method === "locker" ? orderSummary.selected_locker?.id : null;
+
       const { data: createdOrder, error: orderError } = await supabase
         .from("orders")
         .insert([
@@ -162,6 +167,7 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
               estimated_days: orderSummary.delivery.estimated_days,
               pickup_address: orderSummary.seller_address,
               delivery_quote: orderSummary.delivery,
+              delivery_type: deliveryType,
             },
 
             metadata: {
@@ -179,6 +185,9 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
             selected_service_code: orderSummary.delivery.service_level_code || "",
             selected_service_name: orderSummary.delivery.service_name,
             selected_shipping_cost: orderSummary.delivery_price,
+            delivery_type: deliveryType,
+            delivery_locker_data: deliveryLockerData,
+            delivery_locker_location_id: deliveryLockerLocationId,
           },
         ])
         .select()
