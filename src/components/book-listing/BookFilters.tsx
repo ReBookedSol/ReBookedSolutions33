@@ -21,6 +21,8 @@ interface BookFiltersProps {
   setSelectedGrade: (grade: string) => void;
   selectedCurriculum: string;
   setSelectedCurriculum: (curriculum: string) => void;
+  selectedGenre: string;
+  setSelectedGenre: (genre: string) => void;
   selectedUniversityYear: string;
   setSelectedUniversityYear: (year: string) => void;
   selectedUniversity: string;
