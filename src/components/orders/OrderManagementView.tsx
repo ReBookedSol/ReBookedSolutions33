@@ -385,30 +385,30 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     const currentIndex = statusToIndex[deliveryStatus] ?? 0;
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {/* Keep green status indicator for committed vs not committed */}
-        <div className="flex items-center space-x-2 text-sm">
+        <div className="flex items-center space-x-2 text-xs">
           <div
-            className={`w-3 h-3 rounded-full ${
+            className={`w-2 h-2 rounded-full ${
               order.status === "pending_commit" ? "bg-amber-500" : committed ? "bg-green-500" : "bg-gray-300"
             }`}
           />
-          <span>{order.status === "pending_commit" ? "Not Committed" : "Committed"}</span>
+          <span className="text-gray-700 font-medium">{order.status === "pending_commit" ? "Not Committed" : "Committed"}</span>
         </div>
 
         {/* Delivery method indicator */}
         {isLockerDelivery && (
-          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">
-            📦 Locker-to-Locker Delivery
+          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded inline-block">
+            📦 Locker-to-Locker
           </div>
         )}
 
         {/* Delivery stages */}
-        <div className={`grid gap-2 ${steps.length > 5 ? "grid-cols-3 md:grid-cols-6" : "grid-cols-5"}`}>
+        <div className={`grid gap-1 ${steps.length > 5 ? "grid-cols-3 md:grid-cols-6" : "grid-cols-5"}`}>
           {steps.map((step, idx) => (
             <div key={step} className="flex flex-col items-center text-xs">
               <div
-                className={`w-3 h-3 rounded-full ${
+                className={`w-2.5 h-2.5 rounded-full ${
                   idx < currentIndex
                     ? "bg-green-500"
                     : idx === currentIndex
@@ -418,8 +418,8 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
                     : "bg-gray-300"
                 }`}
               />
-              <span className="mt-1 capitalize text-gray-600 text-center leading-tight">
-                {step === "ready_for_pickup" ? "Ready for Pickup" : step.replaceAll("_", " ")}
+              <span className="mt-0.5 capitalize text-gray-600 text-center leading-tight text-xs">
+                {step === "ready_for_pickup" ? "Ready" : step === "out_for_delivery" ? "Out" : step.replaceAll("_", " ")}
               </span>
             </div>
           ))}
