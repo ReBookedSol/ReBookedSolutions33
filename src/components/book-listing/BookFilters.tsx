@@ -8,6 +8,7 @@ import { Filter, Search, School, GraduationCap, BookOpen, MapPin } from "lucide-
 import { UniversitySelector } from "@/components/ui/university-selector";
 import { UNIVERSITY_YEARS } from "@/constants/universities";
 import { CREATE_LISTING_CATEGORIES } from "@/constants/createListingCategories";
+import { ALL_READER_GENRES } from "@/constants/readerGenres";
 
 interface BookFiltersProps {
   searchQuery: string;
@@ -20,6 +21,8 @@ interface BookFiltersProps {
   setSelectedGrade: (grade: string) => void;
   selectedCurriculum: string;
   setSelectedCurriculum: (curriculum: string) => void;
+  selectedGenre: string;
+  setSelectedGenre: (genre: string) => void;
   selectedUniversityYear: string;
   setSelectedUniversityYear: (year: string) => void;
   selectedUniversity: string;
@@ -48,6 +51,8 @@ const BookFilters = ({
   setSelectedGrade,
   selectedCurriculum,
   setSelectedCurriculum,
+  selectedGenre,
+  setSelectedGenre,
   selectedUniversityYear,
   setSelectedUniversityYear,
   selectedUniversity,
@@ -137,10 +142,12 @@ const BookFilters = ({
       setSelectedUniversityYear("");
       setSelectedUniversity("");
       setSelectedGrade("");
+      setSelectedGenre("");
     } else if (type === "university") {
       setSelectedGrade("");
       setSelectedUniversityYear("");
       setSelectedUniversity("");
+      setSelectedGenre("");
     } else if (type === "reader") {
       setSelectedGrade("");
       setSelectedUniversityYear("");
@@ -154,6 +161,7 @@ const BookFilters = ({
     selectedCondition ||
     selectedGrade ||
     selectedCurriculum ||
+    selectedGenre ||
     selectedUniversityYear ||
     selectedUniversity ||
     selectedProvince
@@ -342,6 +350,25 @@ const BookFilters = ({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Genre Filter - for Reader books */}
+          {bookType === "reader" && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Genre</h3>
+              <Select value={selectedGenre} onValueChange={(value) => setSelectedGenre(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select genre" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {ALL_READER_GENRES.map((genre) => (
+                    <SelectItem key={genre} value={genre}>
+                      {genre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 

@@ -41,6 +41,7 @@ const BookListing = () => {
   const [selectedCondition, setSelectedCondition] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedUniversityYear, setSelectedUniversityYear] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
   const [selectedProvince, setSelectedProvince] = useState(
@@ -61,6 +62,7 @@ const BookListing = () => {
       const searchQuery = searchParams.get("search") || "";
       const category = searchParams.get("category") || "";
       const grade = searchParams.get("grade") || "";
+      const genre = searchParams.get("genre") || "";
       const curriculum = searchParams.get("curriculum") || "";
       const universityYear = searchParams.get("universityYear") || "";
       const province = searchParams.get("province") || "";
@@ -70,6 +72,7 @@ const BookListing = () => {
         category?: string;
         condition?: string;
         grade?: string;
+        genre?: string;
         curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
         universityYear?: string;
         university?: string;
@@ -83,6 +86,7 @@ const BookListing = () => {
       if (category) filters.category = category;
       if (selectedCondition) filters.condition = selectedCondition;
       if (grade) filters.grade = grade;
+      if (genre || selectedGenre) filters.genre = genre || selectedGenre;
       if (curriculum || selectedCurriculum) filters.curriculum = (curriculum || selectedCurriculum) as any;
       if (universityYear) filters.universityYear = universityYear;
       if (selectedUniversity) filters.university = selectedUniversity;
@@ -139,7 +143,7 @@ const BookListing = () => {
       setIsLoading(false);
       console.log("🏁 BookListing: Loading complete, isLoading set to false");
     }
-  }, [searchParams, selectedCondition, selectedUniversity, selectedProvince, selectedCurriculum, priceRange, currentPage, bookType]);
+  }, [searchParams, selectedCondition, selectedUniversity, selectedProvince, selectedCurriculum, selectedGenre, priceRange, currentPage, bookType]);
 
   // Initial load
   useEffect(() => {
@@ -164,6 +168,9 @@ const BookListing = () => {
     if (selectedGrade) {
       newSearchParams.set("grade", selectedGrade);
     }
+    if (selectedGenre) {
+      newSearchParams.set("genre", selectedGenre);
+    }
     if (selectedUniversityYear) {
       newSearchParams.set("universityYear", selectedUniversityYear);
     }
@@ -181,7 +188,9 @@ const BookListing = () => {
     searchQuery,
     selectedCategory,
     selectedGrade,
+    selectedGenre,
     selectedUniversityYear,
+    selectedCurriculum,
     selectedProvince,
     setSearchParams,
   ]);
@@ -191,6 +200,7 @@ const BookListing = () => {
     setSelectedCategory("");
     setSelectedCondition("");
     setSelectedGrade("");
+    setSelectedGenre("");
     setSelectedUniversityYear("");
     setSelectedCurriculum("");
     setSelectedUniversity("");
@@ -270,6 +280,10 @@ const BookListing = () => {
             setSelectedCondition={setSelectedCondition}
             selectedGrade={selectedGrade}
             setSelectedGrade={setSelectedGrade}
+            selectedCurriculum={selectedCurriculum}
+            setSelectedCurriculum={setSelectedCurriculum}
+            selectedGenre={selectedGenre}
+            setSelectedGenre={setSelectedGenre}
             selectedUniversityYear={selectedUniversityYear}
             setSelectedUniversityYear={setSelectedUniversityYear}
             selectedUniversity={selectedUniversity}

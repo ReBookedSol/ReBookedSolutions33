@@ -86,6 +86,7 @@ export const createBook = async (bookData: BookFormData): Promise<Book> => {
       grade: bookData.grade,
       university_year: bookData.universityYear,
       curriculum: (bookData as any).curriculum || null,
+      genre: (bookData as any).genre || null,
       province: province,
       affiliate_ref_id: affiliateRefId,
       // Quantity fields at creation
@@ -222,6 +223,8 @@ export const updateBook = async (
       updateData.condition = bookData.condition;
     if ((bookData as any).curriculum !== undefined)
       updateData.curriculum = (bookData as any).curriculum;
+    if ((bookData as any).genre !== undefined)
+      updateData.genre = (bookData as any).genre;
     if (bookData.imageUrl !== undefined)
       updateData.image_url = bookData.imageUrl;
     if (bookData.frontCover !== undefined)

@@ -54,6 +54,7 @@ const CreateListing = () => {
     grade: "",
     universityYear: "",
     university: "",
+    genre: "",
     imageUrl: "",
     frontCover: "",
     backCover: "",
@@ -142,9 +143,9 @@ const CreateListing = () => {
     let newItemType: "textbook" | "reader" = type === "reader" ? "reader" : "textbook";
 
     if (type === "school") {
-      setFormData({ ...formData, universityYear: "", university: "", itemType: newItemType });
+      setFormData({ ...formData, universityYear: "", university: "", genre: "", itemType: newItemType });
     } else if (type === "university") {
-      setFormData({ ...formData, grade: "", itemType: newItemType });
+      setFormData({ ...formData, grade: "", genre: "", itemType: newItemType });
     } else if (type === "reader") {
       setFormData({ ...formData, grade: "", universityYear: "", university: "", itemType: newItemType });
     }
@@ -172,7 +173,9 @@ const CreateListing = () => {
       newErrors.universityYear = "University Year is required for university books";
     }
 
-    // Reader type doesn't require grade or universityYear
+    if (bookType === "reader" && !(formData as any).genre) {
+      newErrors.genre = "Genre is required for reader books";
+    }
 
     if (!bookImages.frontCover)
       newErrors.frontCover = "Front cover photo is required";

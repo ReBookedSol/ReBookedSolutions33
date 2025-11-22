@@ -40,6 +40,7 @@ export const mapBookFromDatabase = (bookData: BookQueryResult): Book => {
     createdAt: bookData.created_at || new Date().toISOString(),
     itemType: (bookData.item_type as 'textbook' | 'reader') || 'textbook',
     grade: bookData.grade,
+    genre: bookData.genre || undefined,
     universityYear: bookData.university_year,
     university: bookData.university,
     curriculum: (bookData as any).curriculum || undefined,

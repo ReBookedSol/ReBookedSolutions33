@@ -3,6 +3,7 @@ export interface BookFilters {
   category?: string;
   condition?: string;
   grade?: string;
+  genre?: string;
   universityYear?: string;
   university?: string;
   province?: string;
@@ -35,6 +36,7 @@ export interface BookQueryResult {
   created_at: string;
   item_type?: 'textbook' | 'reader';
   grade?: string;
+  genre?: string;
   university_year?: string;
   university?: string;
   curriculum?: 'CAPS' | 'Cambridge' | 'IEB';

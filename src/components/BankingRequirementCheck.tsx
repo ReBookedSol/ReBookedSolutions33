@@ -45,38 +45,42 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
       setLoading(true);
       console.log("🔍 Checking listing requirements for user:", user.id, forceRefresh ? "(forced refresh)" : "");
 
-      // Check banking details directly from banking_subaccounts table (looking for active status)
-      const { data: bankingDetails } = await supabase
-        .from("banking_subaccounts")
-        .select("id, status")
-        .eq("user_id", user.id)
-        .in("status", ["active", "pending"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Check for saved locker
+      let hasSavedLocker = false;
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("preferred_delivery_locker_data")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile?.preferred_delivery_locker_data) {
+          const lockerData = profile.preferred_delivery_locker_data as any;
+          if (lockerData.id && lockerData.name) {
+            hasSavedLocker = true;
+            console.log("📍 User has saved locker");
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to check saved locker:", error);
+      }
 
       // Check pickup address from seller requirements
       const requirements = await BankingService.getSellerRequirements(user.id);
 
-      const hasBankingActive = !!bankingDetails && bankingDetails.status === "active";
-      const hasBankingPending = !!bankingDetails && bankingDetails.status === "pending";
-      const hasBankingSetup = hasBankingActive || hasBankingPending;
+      console.log("✅ Locker result:", hasSavedLocker, "📍 Address result:", requirements);
 
-      console.log("✅ Banking details result:", {
-        hasBankingActive,
-        hasBankingPending,
-        status: bankingDetails?.status
-      }, "📍 Address result:", requirements);
+      // User can list if they have EITHER locker OR pickup address
+      const canList = hasSavedLocker || requirements.hasPickupAddress;
 
-      // Banking is now optional - sellers can use wallet as fallback payment method
       const status: BankingRequirementsStatus = {
-        hasBankingInfo: hasBankingSetup,
+        hasBankingInfo: true, // Not checked anymore - banking is not required
         hasPickupAddress: requirements.hasPickupAddress,
-        isVerified: hasBankingActive,
-        // Only address is required now (banking is optional due to wallet system)
-        canListBooks: requirements.hasPickupAddress,
-        missingRequirements: [
-          ...(requirements.hasPickupAddress ? [] : ["Pickup address required for book collection"]),
+        isVerified: true,
+        canListBooks: canList,
+        missingRequirements: canList ? [] : [
+          ...(hasSavedLocker ? [] : ["Locker saved OR "]),
+          ...(requirements.hasPickupAddress ? [] : ["Pickup address required"]),
         ],
       };
 
@@ -130,54 +134,10 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-orange-700">
-            To list books for sale, you need to add a pickup address for collection and delivery:
+            To list books for sale, you need to save either a BobGo locker or a pickup address:
           </p>
 
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-              <div className="flex-shrink-0">
-                {bankingStatus.hasBankingInfo ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-blue-600" />
-                )}
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium">Banking Information</h4>
-                <p className="text-sm text-gray-600">
-                  {bankingStatus.hasBankingInfo ? "Set up for direct bank transfers" : "Optional - use wallet as payment fallback"}
-                </p>
-              </div>
-              <div className="flex-shrink-0">
-                {bankingStatus.hasBankingInfo ? (
-                  bankingStatus.isVerified ? (
-                    <Badge
-                      variant="default"
-                      className="bg-green-100 text-green-800"
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="border-orange-500 text-orange-700"
-                    >
-                      <Clock className="h-3 w-3 mr-1" />
-                      Pending
-                    </Badge>
-                  )
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="border-blue-500 text-blue-700"
-                  >
-                    Optional
-                  </Badge>
-                )}
-              </div>
-            </div>
-
             <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
               <div className="flex-shrink-0">
                 {bankingStatus.hasPickupAddress ? (
@@ -189,7 +149,7 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
               <div className="flex-1">
                 <h4 className="font-medium">Pickup Address</h4>
                 <p className="text-sm text-gray-600">
-                  Required for book collection and delivery arrangements
+                  Address for book pickup and delivery arrangements
                 </p>
               </div>
               <div className="flex-shrink-0">
@@ -211,21 +171,38 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
                 )}
               </div>
             </div>
+
+            <p className="text-center text-gray-600 font-medium">OR</p>
+
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+              <div className="flex-shrink-0">
+                <MapPin className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium">BobGo Locker</h4>
+                <p className="text-sm text-gray-600">
+                  Save a BobGo pickup point as alternative to address
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <Badge
+                  variant="outline"
+                  className="border-blue-500 text-blue-700"
+                >
+                  <MapPin className="h-3 w-3 mr-1" />
+                  Optional
+                </Badge>
+              </div>
+            </div>
           </div>
 
           {bankingStatus.missingRequirements.length > 0 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <ul className="list-disc pl-4 space-y-1">
-                  {bankingStatus.missingRequirements.map(
-                    (requirement, index) => (
-                      <li key={index} className="text-sm">
-                        {requirement}
-                      </li>
-                    ),
-                  )}
-                </ul>
+                <p className="text-sm">
+                  Please save either a BobGo locker or a pickup address in your profile to start listing books.
+                </p>
               </AlertDescription>
             </Alert>
           )}
@@ -236,7 +213,7 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
               className="bg-book-600 hover:bg-book-700 flex-1 btn-mobile"
             >
               <MapPin className="btn-mobile-icon" />
-              <span className="btn-mobile-text">Add Pickup Address</span>
+              <span className="btn-mobile-text">Add Address or Locker</span>
               <ArrowRight className="btn-mobile-icon" />
             </Button>
             <Button
@@ -250,12 +227,13 @@ const BankingRequirementCheck: React.FC<BankingRequirementCheckProps> = ({
 
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">
-              Payment Methods
+              Delivery Options at Checkout
             </h4>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• <strong>With Banking:</strong> Direct bank transfers when buyers confirm delivery</li>
-              <li>• <strong>Without Banking:</strong> Payments added to your wallet (viewable in Settings → Banking Information)</li>
-              <li>• All payments are 90% of sale price (10% platform fee)</li>
+              <li>• <strong>With Address:</strong> Buyer can choose pickup or delivery</li>
+              <li>• <strong>With Locker Only:</strong> Buyer can only use locker delivery</li>
+              <li>• <strong>With Both:</strong> Buyer can choose between all options</li>
+              <li>• All payments go to your wallet (10% platform fee applied)</li>
             </ul>
           </div>
         </CardContent>
