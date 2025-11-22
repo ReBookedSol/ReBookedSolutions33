@@ -261,7 +261,7 @@ const BookFilters = ({
           </div>
 
           {/* Grade Filter */}
-          {(bookType === "school" || bookType === "all") && (
+          {bookType === "school" && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Grade</h3>
               <div className="grid grid-cols-2 gap-2">
