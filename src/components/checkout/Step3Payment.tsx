@@ -1156,10 +1156,29 @@ Time: ${new Date().toISOString()}
 
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between pt-6">
+      <div className="flex justify-between items-center pt-6">
         <Button variant="outline" onClick={onBack} disabled={processing}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
+        </Button>
+
+        <Button
+          onClick={handleBobPayPayment}
+          disabled={processing}
+          className="bg-green-600 hover:bg-green-700"
+          size="lg"
+        >
+          {processing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Complete Order - R{orderSummary.total_price.toFixed(2)}
+            </>
+          )}
         </Button>
       </div>
     </div>
