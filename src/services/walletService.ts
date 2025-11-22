@@ -188,11 +188,19 @@ export class WalletService {
 
       console.log("Edge function response:", data);
 
-      if (!data || !data.success) {
+      if (!data) {
+        console.error("❌ No response from wallet credit function");
+        return {
+          success: false,
+          error: "No response received from wallet credit function",
+        };
+      }
+
+      if (!data.success) {
         console.error("❌ Wallet credit failed:", data);
         return {
           success: false,
-          error: data?.message || data?.error || "Failed to credit wallet",
+          error: data.message || data.error || "Failed to credit wallet",
         };
       }
 
