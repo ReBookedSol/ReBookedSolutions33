@@ -139,6 +139,9 @@ export const getBooks = async (filters?: BookFilters): Promise<Book[]> => {
           if (filters.grade) {
             query = query.eq("grade", filters.grade);
           }
+          if (filters.genre) {
+            query = query.eq("genre", filters.genre);
+          }
           if (filters.universityYear) {
             query = query.eq("university_year", filters.universityYear);
           }
