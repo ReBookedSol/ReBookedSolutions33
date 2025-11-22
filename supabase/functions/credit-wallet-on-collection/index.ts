@@ -367,7 +367,7 @@ serve(async (req) => {
     // No banking details - credit wallet as fallback payment method
     // Pass the BOOK PRICE (not total_amount) to ensure 90% calculation is correct
     console.log("💳 Crediting wallet with book price:", bookPrice);
-    
+
     const { data: creditResult, error: creditError } = await supabase
       .rpc('credit_wallet_on_collection', {
         p_seller_id: seller_id,
@@ -375,18 +375,53 @@ serve(async (req) => {
         p_book_price: bookPrice,
       });
 
-    if (creditError || !creditResult) {
-      console.error("❌ Error crediting wallet:", creditError);
+    if (creditError) {
+      console.error("❌ RPC Error crediting wallet:", creditError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "RPC_ERROR",
+          message: creditError.message || "Failed to credit wallet via RPC",
+          details: {
+            order_id,
+            seller_id,
+            book_price: bookPrice,
+            error: creditError.message
+          }
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check RPC response - it now returns a table with success flag
+    if (!creditResult || !Array.isArray(creditResult) || creditResult.length === 0) {
+      console.error("❌ Invalid RPC response:", creditResult);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "INVALID_RPC_RESPONSE",
+          message: "Unexpected response from wallet credit function",
+          order_id,
+          seller_id
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const rpcResult = creditResult[0];
+
+    if (!rpcResult.success) {
+      console.error("❌ Wallet credit failed:", rpcResult.error_message);
       return new Response(
         JSON.stringify({
           success: false,
           error: "WALLET_CREDIT_FAILED",
-          message: creditError?.message || "Failed to credit wallet",
+          message: rpcResult.error_message || "Failed to credit wallet",
           order_id,
           seller_id,
           book_price: bookPrice
         }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
