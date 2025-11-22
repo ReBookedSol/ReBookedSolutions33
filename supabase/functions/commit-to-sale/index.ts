@@ -401,11 +401,68 @@ serve(async (req) => {
       value: Number(item?.price) || 100
     }));
 
+    // If seller is using locker pickup, recalculate rates for locker-to-locker route
+    let selectedCourierSlug = order.selected_courier_slug;
+    let selectedServiceCode = order.selected_service_code;
+    let selectedShippingCost = order.selected_shipping_cost;
+    let selectedCourierName = order.selected_courier_name;
+    let selectedServiceName = order.selected_service_name;
+    let rateQuote: any = null;
+
+    if (pickupType === 'locker' && deliveryType === 'locker') {
+      console.log(`[commit-to-sale] Locker-to-locker shipment detected. Recalculating rates...`);
+
+      try {
+        const getRatesResponse = await supabase.functions.invoke("bobgo-get-rates", {
+          body: {
+            collectionPickupPoint: {
+              locationId: pickupData.location_id,
+              providerSlug: pickupData.provider_slug
+            },
+            deliveryPickupPoint: {
+              locationId: deliveryData.location_id,
+              providerSlug: deliveryData.provider_slug
+            },
+            parcels: parcels.map(p => ({
+              weight: p.weight,
+              length: p.length,
+              width: p.width,
+              height: p.height,
+              value: p.value,
+              description: p.description
+            })),
+            declaredValue: parcels.reduce((sum, p) => sum + (p.value || 0), 0)
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!getRatesResponse.error && getRatesResponse.data?.quotes && getRatesResponse.data.quotes.length > 0) {
+          const quotes = getRatesResponse.data.quotes;
+
+          rateQuote = quotes.find((q: any) => q.provider_slug === pickupData.provider_slug) || quotes[0];
+
+          selectedCourierSlug = rateQuote.provider_slug;
+          selectedServiceCode = rateQuote.service_level_code;
+          selectedShippingCost = rateQuote.cost;
+          selectedCourierName = rateQuote.provider_name || rateQuote.carrier;
+          selectedServiceName = rateQuote.service_name;
+
+          console.log(`[commit-to-sale] Locker-to-locker rate recalculated: ${selectedCourierName} - ${selectedServiceName} @ R${(selectedShippingCost / 100).toFixed(2)}`);
+        } else {
+          console.warn(`[commit-to-sale] Failed to get locker-to-locker rates, using original rates`);
+        }
+      } catch (e) {
+        console.warn(`[commit-to-sale] Error recalculating locker-to-locker rates:`, e);
+      }
+    }
+
     // Build shipment payload based on pickup and delivery types
     const shipmentPayload: any = {
       order_id,
-      provider_slug: order.selected_courier_slug,
-      service_level_code: order.selected_service_code,
+      provider_slug: selectedCourierSlug,
+      service_level_code: selectedServiceCode,
       parcels,
       reference: `ORDER-${order_id}`
     };
@@ -488,24 +545,64 @@ serve(async (req) => {
     const shipmentData = shipmentResponse.data || {};
     console.log(`[commit-to-sale] Shipment created successfully`);
 
+    // Build updated delivery_data with locker-to-locker info if applicable
+    const deliveryDataUpdate: any = {
+      ...order.delivery_data || {},
+      courier: "bobgo",
+      provider: selectedCourierName || "bobgo",
+      provider_slug: selectedCourierSlug,
+      service_level: selectedServiceName || "Standard",
+      service_level_code: selectedServiceCode,
+      rate_amount: selectedShippingCost / 100,
+      delivery_price: selectedShippingCost,
+      shipment_id: shipmentData.shipment_id,
+      waybill_url: shipmentData.waybill_url,
+      pickup_type: pickupType,
+      delivery_type: deliveryType
+    };
+
+    // Add locker details if both are locker shipments
+    if (pickupType === 'locker' && deliveryType === 'locker') {
+      deliveryDataUpdate.zone_type = "locker-to-locker";
+      deliveryDataUpdate.pickup_locker = pickupData.locker_data;
+      deliveryDataUpdate.delivery_locker = deliveryData.locker_data;
+    }
+
+    // Add delivery quote info from rate quote if available
+    if (rateQuote) {
+      deliveryDataUpdate.delivery_quote = {
+        price: rateQuote.cost / 100,
+        courier: "bobgo",
+        zone_type: pickupType === 'locker' && deliveryType === 'locker' ? "locker-to-locker" : "door",
+        description: `${rateQuote.provider_name} - ${rateQuote.service_name}`,
+        service_name: rateQuote.service_name,
+        provider_name: rateQuote.provider_name,
+        provider_slug: rateQuote.provider_slug,
+        estimated_days: rateQuote.transit_days,
+        service_level_code: rateQuote.service_level_code
+      };
+    }
+
     // Update order with commitment and shipment details
     const { error: updateError } = await supabase.from("orders").update({
       status: "committed",
       committed_at: new Date().toISOString(),
       delivery_status: "scheduled",
       tracking_number: shipmentData.tracking_number || order.tracking_number || null,
-      delivery_data: {
-        ...order.delivery_data || {},
-        provider: order.selected_courier_name || "bobgo",
-        provider_slug: order.selected_courier_slug,
-        service_level: order.selected_service_name || "Standard",
-        service_level_code: order.selected_service_code,
-        rate_amount: order.selected_shipping_cost,
-        shipment_id: shipmentData.shipment_id,
-        waybill_url: shipmentData.waybill_url,
-        pickup_type: pickupType,
-        delivery_type: deliveryType
-      },
+      selected_courier_slug: selectedCourierSlug,
+      selected_service_code: selectedServiceCode,
+      selected_shipping_cost: selectedShippingCost,
+      selected_courier_name: selectedCourierName,
+      selected_service_name: selectedServiceName,
+      delivery_data: deliveryDataUpdate,
+      pickup_type: pickupType,
+      pickup_locker_location_id: pickupType === 'locker' ? pickupData.location_id : order.pickup_locker_location_id,
+      pickup_locker_provider_slug: pickupType === 'locker' ? pickupData.provider_slug : order.pickup_locker_provider_slug,
+      pickup_locker_data: pickupType === 'locker' ? pickupData.locker_data : order.pickup_locker_data,
+      delivery_type: deliveryType,
+      delivery_locker_location_id: deliveryType === 'locker' ? deliveryData.location_id : order.delivery_locker_location_id,
+      delivery_locker_provider_slug: deliveryType === 'locker' ? deliveryData.provider_slug : order.delivery_locker_provider_slug,
+      delivery_locker_data: deliveryType === 'locker' ? deliveryData.locker_data : order.delivery_locker_data,
       updated_at: new Date().toISOString()
     }).eq("id", order_id);
 
