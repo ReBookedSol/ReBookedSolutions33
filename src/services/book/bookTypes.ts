@@ -33,6 +33,7 @@ export interface BookQueryResult {
   additional_images?: string[] | null;
   sold: boolean;
   created_at: string;
+  item_type?: 'textbook' | 'reader';
   grade?: string;
   university_year?: string;
   university?: string;
