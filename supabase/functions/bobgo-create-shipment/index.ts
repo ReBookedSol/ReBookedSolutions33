@@ -190,7 +190,29 @@ serve(async (req) => {
     }
 
     console.log(`[bobgo-create-shipment] Calling BobGo API at ${BOBGO_BASE_URL}/shipments`);
-    console.log(`[bobgo-create-shipment] Payload:`, JSON.stringify(bobgoPayload, null, 2));
+    console.log(`[bobgo-create-shipment] Full payload:`, JSON.stringify(bobgoPayload, null, 2));
+
+    // Log address details for debugging
+    if (bobgoPayload.collection_address) {
+      console.log(`[bobgo-create-shipment] Collection address details:`, {
+        street_address: bobgoPayload.collection_address.street_address,
+        local_area: bobgoPayload.collection_address.local_area,
+        city: bobgoPayload.collection_address.city,
+        zone: bobgoPayload.collection_address.zone,
+        code: bobgoPayload.collection_address.code,
+        country: bobgoPayload.collection_address.country,
+      });
+    }
+    if (bobgoPayload.delivery_address) {
+      console.log(`[bobgo-create-shipment] Delivery address details:`, {
+        street_address: bobgoPayload.delivery_address.street_address,
+        local_area: bobgoPayload.delivery_address.local_area,
+        city: bobgoPayload.delivery_address.city,
+        zone: bobgoPayload.delivery_address.zone,
+        code: bobgoPayload.delivery_address.code,
+        country: bobgoPayload.delivery_address.country,
+      });
+    }
 
     // Make request to BobGo API
     const bobgoResponse = await fetch(`${BOBGO_BASE_URL}/shipments`, {
