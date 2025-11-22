@@ -142,10 +142,12 @@ const BookFilters = ({
       setSelectedUniversityYear("");
       setSelectedUniversity("");
       setSelectedGrade("");
+      setSelectedGenre("");
     } else if (type === "university") {
       setSelectedGrade("");
       setSelectedUniversityYear("");
       setSelectedUniversity("");
+      setSelectedGenre("");
     } else if (type === "reader") {
       setSelectedGrade("");
       setSelectedUniversityYear("");
@@ -159,6 +161,7 @@ const BookFilters = ({
     selectedCondition ||
     selectedGrade ||
     selectedCurriculum ||
+    selectedGenre ||
     selectedUniversityYear ||
     selectedUniversity ||
     selectedProvince
