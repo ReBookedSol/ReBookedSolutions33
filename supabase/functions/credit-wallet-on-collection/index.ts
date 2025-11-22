@@ -410,12 +410,9 @@ serve(async (req) => {
 
     console.log("✅ Wallet credited successfully");
 
-    // Get amounts from RPC result
+    // Get amounts from RPC result (already in rands, not cents)
     const creditAmount = Number(rpcResult.credit_amount);
     const newBalance = Number(rpcResult.new_balance);
-    const bookPriceRands = bookPrice / 100;
-    const creditAmountRands = creditAmount / 100;
-    const newBalanceRands = newBalance / 100;
 
     // Get seller details from order
     const sellerEmail = order.seller_email;
@@ -423,7 +420,7 @@ serve(async (req) => {
 
     if (sellerEmail) {
       console.log("👤 Seller found:", sellerName, sellerEmail);
-      console.log("💰 New wallet balance:", newBalanceRands);
+      console.log("💰 New wallet balance:", newBalance);
 
       // Create in-app notification
       try {
@@ -431,7 +428,7 @@ serve(async (req) => {
           user_id: seller_id,
           type: "success",
           title: "💰 Payment Received!",
-          message: `Credit of R${creditAmountRands.toFixed(2)} has been added to your wallet for "${book.title}". New balance: R${newBalanceRands.toFixed(2)}`
+          message: `Credit of R${creditAmount.toFixed(2)} has been added to your wallet for "${book.title}". New balance: R${newBalance.toFixed(2)}`
         });
 
         if (notifError) {
@@ -445,25 +442,28 @@ serve(async (req) => {
 
       // Send email notification
       try {
-        const emailResult = await supabase.functions.invoke("send-email", {
+        const emailHtml = generateSellerCreditEmailHTML({
+          sellerName,
+          bookTitle: book.title,
+          bookPrice: bookPrice,
+          creditAmount: creditAmount,
+          orderId: order_id,
+          newBalance: newBalance,
+        });
+
+        const { data: emailResult, error: emailError } = await supabase.functions.invoke("send-email", {
           body: {
             to: sellerEmail,
             subject: '💰 Payment Received - Credit Added to Your Account - ReBooked Solutions',
-            html: generateSellerCreditEmailHTML({
-              sellerName,
-              bookTitle: book.title,
-              bookPrice: bookPriceRands,
-              creditAmount: creditAmountRands,
-              orderId: order_id,
-              newBalance: newBalanceRands,
-            }),
+            html: emailHtml,
+            text: `Payment Received! Credit of R${creditAmount.toFixed(2)} has been added to your wallet for "${book.title}". New balance: R${newBalance.toFixed(2)}`,
           },
         });
 
-        if (emailResult.error) {
-          console.error("❌ Error sending email:", emailResult.error);
+        if (emailError) {
+          console.error("❌ Error sending email:", emailError);
         } else {
-          console.log("✅ Credit notification email sent successfully");
+          console.log("✅ Credit notification email sent successfully:", emailResult);
         }
       } catch (emailError) {
         console.error("❌ Exception sending email:", emailError);
