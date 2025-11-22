@@ -71,6 +71,13 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
     }
   }, [selectedLocker]);
 
+  useEffect(() => {
+    // Auto-select first delivery option when locker options are loaded and none is selected yet
+    if (deliveryOptions.length > 0 && !selectedDelivery && preSelectedLocker) {
+      setSelectedDelivery(deliveryOptions[0]);
+    }
+  }, [deliveryOptions, preSelectedLocker]);
+
   const recalculateRatesForLocker = async (locker: BobGoLocation) => {
     setLockerRatesLoading(true);
     setError(null);
