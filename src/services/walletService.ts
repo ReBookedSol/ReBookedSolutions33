@@ -56,9 +56,9 @@ export class WalletService {
 
       const balance = data[0];
       return {
-        available_balance: balance.available_balance / 100,
-        pending_balance: balance.pending_balance / 100,
-        total_earned: balance.total_earned / 100,
+        available_balance: balance.available_balance,
+        pending_balance: balance.pending_balance,
+        total_earned: balance.total_earned,
       };
     } catch (error) {
       console.error("Error in getWalletBalance:", error);
@@ -100,9 +100,9 @@ export class WalletService {
 
       const balance = data[0];
       return {
-        available_balance: balance.available_balance / 100,
-        pending_balance: balance.pending_balance / 100,
-        total_earned: balance.total_earned / 100,
+        available_balance: balance.available_balance,
+        pending_balance: balance.pending_balance,
+        total_earned: balance.total_earned,
       };
     } catch (error) {
       console.error("Error in getUserWalletBalance:", error);
@@ -138,7 +138,7 @@ export class WalletService {
       return (data || []).map((tx: any) => ({
         id: tx.id,
         type: tx.type,
-        amount: tx.amount / 100,
+        amount: tx.amount,
         reason: tx.reason,
         reference_order_id: tx.reference_order_id,
         reference_payout_id: tx.reference_payout_id,
