@@ -243,7 +243,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
       <div className="flex gap-3 items-start">
         <button
           onClick={() => hasMultipleImages && setSelectedOrderForGallery(order)}
-          className={`w-14 h-18 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all ${
+          className={`w-14 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all ${
             hasMultipleImages ? 'cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400' : ''
           }`}
           title={hasMultipleImages ? "Click to view all photos" : undefined}
@@ -314,7 +314,7 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
           <div className="space-y-0.5">
             <div className="text-gray-500 font-medium">Courier / Service</div>
             <div className="flex flex-wrap items-center gap-1">
-              {courier ? <Badge variant="outline" className="text-xs">{courier}</Badge> : <span>—</span>}
+              {courier ? <Badge variant="outline" className="text-xs">{courier}</Badge> : <span>���</span>}
               {service ? <Badge variant="outline" className="text-xs">{service}</Badge> : null}
             </div>
           </div>
