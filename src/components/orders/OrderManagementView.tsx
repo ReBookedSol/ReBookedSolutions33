@@ -447,10 +447,10 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     };
 
     return (
-      <Card className="mb-4 border border-gray-200 shadow-sm rounded-lg">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
+      <Card className="mb-3 border border-gray-200 shadow-sm rounded-lg">
+        <CardHeader className="py-2 px-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
               <OrderHeaderDetails order={order} />
             </div>
             {isCollapsible && (
@@ -458,17 +458,15 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleToggle}
-                className="ml-2"
+                className="ml-2 flex-shrink-0 h-8"
               >
                 {isExpanded ? (
                   <>
-                    <ChevronUp className="h-4 w-4 mr-1" />
-                    Hide Details
+                    <ChevronUp className="h-3 w-3" />
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-4 w-4 mr-1" />
-                    View More
+                    <ChevronDown className="h-3 w-3" />
                   </>
                 )}
               </Button>
