@@ -146,7 +146,7 @@ const BookListing = () => {
 
   // Initial load
   useEffect(() => {
-    console.log("🎬 BookListing: Component mounted, starting initial book load...");
+    console.log("�� BookListing: Component mounted, starting initial book load...");
     loadBooks();
   }, [loadBooks]);
 
@@ -167,6 +167,9 @@ const BookListing = () => {
     if (selectedGrade) {
       newSearchParams.set("grade", selectedGrade);
     }
+    if (selectedGenre) {
+      newSearchParams.set("genre", selectedGenre);
+    }
     if (selectedUniversityYear) {
       newSearchParams.set("universityYear", selectedUniversityYear);
     }
@@ -184,7 +187,9 @@ const BookListing = () => {
     searchQuery,
     selectedCategory,
     selectedGrade,
+    selectedGenre,
     selectedUniversityYear,
+    selectedCurriculum,
     selectedProvince,
     setSearchParams,
   ]);
