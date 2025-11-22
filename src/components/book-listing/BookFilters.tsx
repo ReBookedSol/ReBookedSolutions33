@@ -28,8 +28,8 @@ interface BookFiltersProps {
   setSelectedProvince: (province: string) => void;
   priceRange: [number, number];
   setPriceRange: (range: [number, number]) => void;
-  bookType: "all" | "school" | "university";
-  setBookType: (type: "all" | "school" | "university") => void;
+  bookType: "all" | "school" | "university" | "reader";
+  setBookType: (type: "all" | "school" | "university" | "reader") => void;
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
   onSearch: (e: React.FormEvent) => void;
