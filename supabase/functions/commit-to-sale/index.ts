@@ -427,11 +427,13 @@ serve(async (req) => {
         country: pickupAddress.country || "ZA",
         company: sellerName
       };
-      shipmentPayload.pickup_contact_name = sellerName;
-      shipmentPayload.pickup_contact_phone = sellerPhone;
-      shipmentPayload.pickup_contact_email = sellerEmail;
       console.log(`[commit-to-sale] Pickup: Door address ${pickupAddress.city}`);
     }
+
+    // Always include pickup contact details (required by BobGo, even for locker pickups)
+    shipmentPayload.pickup_contact_name = sellerName;
+    shipmentPayload.pickup_contact_phone = sellerPhone;
+    shipmentPayload.pickup_contact_email = sellerEmail;
 
     // Add delivery information based on type
     if (deliveryData.type === 'locker') {
