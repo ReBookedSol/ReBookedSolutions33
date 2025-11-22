@@ -86,7 +86,7 @@ const BookListing = () => {
       if (category) filters.category = category;
       if (selectedCondition) filters.condition = selectedCondition;
       if (grade) filters.grade = grade;
-      if (selectedGenre) filters.genre = selectedGenre;
+      if (genre || selectedGenre) filters.genre = genre || selectedGenre;
       if (curriculum || selectedCurriculum) filters.curriculum = (curriculum || selectedCurriculum) as any;
       if (universityYear) filters.universityYear = universityYear;
       if (selectedUniversity) filters.university = selectedUniversity;
