@@ -7,16 +7,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { School, GraduationCap } from "lucide-react";
+import { School, GraduationCap, BookOpen } from "lucide-react";
 import { UNIVERSITY_YEARS, SOUTH_AFRICAN_UNIVERSITIES_SIMPLE } from "@/constants/universities";
 import { CREATE_LISTING_CATEGORIES } from "@/constants/createListingCategories";
 import { BookFormData } from "@/types/book";
 
 interface BookTypeSectionProps {
-  bookType: "school" | "university";
+  bookType: "school" | "university" | "reader";
   formData: BookFormData;
   errors: Record<string, string>;
-  onBookTypeChange: (type: "school" | "university") => void;
+  onBookTypeChange: (type: "school" | "university" | "reader") => void;
   onSelectChange: (name: string, value: string) => void;
 }
 
