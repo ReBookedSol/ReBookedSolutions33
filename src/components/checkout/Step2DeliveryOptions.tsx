@@ -50,6 +50,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
   const [lockerRatesLoading, setLockerRatesLoading] = useState(false);
+  const [localSelectedDelivery, setLocalSelectedDelivery] = useState<DeliveryOption | undefined>(selectedDelivery);
 
   useEffect(() => {
     // If a locker was pre-selected in Step1.5, automatically calculate locker rates
