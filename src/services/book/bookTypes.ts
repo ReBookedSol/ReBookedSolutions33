@@ -9,6 +9,7 @@ export interface BookFilters {
   curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
   minPrice?: number;
   maxPrice?: number;
+  itemType?: 'textbook' | 'reader' | 'all';
 }
 
 export interface ProfileData {
