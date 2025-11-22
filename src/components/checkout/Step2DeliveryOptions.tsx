@@ -127,6 +127,8 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
       if (options.length > 0) {
         console.log("✅ Updated rates for locker delivery:", options);
         setDeliveryOptions(options);
+        // Auto-select the first locker delivery option
+        onSelectDelivery(options[0]);
       }
     } catch (err) {
       console.error("Error recalculating locker rates:", err);
