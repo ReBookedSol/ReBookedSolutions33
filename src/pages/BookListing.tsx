@@ -279,6 +279,10 @@ const BookListing = () => {
             setSelectedCondition={setSelectedCondition}
             selectedGrade={selectedGrade}
             setSelectedGrade={setSelectedGrade}
+            selectedCurriculum={selectedCurriculum}
+            setSelectedCurriculum={setSelectedCurriculum}
+            selectedGenre={selectedGenre}
+            setSelectedGenre={setSelectedGenre}
             selectedUniversityYear={selectedUniversityYear}
             setSelectedUniversityYear={setSelectedUniversityYear}
             selectedUniversity={selectedUniversity}
