@@ -156,7 +156,8 @@ serve(async (req): Promise<Response> => {
           payload.collection_contact_email = pickupAddr.contact_email || order.seller_email || "seller@example.com";
         }
 
-        // Handle delivery location - CRITICAL: For lockers, ONLY send location_id, NOT address
+        // Handle delivery location - BobGo requires a delivery_address even for locker shipments
+        const deliveryAddr = delivery_address || {};
         if (deliveryType === 'locker') {
           // Locker delivery - use location_id from order or locker data
           const deliveryLocationId = order.delivery_locker_location_id ||
@@ -171,10 +172,18 @@ serve(async (req): Promise<Response> => {
           payload.delivery_contact_mobile_number = order.buyer_phone_number || "0000000000";
           payload.delivery_contact_email = order.buyer_email || "buyer@example.com";
 
-          // DO NOT send delivery_address for locker delivery
+          // Also send a physical delivery address (required by BobGo) if we have one
+          payload.delivery_address = {
+            company: deliveryAddr.company || "",
+            street_address: deliveryAddr.streetAddress || deliveryAddr.street_address || "",
+            local_area: deliveryAddr.suburb || deliveryAddr.local_area || "",
+            city: deliveryAddr.city || deliveryAddr.suburb || "",
+            zone: deliveryAddr.province || deliveryAddr.zone || "",
+            country: "ZA",
+            code: deliveryAddr.postalCode || deliveryAddr.postal_code || deliveryAddr.code || ""
+          };
         } else {
-          // Door delivery - use address
-          const deliveryAddr = delivery_address || {};
+          // Door delivery - use address from payload
           payload.delivery_address = {
             company: deliveryAddr.company || "",
             street_address: deliveryAddr.streetAddress || deliveryAddr.street_address || "",
