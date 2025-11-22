@@ -230,22 +230,23 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
 
   const OrderHeaderDetails: React.FC<{ order: Order }> = ({ order }) => {
     const role = getUserRole(order);
-    const img = order.book?.additional_images?.[0] || order.book?.image_url || "/placeholder.svg";
+    const bookImages = getBookImages(order);
+    const img = bookImages[0] || "/placeholder.svg";
     const otherPartyName = role === "buyer"
       ? (order.seller?.full_name || order.seller?.name || "Seller")
       : (order.buyer?.full_name || order.buyer?.name || "Buyer");
 
-    const bookImages = getBookImages(order);
     const hasMultipleImages = bookImages.length > 1;
 
     return (
       <div className="flex gap-4">
         <button
-          onClick={() => setSelectedOrderForGallery(order)}
+          onClick={() => hasMultipleImages && setSelectedOrderForGallery(order)}
           className={`w-16 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all ${
             hasMultipleImages ? 'cursor-pointer hover:shadow-md hover:ring-2 hover:ring-book-600' : ''
           }`}
           title={hasMultipleImages ? "Click to view all photos" : undefined}
+          disabled={!hasMultipleImages}
         >
           <img
             src={img}
