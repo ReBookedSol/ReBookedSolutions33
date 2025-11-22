@@ -109,13 +109,29 @@ serve(async (req) => {
     // Validate and format address for BobGo
     const formatAddressForBobGo = (addr: any) => {
       if (!addr) return null;
+
+      // Normalize all field values first
+      const streetAddress = (addr.street_address || addr.streetAddress || addr.street || "").toString().trim();
+      const localArea = (addr.local_area || addr.suburb || "").toString().trim();
+      const city = (addr.city || "").toString().trim();
+      const province = (addr.province || addr.zone || "").toString().trim();
+      const postalCode = (addr.code || addr.postalCode || addr.postal_code || "").toString().trim();
+      const country = (addr.country || "").toString().trim();
+
+      // Only default country to "ZA" if not explicitly set, don't use it as fallback for other fields
+      const formattedCountry = country && country.length > 0 && country.toUpperCase() !== "SOUTH AFRICA" ? country : "ZA";
+      const formattedZone = province && province.length > 0 ? province.toUpperCase().substring(0, 3) : "ZA";
+
+      // Use city first, then local_area/suburb as fallback
+      const formattedCity = city || localArea || "";
+
       return {
-        street_address: (addr.street_address || addr.streetAddress || addr.street || "").toString().trim(),
-        local_area: (addr.local_area || addr.suburb || addr.city || "").toString().trim(),
-        city: (addr.city || addr.local_area || addr.suburb || "").toString().trim(),
-        zone: (addr.zone || addr.province || "ZA").toString().trim(),
-        code: (addr.code || addr.postalCode || addr.postal_code || "").toString().trim(),
-        country: (addr.country || "ZA").toString().trim(),
+        street_address: streetAddress,
+        local_area: localArea || city,  // local_area is suburb/locality name
+        city: formattedCity,
+        zone: formattedZone,
+        code: postalCode,
+        country: formattedCountry,
         ...(addr.company && { company: addr.company.toString().trim() }),
       };
     };
