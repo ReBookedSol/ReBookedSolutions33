@@ -149,6 +149,47 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     }
   };
 
+  const checkSellerPickupAddress = async () => {
+    try {
+      setIsCheckingPickupAddress(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setSellerHasPickupAddress(false);
+        return;
+      }
+
+      // Check if seller has pickup address in their profile
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("pickup_address_encrypted")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.warn("Failed to check pickup address:", error);
+        setSellerHasPickupAddress(false);
+        return;
+      }
+
+      const hasAddress = !!profile?.pickup_address_encrypted;
+      setSellerHasPickupAddress(hasAddress);
+      console.log("✅ Seller pickup address check:", hasAddress ? "Has address" : "No address");
+
+      // If seller doesn't have a home address, force locker selection
+      if (!hasAddress && deliveryMethod === "home") {
+        setDeliveryMethod("locker");
+      }
+    } catch (error) {
+      console.error("Error checking seller pickup address:", error);
+      setSellerHasPickupAddress(false);
+    } finally {
+      setIsCheckingPickupAddress(false);
+    }
+  };
+
   // Auto-select locker method with saved locker
   const handleSelectLockerMethod = (currentSavedLocker: BobGoLocation | null) => {
     setDeliveryMethod("locker");
