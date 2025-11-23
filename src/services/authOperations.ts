@@ -301,7 +301,7 @@ export const fetchUserProfile = async (user: User): Promise<Profile | null> => {
           supabase
             .from("profiles")
             .select(
-              "id, first_name, last_name, name, email, status, profile_picture_url, bio, is_admin",
+              "id, first_name, last_name, name, full_name, email, status, profile_picture_url, bio, is_admin",
             )
             .eq("id", user.id)
             .single(),
