@@ -444,6 +444,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         ...prev,
         book: updatedBook,
         seller_address: sellerAddress,
+        seller_locker_data: sellerLockerData,
         buyer_address: buyerAddress,
         loading: false,
       }));
