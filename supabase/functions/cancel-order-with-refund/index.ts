@@ -136,14 +136,19 @@ Deno.serve(async (req) => {
     );
 
     if (refundError) {
-      console.error('Refund failed:', refundError);
+      console.error('Refund failed with error:', refundError);
       throw new Error(`Refund failed: ${refundError.message}`);
     }
 
-    console.log('Refund processed successfully');
+    if (!refundResult || !refundResult.success) {
+      console.error('Refund was not successful:', refundResult);
+      throw new Error(`Refund failed: ${refundResult?.error || 'Unknown refund error'}`);
+    }
+
+    console.log('Refund processed successfully:', refundResult);
 
     // Step 3: Update order status
-    await supabaseClient
+    const { error: updateError } = await supabaseClient
       .from('orders')
       .update({
         status: 'cancelled',
@@ -154,6 +159,11 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq('id', cancelData.order_id);
+
+    if (updateError) {
+      console.error('Failed to update order status:', updateError);
+      throw new Error(`Failed to update order status: ${updateError.message}`);
+    }
 
     console.log('Order status updated to cancelled');
 
