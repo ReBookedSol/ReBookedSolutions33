@@ -192,38 +192,36 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
 
       {/* Search Section */}
       <Card className="border-0 shadow-lg">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-1">
-          <CardContent className="p-6 bg-white rounded-lg m-1">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <Input
-                  placeholder="Enter tracking number (e.g., BOG123456789)"
-                  value={trackingNumber}
-                  onChange={(e) => setTrackingNumber(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleTrack()}
-                  className="text-base h-12 border-2 border-gray-300 focus:border-blue-600 focus:ring-blue-600"
-                />
-              </div>
-              <Button
-                onClick={handleTrack}
-                disabled={loading || !trackingNumber.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 font-semibold rounded-lg transition"
-              >
-                {loading ? (
-                  <>
-                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2"></div>
-                    Tracking...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" />
-                    Track
-                  </>
-                )}
-              </Button>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Input
+                placeholder="Enter tracking number (e.g., BOG123456789)"
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleTrack()}
+                className="text-base h-12 border-2 border-gray-300 focus:border-blue-600 focus:ring-blue-600"
+              />
             </div>
-          </CardContent>
-        </div>
+            <Button
+              onClick={handleTrack}
+              disabled={loading || !trackingNumber.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 font-semibold rounded-lg transition"
+            >
+              {loading ? (
+                <>
+                  <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2"></div>
+                  Tracking...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4 mr-2" />
+                  Track
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Loading State */}
