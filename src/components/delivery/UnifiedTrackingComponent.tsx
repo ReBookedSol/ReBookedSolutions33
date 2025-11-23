@@ -269,7 +269,7 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
                   <div>
                     <p className="text-sm text-gray-600">Estimated Delivery</p>
                     <p className="font-medium">
-                      {formatDateTime(trackingData.estimated_delivery)}
+                      {trackingData.estimated_delivery ? formatDateTime(trackingData.estimated_delivery) : "Not available"}
                     </p>
                   </div>
                 </div>
@@ -282,6 +282,22 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
                         {formatDateTime(trackingData.actual_delivery)}
                       </p>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Courier & Service Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
+                {trackingData.courier_name && (
+                  <div>
+                    <p className="text-sm text-gray-600">Courier</p>
+                    <p className="font-medium">{trackingData.courier_name}</p>
+                  </div>
+                )}
+                {trackingData.service_level && (
+                  <div>
+                    <p className="text-sm text-gray-600">Service Level</p>
+                    <p className="font-medium text-sm">{trackingData.service_level}</p>
                   </div>
                 )}
               </div>
