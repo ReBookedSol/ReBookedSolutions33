@@ -404,35 +404,9 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div>
-              <p className="text-sm font-medium text-gray-600">From (Seller)</p>
-              {sellerAddress ? (
-                <p className="text-sm">
-                  {sellerAddress.street}, {sellerAddress.city},{" "}
-                  {sellerAddress.province} {sellerAddress.postal_code}
-                </p>
-              ) : sellerLockerData ? (
-                <>
-                  <p className="text-sm font-semibold text-purple-700">
-                    📍 {sellerLockerData.name}
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    {sellerLockerData.address || sellerLockerData.full_address}
-                  </p>
-                  {sellerLockerData.provider_slug && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Provider: {sellerLockerData.pickup_point_provider_name || sellerLockerData.provider_slug}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-gray-500">No seller location available</p>
-              )}
-            </div>
-            <div className="border-t pt-3">
-              <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium text-gray-600">To (You)</p>
-                {onEditAddress && (
+                {onEditAddress && !preSelectedLocker && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -444,10 +418,27 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
                   </Button>
                 )}
               </div>
-              <p className="text-sm">
-                {buyerAddress.street}, {buyerAddress.city},{" "}
-                {buyerAddress.province} {buyerAddress.postal_code}
-              </p>
+            <div>
+              {preSelectedLocker ? (
+                <>
+                  <p className="text-sm font-semibold text-purple-700">
+                    📍 {preSelectedLocker.name}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {preSelectedLocker.address || preSelectedLocker.full_address}
+                  </p>
+                  {preSelectedLocker.provider_slug && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Provider: {preSelectedLocker.pickup_point_provider_name || preSelectedLocker.provider_slug}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm">
+                  {buyerAddress.street}, {buyerAddress.city},{" "}
+                  {buyerAddress.province} {buyerAddress.postal_code}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -472,18 +463,24 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
             <AccordionContent>
               <div className="divide-y">
                 {items.map((q, idx) => {
+                  let zoneType: "local" | "provincial" | "national" | "locker" = "national";
+                  if (sellerAddress && buyerAddress) {
+                    zoneType = buyerAddress.province === sellerAddress.province
+                      ? buyerAddress.city === sellerAddress.city
+                        ? "local"
+                        : "provincial"
+                      : "national";
+                  } else if (!sellerAddress && sellerLockerData) {
+                    zoneType = "locker";
+                  }
+
                   const option: DeliveryOption = {
                     courier: "bobgo",
                     service_name: q.service_name,
                     price: q.cost + 15,
                     estimated_days: typeof q.transit_days === "number" ? q.transit_days : 3,
                     description: `${courier}`,
-                    zone_type:
-                      buyerAddress.province === sellerAddress.province
-                        ? buyerAddress.city === sellerAddress.city
-                          ? "local"
-                          : "provincial"
-                        : "national",
+                    zone_type: zoneType,
                     provider_name: q.provider_name,
                     provider_slug: q.provider_slug,
                     service_level_code: q.service_level_code,
@@ -541,8 +538,8 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
         </AlertDescription>
       </Alert>
 
-      {/* BobGo Locker Selection - Show when BobGo delivery is selected */}
-      {localSelectedDelivery && localSelectedDelivery.courier === "bobgo" && (
+      {/* BobGo Locker Selection - Show when BobGo delivery is selected and no locker pre-selected */}
+      {localSelectedDelivery && localSelectedDelivery.courier === "bobgo" && !preSelectedLocker && (
         <Card className="border-purple-200 bg-purple-50">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
