@@ -1,5 +1,6 @@
 import { Book } from "@/types/book";
 import { BookQueryResult } from "./bookTypes";
+import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 
 export const mapBookFromDatabase = (bookData: BookQueryResult): Book => {
   const profile = bookData.profiles;
