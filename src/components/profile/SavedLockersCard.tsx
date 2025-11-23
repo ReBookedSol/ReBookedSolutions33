@@ -175,9 +175,9 @@ const SavedLockersCard = forwardRef<
         <CardContent className="p-6">
           <div className="space-y-5">
             {/* Image and Basic Info Row */}
-            <div className="flex gap-5">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
               {/* Image */}
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 w-full sm:w-auto">
                 {(locker.image_url || locker.pickup_point_provider_logo_url) ? (
                   <div
                     className="cursor-pointer hover:opacity-80 transition-opacity"
@@ -186,14 +186,14 @@ const SavedLockersCard = forwardRef<
                     <img
                       src={locker.image_url || locker.pickup_point_provider_logo_url}
                       alt={locker.name}
-                      className="h-24 w-24 object-cover rounded-lg border border-gray-200 shadow-sm"
+                      className="w-full h-auto sm:h-24 sm:w-24 object-cover rounded-lg border border-gray-200 shadow-sm"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
                     />
                   </div>
                 ) : (
-                  <div className="h-24 w-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
+                  <div className="w-full h-32 sm:h-24 sm:w-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
                     <MapPin className="h-6 w-6 text-gray-400" />
                   </div>
                 )}
