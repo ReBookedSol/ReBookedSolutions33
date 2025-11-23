@@ -47,7 +47,8 @@ export interface OrderSummary {
   book: CheckoutBook;
   delivery: DeliveryOption;
   buyer_address: CheckoutAddress;
-  seller_address: CheckoutAddress;
+  seller_address: CheckoutAddress | null;
+  seller_locker_data?: BobGoLocker | null;
   book_price: number;
   delivery_price: number;
   platform_fee?: number;
