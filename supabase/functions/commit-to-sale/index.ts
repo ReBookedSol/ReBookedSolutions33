@@ -93,48 +93,75 @@ serve(async (req) => {
 
     // Get seller pickup information based on type
     let pickupData: any = null;
+    let pickupLockerLocationId: string | null = null;
+    let pickupLockerProviderSlug: string = "pargo";
+    let pickupLockerDataToSave: any = null;
 
     if (pickupType === 'locker') {
-      // Locker pickup - get locker details from order
-      console.log(`[commit-to-sale] Getting seller locker pickup info from order`);
+      // Locker pickup - prioritize seller-selected locker from request body
+      console.log(`[commit-to-sale] Getting seller locker pickup info`);
 
-      const pickupLocationId = order.pickup_locker_location_id;
-      const pickupProviderSlug = order.pickup_locker_provider_slug;
-      const pickupLockerData = order.pickup_locker_data;
-
-      if (pickupLocationId && pickupProviderSlug) {
+      if (locker_data) {
+        // Use seller-selected locker from request body
+        console.log(`[commit-to-sale] Using seller-selected locker: ${locker_data.name}`);
         pickupData = {
           type: 'locker',
-          location_id: pickupLocationId,
-          provider_slug: pickupProviderSlug,
-          locker_data: pickupLockerData
+          location_id: locker_data.id,
+          provider_slug: locker_data.provider_slug || 'pargo',
+          locker_data: locker_data
         };
-      } else if (pickupLockerData?.id && pickupLockerData?.provider_slug) {
-        // Fallback to locker_data JSON
-        pickupData = {
-          type: 'locker',
-          location_id: pickupLockerData.id,
-          provider_slug: pickupLockerData.provider_slug,
-          locker_data: pickupLockerData
-        };
+        pickupLockerLocationId = locker_data.id;
+        pickupLockerProviderSlug = locker_data.provider_slug || 'pargo';
+        pickupLockerDataToSave = locker_data;
       } else {
-        // Fallback to seller profile for missing locker info
-        console.log(`[commit-to-sale] Locker info incomplete, checking seller profile`);
-        const { data: sellerProfile } = await supabase
-          .from("profiles")
-          .select("preferred_delivery_locker_location_id, preferred_delivery_locker_provider_slug, preferred_delivery_locker_data")
-          .eq("id", order.seller_id)
-          .single();
+        // Fallback to order's stored locker info
+        const pickupLocationId = order.pickup_locker_location_id;
+        const pickupProviderSlug = order.pickup_locker_provider_slug;
+        const pickupLockerData = order.pickup_locker_data;
 
-        if (sellerProfile?.preferred_delivery_locker_location_id) {
+        if (pickupLocationId && pickupProviderSlug) {
           pickupData = {
             type: 'locker',
-            location_id: sellerProfile.preferred_delivery_locker_location_id,
-            provider_slug: sellerProfile.preferred_delivery_locker_provider_slug || 'pargo',
-            locker_data: sellerProfile.preferred_delivery_locker_data
+            location_id: pickupLocationId,
+            provider_slug: pickupProviderSlug,
+            locker_data: pickupLockerData
           };
+          pickupLockerLocationId = pickupLocationId;
+          pickupLockerProviderSlug = pickupProviderSlug;
+          pickupLockerDataToSave = pickupLockerData;
+        } else if (pickupLockerData?.id && pickupLockerData?.provider_slug) {
+          // Fallback to locker_data JSON
+          pickupData = {
+            type: 'locker',
+            location_id: pickupLockerData.id,
+            provider_slug: pickupLockerData.provider_slug,
+            locker_data: pickupLockerData
+          };
+          pickupLockerLocationId = pickupLockerData.id;
+          pickupLockerProviderSlug = pickupLockerData.provider_slug;
+          pickupLockerDataToSave = pickupLockerData;
         } else {
-          throw new Error("Seller locker pickup information not found");
+          // Fallback to seller profile for missing locker info
+          console.log(`[commit-to-sale] Locker info incomplete, checking seller profile`);
+          const { data: sellerProfile } = await supabase
+            .from("profiles")
+            .select("preferred_delivery_locker_location_id, preferred_delivery_locker_provider_slug, preferred_delivery_locker_data")
+            .eq("id", order.seller_id)
+            .single();
+
+          if (sellerProfile?.preferred_delivery_locker_location_id) {
+            pickupData = {
+              type: 'locker',
+              location_id: sellerProfile.preferred_delivery_locker_location_id,
+              provider_slug: sellerProfile.preferred_delivery_locker_provider_slug || 'pargo',
+              locker_data: sellerProfile.preferred_delivery_locker_data
+            };
+            pickupLockerLocationId = sellerProfile.preferred_delivery_locker_location_id;
+            pickupLockerProviderSlug = sellerProfile.preferred_delivery_locker_provider_slug || 'pargo';
+            pickupLockerDataToSave = sellerProfile.preferred_delivery_locker_data;
+          } else {
+            throw new Error("Seller locker pickup information not found");
+          }
         }
       }
     } else {
