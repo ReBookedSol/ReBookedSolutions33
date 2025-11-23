@@ -97,20 +97,17 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
         throw new Error("Locker is missing required information (ID or provider slug)");
       }
 
+      // Determine if seller has only locker (no physical address)
+      const sellerHasOnlyLocker = !sellerAddress && sellerLockerData;
+
       console.log("📍 Calculating rates to locker:", {
         locker_name: locker.name,
         location_id: locker.id,
         provider_slug: locker.provider_slug,
+        sellerHasOnlyLocker,
       });
 
-      const quotesResp = await getAllDeliveryQuotes({
-        from: {
-          streetAddress: sellerAddress.street,
-          suburb: sellerAddress.city,
-          city: sellerAddress.city,
-          province: sellerAddress.province,
-          postalCode: sellerAddress.postal_code,
-        },
+      const quoteRequest: any = {
         to: {
           streetAddress: buyerAddress.street,
           suburb: buyerAddress.city,
@@ -124,7 +121,33 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
           providerSlug: locker.provider_slug || "",
         },
         user_id: user?.id,
-      });
+      };
+
+      // If seller has only locker, use it as the collection point; otherwise use address
+      if (sellerHasOnlyLocker && sellerLockerData?.id && sellerLockerData?.provider_slug) {
+        quoteRequest.from = {
+          streetAddress: "",
+          city: "",
+          province: "",
+          postalCode: "",
+        };
+        quoteRequest.sellerCollectionPickupPoint = {
+          locationId: sellerLockerData.id,
+          providerSlug: sellerLockerData.provider_slug,
+        };
+      } else if (sellerAddress) {
+        quoteRequest.from = {
+          streetAddress: sellerAddress.street,
+          suburb: sellerAddress.city,
+          city: sellerAddress.city,
+          province: sellerAddress.province,
+          postalCode: sellerAddress.postal_code,
+        };
+      } else {
+        throw new Error("No seller address or locker location available for rate calculation");
+      }
+
+      const quotesResp = await getAllDeliveryQuotes(quoteRequest);
 
       setQuotes(quotesResp);
 
