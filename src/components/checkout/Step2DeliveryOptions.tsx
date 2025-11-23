@@ -63,7 +63,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
     } else {
       fetchDeliveryOptions();
     }
-  }, [buyerAddress, sellerAddress, preSelectedLocker]);
+  }, [buyerAddress, sellerAddress, sellerLockerData, preSelectedLocker]);
 
   useEffect(() => {
     // Recalculate rates when a locker is selected
