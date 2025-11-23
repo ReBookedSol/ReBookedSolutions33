@@ -170,7 +170,30 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
 
       console.log("🔍 Raw seller address result:", sellerAddress);
 
+      // Fetch seller's preferred locker data separately if no physical address
+      let sellerLockerData = null;
       if (!sellerAddress) {
+        console.log("📍 No physical address found, checking for seller's preferred locker...");
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("preferred_delivery_locker_data")
+            .eq("id", bookData.seller_id)
+            .maybeSingle();
+
+          if (!profileError && profile?.preferred_delivery_locker_data) {
+            const lockerData = profile.preferred_delivery_locker_data as any;
+            if (lockerData.id && lockerData.name && lockerData.provider_slug) {
+              sellerLockerData = lockerData;
+              console.log("✅ Found seller's preferred locker:", lockerData.name);
+            }
+          }
+        } catch (lockerError) {
+          console.warn("Failed to fetch seller's preferred locker:", lockerError);
+        }
+      }
+
+      if (!sellerAddress && !sellerLockerData) {
         // Let's check what's in the database directly for debugging
         console.log("❌ getSellerDeliveryAddress returned null, checking database directly...");
 
