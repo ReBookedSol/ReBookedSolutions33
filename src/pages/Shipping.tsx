@@ -225,13 +225,15 @@ const Shipping = () => {
             </CardContent>
           </Card>
 
-          {/* Tracking section removed per policy; use official tracking site */}
-          <Separator />
-
-          {/* Help */}
-          <div className="text-center text-sm text-gray-600">
-            For tracking, use the official BobGo site with your tracking number: https://track.bobgo.co.za
-          </div>
+          {/* Tracking Section */}
+          <Card className="border-0 shadow-sm ring-1 ring-black/5 bg-gradient-to-br from-blue-50 to-white">
+            <CardHeader>
+              <SectionTitle subtitle="Enter your tracking number to get real-time delivery updates">Track Your Order</SectionTitle>
+            </CardHeader>
+            <CardContent>
+              <UnifiedTrackingComponent initialTrackingNumber={initialTracking} provider="bobgo" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>
