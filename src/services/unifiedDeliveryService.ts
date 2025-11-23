@@ -348,23 +348,34 @@ export const trackUnifiedShipment = async (
   const { data, error } = await supabase.functions.invoke(`bobgo-track-shipment/${encodeURIComponent(trackingNumber)}`, { method: "GET" as any });
   if (error) throw new Error(error.message);
   const t = data?.tracking || {};
-  const events = (t.events || []).map((e: any) => ({
-    timestamp: e.timestamp,
+
+  // Map checkpoints to events
+  const events = (t.checkpoints || t.events || []).map((e: any) => ({
+    timestamp: e.time || e.timestamp,
     status: (e.status || "").toLowerCase(),
-    location: e.location,
+    location: e.location || e.zone,
     description: e.message || e.status_friendly || e.status,
+    signature: e.signature,
   }));
+
   return {
     provider: "bobgo",
     tracking_number: trackingNumber,
     status: (t.status || "pending").toLowerCase(),
-    current_location: t.current_location,
-    estimated_delivery: t.estimated_delivery,
-    actual_delivery: t.delivered_at,
+    current_location: t.current_location || t.zone,
+    estimated_delivery: t.estimated_delivery || t.shipment_estimated_delivery_date_to,
+    actual_delivery: t.delivered_at || t.shipment_movement_events?.delivered_time,
     events,
     recipient_signature: t.recipient_signature,
     proof_of_delivery: undefined,
     tracking_url: `https://track.bobgo.co.za/${encodeURIComponent(trackingNumber)}`,
+    courier_name: t.courier_name,
+    courier_slug: t.courier_slug,
+    service_level: t.service_level,
+    shipment_id: t.id || t.shipment_id,
+    merchant_name: t.merchant_name,
+    created_at: t.shipment_time_created,
+    last_updated: t.last_checkpoint_time,
   };
 };
 
