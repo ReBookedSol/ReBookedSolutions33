@@ -248,12 +248,12 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
       {/* Error State */}
       {error && (
         <Card className="border-red-200 bg-red-50">
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-            <h3 className="text-lg font-semibold text-red-900 mb-2">
+          <CardContent className="flex flex-col items-center justify-center p-4 sm:p-8">
+            <AlertCircle className="h-10 sm:h-12 w-10 sm:w-12 text-red-500 mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-lg font-semibold text-red-900 mb-2">
               Tracking Failed
             </h3>
-            <p className="text-red-700 text-center">{error}</p>
+            <p className="text-red-700 text-center text-sm sm:text-base break-words">{error}</p>
           </CardContent>
         </Card>
       )}
