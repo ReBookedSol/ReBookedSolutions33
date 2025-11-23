@@ -292,7 +292,7 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
               </div>
 
               {/* Courier & Service Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t">
                 {trackingData.courier_name && (
                   <div>
                     <p className="text-sm text-gray-600">Courier</p>
@@ -303,6 +303,18 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
                   <div>
                     <p className="text-sm text-gray-600">Service Level</p>
                     <p className="font-medium text-sm">{trackingData.service_level}</p>
+                  </div>
+                )}
+                {trackingData.created_at && (
+                  <div>
+                    <p className="text-sm text-gray-600">Created</p>
+                    <p className="font-medium text-sm">{formatDateTime(trackingData.created_at)}</p>
+                  </div>
+                )}
+                {trackingData.last_updated && (
+                  <div>
+                    <p className="text-sm text-gray-600">Last Updated</p>
+                    <p className="font-medium text-sm">{formatDateTime(trackingData.last_updated)}</p>
                   </div>
                 )}
               </div>
