@@ -473,24 +473,37 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
                 <div className="space-y-4">
                   {/* Home Pick-Up Option */}
                   <div
-                    className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      deliveryMethod === "home"
-                        ? "bg-blue-50 border-blue-500"
-                        : "bg-gray-50 border-gray-200 hover:border-blue-300"
+                    className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg transition-all ${
+                      !sellerHasPickupAddress
+                        ? "cursor-not-allowed opacity-60 bg-gray-100 border-gray-300"
+                        : `cursor-pointer ${
+                            deliveryMethod === "home"
+                              ? "bg-blue-50 border-blue-500"
+                              : "bg-gray-50 border-gray-200 hover:border-blue-300"
+                          }`
                     }`}
                     onClick={() => {
-                      setDeliveryMethod("home");
-                      setSelectedLocker(null);
+                      if (sellerHasPickupAddress) {
+                        setDeliveryMethod("home");
+                        setSelectedLocker(null);
+                      }
                     }}
                   >
-                    <RadioGroupItem value="home" className="mt-1 flex-shrink-0" />
+                    <RadioGroupItem value="home" className="mt-1 flex-shrink-0" disabled={!sellerHasPickupAddress} />
                     <div className="flex-1">
-                      <Label className="flex items-center gap-2 font-medium text-sm sm:text-base cursor-pointer">
+                      <Label className={`flex items-center gap-2 font-medium text-sm sm:text-base ${
+                        sellerHasPickupAddress ? "cursor-pointer" : "text-gray-500"
+                      }`}>
                         <Home className="w-4 h-4 flex-shrink-0" />
                         <span>Home Pick-Up (Courier Collection)</span>
                       </Label>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                        Our courier will collect the book from your address at a scheduled time.
+                      <p className={`text-xs sm:text-sm mt-1 ${
+                        sellerHasPickupAddress ? "text-gray-600" : "text-gray-500"
+                      }`}>
+                        {sellerHasPickupAddress
+                          ? "Our courier will collect the book from your address at a scheduled time."
+                          : "You haven't set up a pickup address in your profile."
+                        }
                       </p>
                     </div>
                   </div>
