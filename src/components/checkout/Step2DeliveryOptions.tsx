@@ -38,6 +38,7 @@ interface Step2DeliveryOptionsProps {
 const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
   buyerAddress,
   sellerAddress,
+  sellerLockerData,
   onSelectDelivery,
   onBack,
   onCancel,
