@@ -361,32 +361,34 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
               {trackingData.events.length > 0 ? (
                 <div className="space-y-4">
                   {trackingData.events.map((event, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getStatusIcon(event.status)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {event.description}
-                            </p>
-                            {event.location && (
-                              <p className="text-sm text-gray-600 flex items-center">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                {event.location}
-                              </p>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-500 mt-1 sm:mt-0">
-                            {formatDateTime(event.timestamp)}
-                          </p>
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 mt-1">
+                          {getStatusIcon(event.status)}
                         </div>
-                        {event.signature && (
-                          <p className="text-sm text-green-600 mt-1">
-                            Signed by: {event.signature}
-                          </p>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">
+                                {event.description}
+                              </p>
+                              {event.location && (
+                                <p className="text-sm text-gray-600 flex items-center mt-1">
+                                  <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                                  {event.location}
+                                </p>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500 whitespace-nowrap">
+                              {formatDateTime(event.timestamp)}
+                            </p>
+                          </div>
+                          {event.signature && (
+                            <p className="text-sm text-green-600 mt-2">
+                              ✓ Signed by: {event.signature}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
