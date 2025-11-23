@@ -76,23 +76,6 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
     }
   };
 
-  const handleCancelShipment = async () => {
-    if (!trackingNumber) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.functions.invoke("bobgo-cancel-shipment", {
-        body: { tracking_number: trackingNumber, reason: "Cancelled by user" },
-      });
-      if (error || !data?.success) throw new Error(error?.message || data?.error || "Cancel failed");
-      toast.success("Shipment cancellation requested");
-      await handleTrack();
-    } catch (err) {
-      console.error("Cancel shipment failed:", err);
-      toast.error("Unable to cancel shipment");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
