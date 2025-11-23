@@ -131,13 +131,29 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
           reason: cancelReason || "Cancelled by Seller",
         },
       });
-      if (error || !data?.success) {
-        throw new Error(error?.message || data?.error || "Cancellation failed");
+
+      console.log("Seller cancel response:", { data, error });
+
+      if (error) {
+        console.error("Seller cancel error:", error);
+        throw new Error(error.message || "Failed to cancel order");
       }
-      toast.success("Order cancelled successfully");
+
+      if (!data?.success) {
+        console.error("Seller cancellation failed:", data);
+        throw new Error(data?.error || "Cancellation failed");
+      }
+
+      console.log("✓ Seller cancellation successful:", data);
+      toast.success(data.message || "Order cancelled successfully");
       setShowCancelDialog(false);
-      onOrderUpdate();
+
+      // Refresh order data after successful cancellation
+      setTimeout(() => {
+        onOrderUpdate();
+      }, 500);
     } catch (err: any) {
+      console.error("Seller cancel catch error:", err);
       toast.error(err?.message || "Failed to cancel order");
     } finally {
       setIsLoading(false);
