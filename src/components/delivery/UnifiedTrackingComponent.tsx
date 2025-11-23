@@ -388,43 +388,59 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
           </Card>
 
           {/* Tracking History */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5" />
-                <span>Tracking History</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="border-0 shadow-lg">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-orange-100">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-3 text-xl font-bold text-gray-900">
+                  <div className="bg-white rounded-full p-2 shadow-md">
+                    <Clock className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <span>Tracking History</span>
+                </CardTitle>
+              </CardHeader>
+            </div>
+            <CardContent className="p-6">
               {trackingData.events.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-0">
                   {trackingData.events.map((event, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition">
-                      <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 mt-1">
-                          {getStatusIcon(event.status)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div className="flex-1">
-                              <p className="font-medium text-gray-900">
-                                {event.description}
-                              </p>
-                              {event.location && (
-                                <p className="text-sm text-gray-600 flex items-center mt-1">
-                                  <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                                  {event.location}
-                                </p>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-500 whitespace-nowrap">
-                              {formatDateTime(event.timestamp)}
-                            </p>
+                    <div key={index} className="relative">
+                      {/* Timeline line */}
+                      {index < trackingData.events.length - 1 && (
+                        <div className="absolute left-8 top-16 bottom-0 w-0.5 bg-gradient-to-b from-blue-300 to-gray-200"></div>
+                      )}
+
+                      {/* Event item */}
+                      <div className="flex gap-4 pb-6">
+                        {/* Icon circle */}
+                        <div className="relative flex-shrink-0 mt-1">
+                          <div className="flex items-center justify-center h-12 w-12 rounded-full bg-white border-3 border-blue-500 shadow-md relative z-10">
+                            {getStatusIcon(event.status)}
                           </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition hover:border-blue-300">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                            <h4 className="font-bold text-gray-900 text-sm">
+                              {event.description}
+                            </h4>
+                            <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap">
+                              {formatDateTime(event.timestamp)}
+                            </span>
+                          </div>
+
+                          {event.location && (
+                            <div className="flex items-center text-sm text-gray-600 mt-2">
+                              <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-gray-400" />
+                              <span className="font-medium">{event.location}</span>
+                            </div>
+                          )}
+
                           {event.signature && (
-                            <p className="text-sm text-green-600 mt-2">
-                              ✓ Signed by: {event.signature}
-                            </p>
+                            <div className="flex items-center text-sm text-green-700 bg-green-50 rounded p-2 mt-3 border border-green-200">
+                              <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                              <span className="font-medium">Signed by: {event.signature}</span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -432,10 +448,13 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">
+                <div className="text-center py-12">
+                  <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600 font-medium">
                     No tracking events available yet
+                  </p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Check back soon for updates
                   </p>
                 </div>
               )}
