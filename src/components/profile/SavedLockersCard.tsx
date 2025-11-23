@@ -159,7 +159,7 @@ const SavedLockersCard = forwardRef<
 
     return (
       <Card className="border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden">
-        <CardHeader className="border-b border-gray-100 bg-white py-4 px-6">
+        <CardHeader className="border-b border-gray-100 bg-white py-4 px-6 space-y-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
               <MapPin className="h-5 w-5 text-blue-600" />
@@ -169,6 +169,29 @@ const SavedLockersCard = forwardRef<
               <CheckCircle className="h-3 w-3 mr-1" />
               Active
             </Badge>
+          </div>
+
+          {/* Image Section */}
+          <div className="flex justify-center">
+            {(locker.image_url || locker.pickup_point_provider_logo_url) ? (
+              <div
+                className="cursor-pointer hover:opacity-80 transition-opacity max-w-xs w-full"
+                onClick={() => onImageSelect(locker.image_url || locker.pickup_point_provider_logo_url || "")}
+              >
+                <img
+                  src={locker.image_url || locker.pickup_point_provider_logo_url}
+                  alt={locker.name}
+                  className="w-full h-auto object-cover rounded-lg border border-gray-200 shadow-sm"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="w-full max-w-xs h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
+                <MapPin className="h-8 w-8 text-gray-400" />
+              </div>
+            )}
           </div>
         </CardHeader>
 
