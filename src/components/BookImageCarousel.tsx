@@ -121,8 +121,8 @@ const BookImageCarousel = ({ images }: BookImageCarouselProps) => {
 
       {/* Lightbox Modal */}
       <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
-        <DialogContent className="max-w-4xl w-full h-screen sm:h-auto max-h-[95vh] p-0 border-0 bg-black/95 flex flex-col">
-          <DialogClose className="absolute right-4 top-4 text-white hover:bg-white/20 z-10 rounded-md p-2" asChild>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] sm:max-h-[95vh] p-0 border-0 bg-black/80 flex flex-col gap-0 rounded-lg sm:rounded-lg">
+          <DialogClose className="absolute right-2 top-2 sm:right-4 sm:top-4 text-white hover:bg-white/20 z-10 rounded-md p-2" asChild>
             <button>
               <X className="h-6 w-6" />
               <span className="sr-only">Close</span>
@@ -130,7 +130,7 @@ const BookImageCarousel = ({ images }: BookImageCarouselProps) => {
           </DialogClose>
 
           {/* Image container */}
-          <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
+          <div className="flex-1 flex items-center justify-center w-full overflow-hidden min-h-[400px] sm:min-h-[500px]">
             <img
               src={images[currentImageIndex]}
               alt={`Book image ${currentImageIndex + 1}`}
@@ -140,27 +140,27 @@ const BookImageCarousel = ({ images }: BookImageCarouselProps) => {
 
           {/* Navigation controls and counter */}
           {images.length > 1 && (
-            <div className="flex items-center justify-between gap-4 p-4 bg-black/50">
+            <div className="flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 bg-black/60">
               <Button
                 variant="ghost"
                 size="lg"
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 h-9 w-9 sm:h-10 sm:w-10 p-0"
                 onClick={prevImage}
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
               </Button>
 
-              <div className="text-white text-sm font-medium min-w-fit">
+              <div className="text-white text-xs sm:text-sm font-medium min-w-fit">
                 {currentImageIndex + 1} / {images.length}
               </div>
 
               <Button
                 variant="ghost"
                 size="lg"
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 h-9 w-9 sm:h-10 sm:w-10 p-0"
                 onClick={nextImage}
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
               </Button>
             </div>
           )}
