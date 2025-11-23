@@ -372,11 +372,11 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
 
               {/* Delivery Signature */}
               {trackingData.recipient_signature && (
-                <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <User className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <div>
+                <div className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
+                  <User className="h-4 sm:h-5 w-4 sm:w-5 text-green-600 flex-shrink-0" />
+                  <div className="min-w-0">
                     <p className="text-xs font-semibold text-green-700 uppercase">Signed by</p>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 text-xs sm:text-sm break-words">
                       {trackingData.recipient_signature}
                     </p>
                   </div>
@@ -390,7 +390,7 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
                     const url = trackingData.tracking_url || `https://track.bobgo.co.za/${encodeURIComponent(trackingData.tracking_number)}`;
                     window.open(url, "_blank");
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
+                  className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto text-sm sm:text-base"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   View on Courier Website
