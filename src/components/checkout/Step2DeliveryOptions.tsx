@@ -549,8 +549,8 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
         </AlertDescription>
       </Alert>
 
-      {/* BobGo Locker Selection - Show when BobGo delivery is selected */}
-      {localSelectedDelivery && localSelectedDelivery.courier === "bobgo" && (
+      {/* BobGo Locker Selection - Show when BobGo delivery is selected and no locker pre-selected */}
+      {localSelectedDelivery && localSelectedDelivery.courier === "bobgo" && !preSelectedLocker && (
         <Card className="border-purple-200 bg-purple-50">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
