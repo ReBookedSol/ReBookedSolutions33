@@ -224,18 +224,23 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
           {/* Status Overview */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center space-x-3 flex-1">
                   <span className="text-2xl">
                     {getProviderIcon(trackingData.provider)}
                   </span>
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-xl">
-                      {trackingData.provider === "bobgo" && "Bob Go"}
+                      {trackingData.courier_name ? trackingData.courier_name : trackingData.provider === "bobgo" ? "Bob Go" : "Shipment"}
                     </CardTitle>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm">
                       Tracking: {trackingData.tracking_number}
                     </p>
+                    {trackingData.merchant_name && (
+                      <p className="text-gray-500 text-xs">
+                        {trackingData.merchant_name}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <Badge
