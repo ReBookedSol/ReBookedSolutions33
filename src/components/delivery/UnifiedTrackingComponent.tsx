@@ -295,19 +295,19 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4 text-gray-500" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm text-gray-600">Estimated Delivery</p>
-                    <p className="font-medium">
-                      {trackingData.estimated_delivery ? formatDateTime(trackingData.estimated_delivery) : "Not available"}
+                    <p className="font-medium text-sm">
+                      {trackingData.estimated_delivery && trackingData.estimated_delivery.trim() ? formatDateTime(trackingData.estimated_delivery) : "Not specified"}
                     </p>
                   </div>
                 </div>
-                {trackingData.actual_delivery && (
+                {trackingData.actual_delivery && trackingData.actual_delivery.trim() && (
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-gray-600">Delivered</p>
-                      <p className="font-medium">
+                      <p className="font-medium text-sm">
                         {formatDateTime(trackingData.actual_delivery)}
                       </p>
                     </div>
