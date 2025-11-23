@@ -493,10 +493,11 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     };
     if (checkoutState.delivery_method === "locker" && checkoutState.selected_locker) {
       const locker = checkoutState.selected_locker;
+      const lockerProvince = (locker as any).province || getProvinceFromLocker(locker);
       deliveryAddress = {
         street: (locker as any).full_address || (locker as any).address || "",
         city: (locker as any).city || (locker as any).suburb || "Locker Location",
-        province: (locker as any).province || "",
+        province: lockerProvince || "",
         postal_code: (locker as any).postal_code || (locker as any).postalCode || "",
         country: "South Africa",
         additional_info: `Pickup at: ${locker.name}`,
