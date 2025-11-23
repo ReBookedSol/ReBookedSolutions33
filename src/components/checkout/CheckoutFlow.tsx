@@ -25,6 +25,7 @@ import {
   getBuyerCheckoutData,
 } from "@/services/checkoutValidationService";
 import { supabase } from "@/integrations/supabase/client";
+import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 import Step1OrderSummary from "./Step1OrderSummary";
 import Step1point5DeliveryMethod from "./Step1point5DeliveryMethod";
 import Step2DeliveryOptions from "./Step2DeliveryOptions";
