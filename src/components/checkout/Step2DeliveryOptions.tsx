@@ -25,7 +25,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface Step2DeliveryOptionsProps {
   buyerAddress: CheckoutAddress;
-  sellerAddress: CheckoutAddress;
+  sellerAddress: CheckoutAddress | null;
+  sellerLockerData?: BobGoLocation | null;
   onSelectDelivery: (option: DeliveryOption) => void;
   onBack: () => void;
   onCancel?: () => void;
