@@ -219,6 +219,8 @@ Deno.serve(async (req) => {
         data: {
           order_id: cancelData.order_id,
           refund_status: 'completed',
+          shipment_cancelled: shipmentCancelledSuccessfully,
+          refund_id: refundResult.data?.refund_id || refundResult.refund_id,
         },
       }),
       {
