@@ -262,23 +262,21 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
           {/* Status Overview */}
           <Card className="border-0 shadow-lg overflow-hidden">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-              <CardHeader>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="bg-white rounded-full p-3 shadow-md">
-                      <span className="text-3xl">
-                        {getProviderIcon(trackingData.provider)}
-                      </span>
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex items-start sm:items-center space-x-3 flex-1 min-w-0">
+                    <div className="bg-white rounded-full p-2 sm:p-3 shadow-md flex-shrink-0">
+                      {getProviderIcon(trackingData.provider)}
                     </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-2xl font-bold text-gray-900">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                         {trackingData.courier_name ? trackingData.courier_name : trackingData.provider === "bobgo" ? "Bob Go" : "Shipment"}
                       </CardTitle>
-                      <p className="text-gray-600 text-sm mt-1">
+                      <p className="text-gray-600 text-xs sm:text-sm mt-1 break-all">
                         Tracking: <span className="font-mono font-semibold text-gray-900">{trackingData.tracking_number}</span>
                       </p>
                       {trackingData.merchant_name && (
-                        <p className="text-gray-500 text-xs mt-1">
+                        <p className="text-gray-500 text-xs mt-1 truncate">
                           {trackingData.merchant_name}
                         </p>
                       )}
@@ -286,7 +284,7 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
                   </div>
                   <Badge
                     variant="outline"
-                    className={`${getStatusColor(trackingData.status)} text-base py-2 px-4 font-semibold border-2`}
+                    className={`${getStatusColor(trackingData.status)} text-xs sm:text-base py-1 sm:py-2 px-2 sm:px-4 font-semibold border-2 flex-shrink-0`}
                   >
                     {getStatusText(trackingData.status)}
                   </Badge>
