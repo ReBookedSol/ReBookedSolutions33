@@ -22,7 +22,6 @@ import BobGoLockerSelector from "@/components/checkout/BobGoLockerSelector";
 import { BobGoLocation } from "@/services/bobgoLocationsService";
 import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect as useEffectCheck } from "react";
 
 interface Step2DeliveryOptionsProps {
   buyerAddress: CheckoutAddress;
