@@ -312,16 +312,6 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
                   <ExternalLink className="h-4 w-4 mr-2" />
                   View on Courier Website
                 </Button>
-                {trackingData.status !== "delivered" && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleCancelShipment}
-                    disabled={loading}
-                  >
-                    Cancel Shipment
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
