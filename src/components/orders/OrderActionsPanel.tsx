@@ -68,9 +68,11 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
   const [selectedRescheduleTime, setSelectedRescheduleTime] = useState("");
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
-  const canCancelShipment = !["picked_up", "collected", "in_transit", "delivered"].includes(
-    (order.delivery_status || "").toLowerCase(),
-  ) && !["cancelled", "completed", "delivered"].includes(order.status);
+  // Align with server-side blocked statuses: ['collected', 'in transit', 'out for delivery', 'delivered']
+  const blockedStatuses = ["collected", "in transit", "out for delivery", "delivered"];
+  const orderStatusLower = (order.status || "").toLowerCase();
+  const deliveryStatusLower = (order.delivery_status || "").toLowerCase();
+  const canCancelShipment = !blockedStatuses.includes(orderStatusLower) && !blockedStatuses.includes(deliveryStatusLower);
 
   const showMissedPickupActions = userRole === "seller" && order.delivery_status === "pickup_failed";
 
@@ -86,18 +88,31 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
         },
       });
 
+      console.log("Cancel order response:", { data, error });
+
       if (error) {
         console.error("Cancel order error:", error);
         throw new Error(error.message || "Failed to cancel order");
       }
 
-      if (!data?.success) {
-        throw new Error(data?.error || "Cancellation failed");
+      if (!data) {
+        console.error("No data returned from cancel-order-with-refund");
+        throw new Error("No response from server");
       }
 
+      if (!data.success) {
+        console.error("Cancellation failed - server returned success: false", data);
+        throw new Error(data.error || "Cancellation failed");
+      }
+
+      console.log("✓ Cancellation successful:", data);
       toast.success(data.message || "Order cancelled and refund processed");
       setShowCancelDialog(false);
-      onOrderUpdate();
+
+      // Refresh order data after successful cancellation
+      setTimeout(() => {
+        onOrderUpdate();
+      }, 500);
     } catch (error: any) {
       console.error("Cancel error:", error);
       toast.error(error?.message || "Failed to cancel order. Please try again.");
@@ -116,13 +131,29 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
           reason: cancelReason || "Cancelled by Seller",
         },
       });
-      if (error || !data?.success) {
-        throw new Error(error?.message || data?.error || "Cancellation failed");
+
+      console.log("Seller cancel response:", { data, error });
+
+      if (error) {
+        console.error("Seller cancel error:", error);
+        throw new Error(error.message || "Failed to cancel order");
       }
-      toast.success("Order cancelled successfully");
+
+      if (!data?.success) {
+        console.error("Seller cancellation failed:", data);
+        throw new Error(data?.error || "Cancellation failed");
+      }
+
+      console.log("✓ Seller cancellation successful:", data);
+      toast.success(data.message || "Order cancelled successfully");
       setShowCancelDialog(false);
-      onOrderUpdate();
+
+      // Refresh order data after successful cancellation
+      setTimeout(() => {
+        onOrderUpdate();
+      }, 500);
     } catch (err: any) {
+      console.error("Seller cancel catch error:", err);
       toast.error(err?.message || "Failed to cancel order");
     } finally {
       setIsLoading(false);
@@ -252,6 +283,9 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
             {getDeliveryStatusBadge()}
           </div>
         </CardTitle>
+        <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-100 rounded">
+          <p>Status: {order.status} | Delivery: {order.delivery_status || "N/A"} | Can Cancel: {canCancelShipment ? "✓ Yes" : "✗ No"}</p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2 flex items-start gap-2">
