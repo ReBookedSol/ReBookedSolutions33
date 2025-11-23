@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Truck, Clock, ShieldCheck, Wallet, ArrowRight, PackageSearch, Sparkles } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import UnifiedTrackingComponent from "@/components/delivery/UnifiedTrackingComponent";
 
 const Pill = ({ children }: { children: React.ReactNode }) => (
   <span className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur px-3 py-1 text-xs font-medium text-gray-700 shadow-sm ring-1 ring-black/5">
@@ -224,13 +225,15 @@ const Shipping = () => {
             </CardContent>
           </Card>
 
-          {/* Tracking section removed per policy; use official tracking site */}
-          <Separator />
-
-          {/* Help */}
-          <div className="text-center text-sm text-gray-600">
-            For tracking, use the official BobGo site with your tracking number: https://track.bobgo.co.za
-          </div>
+          {/* Tracking Section */}
+          <Card className="border-0 shadow-sm ring-1 ring-black/5 bg-gradient-to-br from-blue-50 to-white">
+            <CardHeader>
+              <SectionTitle subtitle="Enter your tracking number to get real-time delivery updates">Track Your Order</SectionTitle>
+            </CardHeader>
+            <CardContent>
+              <UnifiedTrackingComponent initialTrackingNumber={initialTracking} provider="bobgo" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Layout>

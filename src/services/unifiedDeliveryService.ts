@@ -112,6 +112,13 @@ export interface UnifiedTrackingResponse {
   recipient_signature?: string;
   proof_of_delivery?: string;
   tracking_url?: string;
+  courier_name?: string;
+  courier_slug?: string;
+  service_level?: string;
+  shipment_id?: string;
+  merchant_name?: string;
+  created_at?: string;
+  last_updated?: string;
 }
 
 const PROVINCE_CODE_MAP: Record<string, string> = {
@@ -341,23 +348,36 @@ export const trackUnifiedShipment = async (
   const { data, error } = await supabase.functions.invoke(`bobgo-track-shipment/${encodeURIComponent(trackingNumber)}`, { method: "GET" as any });
   if (error) throw new Error(error.message);
   const t = data?.tracking || {};
-  const events = (t.events || []).map((e: any) => ({
-    timestamp: e.timestamp,
-    status: (e.status || "").toLowerCase(),
-    location: e.location,
-    description: e.message || e.status_friendly || e.status,
+
+  console.log("Tracking response:", JSON.stringify(t, null, 2));
+
+  // Map checkpoints/events to events array
+  const events = (t.checkpoints || t.events || []).map((e: any) => ({
+    timestamp: e.time || e.timestamp,
+    status: (e.status || "").toLowerCase().replace(/_/g, "-"),
+    location: e.location || e.zone || e.city,
+    description: e.message || e.description || e.status_friendly || e.status,
+    signature: e.signature,
   }));
+
   return {
     provider: "bobgo",
-    tracking_number: trackingNumber,
-    status: (t.status || "pending").toLowerCase(),
-    current_location: t.current_location,
-    estimated_delivery: t.estimated_delivery,
-    actual_delivery: t.delivered_at,
+    tracking_number: t.tracking_number || t.shipment_tracking_reference || trackingNumber,
+    status: (t.status || "pending").toLowerCase().replace(/_/g, "-"),
+    current_location: t.current_location || t.zone || "Unknown",
+    estimated_delivery: t.estimated_delivery || t.shipment_estimated_delivery_date_to,
+    actual_delivery: t.delivered_at || t.shipment_movement_events?.delivered_time,
     events,
     recipient_signature: t.recipient_signature,
     proof_of_delivery: undefined,
-    tracking_url: `https://track.bobgo.co.za/${encodeURIComponent(trackingNumber)}`,
+    tracking_url: t.tracking_url || `https://track.bobgo.co.za/${encodeURIComponent(trackingNumber)}`,
+    courier_name: t.courier_name,
+    courier_slug: t.courier_slug,
+    service_level: t.service_level,
+    shipment_id: t.shipment_id || t.id,
+    merchant_name: t.merchant_name,
+    created_at: t.created_at,
+    last_updated: t.updated_at,
   };
 };
 
