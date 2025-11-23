@@ -815,13 +815,14 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         )}
 
         {checkoutState.step.current === 3 &&
-          checkoutState.seller_address &&
+          (checkoutState.seller_address || checkoutState.seller_locker_data) &&
           !isEditingAddress && (
             <>
               {checkoutState.delivery_method === "locker" && checkoutState.selected_locker ? (
                 <Step2DeliveryOptions
                   buyerAddress={checkoutState.buyer_address || { street: "", city: "", province: "", postal_code: "", country: "" }}
                   sellerAddress={checkoutState.seller_address}
+                  sellerLockerData={checkoutState.seller_locker_data}
                   onSelectDelivery={handleDeliverySelection}
                   onBack={() => goToStep(2)}
                   onCancel={handleCancelCheckout}
@@ -833,6 +834,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
                 <Step2DeliveryOptions
                   buyerAddress={checkoutState.buyer_address}
                   sellerAddress={checkoutState.seller_address}
+                  sellerLockerData={checkoutState.seller_locker_data}
                   onSelectDelivery={handleDeliverySelection}
                   onBack={() => goToStep(2)}
                   onCancel={handleCancelCheckout}
