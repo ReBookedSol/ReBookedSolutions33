@@ -278,7 +278,7 @@ const Profile = () => {
                 <Avatar className="w-20 h-20">
                   <AvatarFallback className="bg-book-100 text-book-600 text-xl font-semibold">
                     {(
-                      ([(profile as any)?.first_name, (profile as any)?.last_name].filter(Boolean).join(" ") || profile.name || "U")
+                      (profile.full_name || profile.name || "U")
                       .charAt(0)
                       ?.toUpperCase()
                     )}
@@ -287,7 +287,7 @@ const Profile = () => {
                 <div className="flex-1 space-y-3">
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                      {[(profile as any)?.first_name, (profile as any)?.last_name].filter(Boolean).join(" ") || profile.name || "Anonymous User"}
+                      {profile.full_name || profile.name || "Anonymous User"}
                     </h1>
                     <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                       <div className="flex items-center gap-1">
@@ -369,7 +369,7 @@ const Profile = () => {
           <TabsContent value="overview" className="space-y-6">
             <ShareReminderBanner
               userId={user?.id || ""}
-              userName={profile?.name || ""}
+              userName={profile?.full_name || profile?.name || ""}
               onShare={() => setIsShareDialogOpen(true)}
             />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

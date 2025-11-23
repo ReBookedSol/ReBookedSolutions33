@@ -54,11 +54,6 @@ export const BookTypeSection = ({
     "Course Book",
   ];
 
-  const universityBookTypes = [
-    "Study Guide",
-    "Course Book",
-  ];
-
   return (
     <div className="space-y-4">
       <div>
@@ -130,27 +125,6 @@ export const BookTypeSection = ({
         {errors.category && (
           <p className="text-sm text-red-500 mt-1">{errors.category}</p>
         )}
-      </div>
-
-      <div>
-        <Label htmlFor="curriculum" className="text-base font-medium">
-          Curriculum <span className="text-gray-400">(Optional)</span>
-        </Label>
-        <Select
-          value={(formData as any).curriculum || ""}
-          onValueChange={(value) => onSelectChange("curriculum", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select curriculum (optional)" />
-          </SelectTrigger>
-          <SelectContent>
-            {['CAPS', 'Cambridge', 'IEB'].map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <div>
@@ -244,28 +218,6 @@ export const BookTypeSection = ({
                 {SOUTH_AFRICAN_UNIVERSITIES_SIMPLE.map((university) => (
                   <SelectItem key={university.id} value={university.id}>
                     {university.abbreviation} - {university.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* University Book Type - Optional */}
-          <div>
-            <Label htmlFor="universityBookType" className="text-base font-medium">
-              Book Type <span className="text-gray-400">(Optional)</span>
-            </Label>
-            <Select
-              value={(formData as any).universityBookType || ""}
-              onValueChange={(value) => onSelectChange("universityBookType", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select book type (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                {universityBookTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
                   </SelectItem>
                 ))}
               </SelectContent>
