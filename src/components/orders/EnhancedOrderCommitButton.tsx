@@ -66,16 +66,19 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
   const [wantToChangeLocker, setWantToChangeLocker] = useState(false);
   const [buyerDeliveryType, setBuyerDeliveryType] = useState<string | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const [sellerHasPickupAddress, setSellerHasPickupAddress] = useState<boolean | null>(null);
+  const [isCheckingPickupAddress, setIsCheckingPickupAddress] = useState(false);
 
   // Pre-commit checklist states
   const [isPackagedSecurely, setIsPackagedSecurely] = useState(false);
   const [canFulfillOrder, setCanFulfillOrder] = useState(false);
 
-  // Load saved locker and buyer's delivery type when dialog opens and reset state when closing
+  // Load saved locker, buyer's delivery type, and check seller's pickup address when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
       loadSavedLocker();
       fetchBuyerDeliveryType();
+      checkSellerPickupAddress();
       setWantToChangeLocker(false);
       setSelectedLocker(null);
     }
@@ -146,6 +149,47 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     }
   };
 
+  const checkSellerPickupAddress = async () => {
+    try {
+      setIsCheckingPickupAddress(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setSellerHasPickupAddress(false);
+        return;
+      }
+
+      // Check if seller has pickup address in their profile
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("pickup_address_encrypted")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.warn("Failed to check pickup address:", error);
+        setSellerHasPickupAddress(false);
+        return;
+      }
+
+      const hasAddress = !!profile?.pickup_address_encrypted;
+      setSellerHasPickupAddress(hasAddress);
+      console.log("✅ Seller pickup address check:", hasAddress ? "Has address" : "No address");
+
+      // If seller doesn't have a home address, force locker selection
+      if (!hasAddress && deliveryMethod === "home") {
+        setDeliveryMethod("locker");
+      }
+    } catch (error) {
+      console.error("Error checking seller pickup address:", error);
+      setSellerHasPickupAddress(false);
+    } finally {
+      setIsCheckingPickupAddress(false);
+    }
+  };
+
   // Auto-select locker method with saved locker
   const handleSelectLockerMethod = (currentSavedLocker: BobGoLocation | null) => {
     setDeliveryMethod("locker");
@@ -165,7 +209,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
   const isFormValid =
     isPackagedSecurely &&
     canFulfillOrder &&
-    (deliveryMethod === "home" || (deliveryMethod === "locker" && (selectedLocker || (savedLocker && !wantToChangeLocker))));
+    ((deliveryMethod === "home" && sellerHasPickupAddress) || (deliveryMethod === "locker" && (selectedLocker || (savedLocker && !wantToChangeLocker))));
 
   const handleCommit = async () => {
     setIsCommitting(true);
@@ -190,6 +234,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
           locker_id: lockerToUse.id,
           locker_name: lockerToUse.name,
           locker_address: lockerToUse.address || lockerToUse.full_address,
+          locker_data: lockerToUse,
         } : {}),
       };
 
@@ -199,16 +244,10 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
       try {
         console.log("📞 Using commit-to-sale function...");
 
-        // Use basic commit data for the original function
-        const basicCommitData = {
-          order_id: orderId,
-          seller_id: sellerId,
-        };
-
         const result = await supabase.functions.invoke(
           "commit-to-sale",
           {
-            body: basicCommitData,
+            body: commitData,
           },
         );
         data = result.data;
@@ -434,24 +473,37 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
                 <div className="space-y-4">
                   {/* Home Pick-Up Option */}
                   <div
-                    className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      deliveryMethod === "home"
-                        ? "bg-blue-50 border-blue-500"
-                        : "bg-gray-50 border-gray-200 hover:border-blue-300"
+                    className={`flex items-start space-x-3 p-3 sm:p-4 border-2 rounded-lg transition-all ${
+                      !sellerHasPickupAddress
+                        ? "cursor-not-allowed opacity-60 bg-gray-100 border-gray-300"
+                        : `cursor-pointer ${
+                            deliveryMethod === "home"
+                              ? "bg-blue-50 border-blue-500"
+                              : "bg-gray-50 border-gray-200 hover:border-blue-300"
+                          }`
                     }`}
                     onClick={() => {
-                      setDeliveryMethod("home");
-                      setSelectedLocker(null);
+                      if (sellerHasPickupAddress) {
+                        setDeliveryMethod("home");
+                        setSelectedLocker(null);
+                      }
                     }}
                   >
-                    <RadioGroupItem value="home" className="mt-1 flex-shrink-0" />
+                    <RadioGroupItem value="home" className="mt-1 flex-shrink-0" disabled={!sellerHasPickupAddress} />
                     <div className="flex-1">
-                      <Label className="flex items-center gap-2 font-medium text-sm sm:text-base cursor-pointer">
+                      <Label className={`flex items-center gap-2 font-medium text-sm sm:text-base ${
+                        sellerHasPickupAddress ? "cursor-pointer" : "text-gray-500"
+                      }`}>
                         <Home className="w-4 h-4 flex-shrink-0" />
                         <span>Home Pick-Up (Courier Collection)</span>
                       </Label>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                        Our courier will collect the book from your address at a scheduled time.
+                      <p className={`text-xs sm:text-sm mt-1 ${
+                        sellerHasPickupAddress ? "text-gray-600" : "text-gray-500"
+                      }`}>
+                        {sellerHasPickupAddress
+                          ? "Our courier will collect the book from your address at a scheduled time."
+                          : "You haven't set up a pickup address in your profile."
+                        }
                       </p>
                     </div>
                   </div>
@@ -491,6 +543,16 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
                       </p>
                     </div>
                   </div>
+
+                  {/* Alert when seller doesn't have a pickup address */}
+                  {sellerHasPickupAddress === false && (
+                    <Alert className="bg-amber-50 border-amber-200">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-800">
+                        You haven't set up a pickup address in your profile. Home pick-up is disabled. Please add your pickup address in your profile settings, or use locker drop-off for this order.
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
                   {/* Alert when buyer chose door delivery */}
                   {buyerDeliveryType === "door" && (
