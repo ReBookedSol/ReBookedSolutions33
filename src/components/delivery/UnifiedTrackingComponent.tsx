@@ -95,16 +95,24 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const normalizedStatus = (status || "").toLowerCase().replace(/_/g, "-");
+    switch (normalizedStatus) {
       case "delivered":
+      case "ready-for-pickup":
         return "bg-green-100 text-green-700 border-green-200";
+      case "out-for-delivery":
       case "out_for_delivery":
         return "bg-blue-100 text-blue-700 border-blue-200";
+      case "in-transit":
       case "in_transit":
         return "bg-orange-100 text-orange-700 border-orange-200";
       case "collected":
+      case "awaiting-dropoff":
         return "bg-yellow-100 text-yellow-700 border-yellow-200";
       case "failed":
+      case "failed-delivery":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "cancelled":
         return "bg-red-100 text-red-700 border-red-200";
       default:
         return "bg-gray-100 text-gray-700 border-gray-200";
