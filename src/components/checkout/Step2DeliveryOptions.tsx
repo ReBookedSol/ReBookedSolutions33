@@ -472,18 +472,24 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
             <AccordionContent>
               <div className="divide-y">
                 {items.map((q, idx) => {
+                  let zoneType: "local" | "provincial" | "national" | "locker" = "national";
+                  if (sellerAddress && buyerAddress) {
+                    zoneType = buyerAddress.province === sellerAddress.province
+                      ? buyerAddress.city === sellerAddress.city
+                        ? "local"
+                        : "provincial"
+                      : "national";
+                  } else if (!sellerAddress && sellerLockerData) {
+                    zoneType = "locker";
+                  }
+
                   const option: DeliveryOption = {
                     courier: "bobgo",
                     service_name: q.service_name,
                     price: q.cost + 15,
                     estimated_days: typeof q.transit_days === "number" ? q.transit_days : 3,
                     description: `${courier}`,
-                    zone_type:
-                      buyerAddress.province === sellerAddress.province
-                        ? buyerAddress.city === sellerAddress.city
-                          ? "local"
-                          : "provincial"
-                        : "national",
+                    zone_type: zoneType,
                     provider_name: q.provider_name,
                     provider_slug: q.provider_slug,
                     service_level_code: q.service_level_code,
