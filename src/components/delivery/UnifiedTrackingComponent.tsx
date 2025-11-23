@@ -157,9 +157,9 @@ const UnifiedTrackingComponent: React.FC<UnifiedTrackingComponentProps> = ({
   const getProviderIcon = (provider: string) => {
     switch (provider) {
       case "bobgo":
-        return "🚚";
+        return <Truck className="h-8 w-8 text-blue-600" />;
       default:
-        return "🚛";
+        return <Package className="h-8 w-8 text-gray-600" />;
     }
   };
 
