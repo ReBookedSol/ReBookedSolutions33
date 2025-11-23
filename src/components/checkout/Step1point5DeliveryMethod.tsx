@@ -252,7 +252,7 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   <span>Home Delivery</span>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
-                  The seller will arrange courier pickup from their address. The book will be delivered to your address.
+                  Our courier will collect the book from the seller's address and deliver it to your home.
                 </p>
               </div>
             </div>
