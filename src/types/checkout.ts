@@ -91,6 +91,7 @@ export interface CheckoutState {
   book: CheckoutBook | null;
   buyer_address: CheckoutAddress | null;
   seller_address: CheckoutAddress | null;
+  seller_locker_data: BobGoLocker | null;
   delivery_options: DeliveryOption[];
   selected_delivery: DeliveryOption | null;
   order_summary: OrderSummary | null;
