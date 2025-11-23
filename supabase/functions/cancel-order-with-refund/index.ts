@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
     console.log('Shipment cancellation result:', shipmentCancelledSuccessfully ? 'Success' : 'Failed/Skipped');
 
     // Step 2: Process refund
-    console.log('Processing refund...');
+    console.log('Processing refund for order:', cancelData.order_id);
     const { data: refundResult, error: refundError } = await supabaseClient.functions.invoke(
       'bobpay-refund',
       {
@@ -147,17 +147,32 @@ Deno.serve(async (req) => {
       }
     );
 
+    console.log('Refund response - Error:', refundError, 'Data:', refundResult);
+
     if (refundError) {
-      console.error('Refund failed with error:', refundError);
-      throw new Error(`Refund failed: ${refundError.message}`);
+      console.error('Refund function returned error:', refundError);
+      throw new Error(`Refund failed: ${refundError.message || JSON.stringify(refundError)}`);
     }
 
-    if (!refundResult || !refundResult.success) {
-      console.error('Refund was not successful:', refundResult);
-      throw new Error(`Refund failed: ${refundResult?.error || 'Unknown refund error'}`);
+    if (!refundResult) {
+      console.error('Refund returned no data');
+      throw new Error('Refund failed: No response from refund service');
     }
 
-    console.log('Refund processed successfully:', refundResult);
+    if (refundResult.success === false) {
+      console.error('Refund was not successful. Response:', refundResult);
+      throw new Error(`Refund failed: ${refundResult.error || 'Unknown refund error'}`);
+    }
+
+    if (refundResult.success !== true) {
+      console.warn('Refund success status unclear:', refundResult);
+      // Check if refund was still processed
+      if (!refundResult.data?.refund_id && !refundResult.refund_id) {
+        throw new Error(`Refund failed: No refund ID returned`);
+      }
+    }
+
+    console.log('Refund processed successfully. Refund ID:', refundResult.data?.refund_id || refundResult.refund_id);
 
     // Step 3: Update order status
     const { error: updateError } = await supabaseClient
