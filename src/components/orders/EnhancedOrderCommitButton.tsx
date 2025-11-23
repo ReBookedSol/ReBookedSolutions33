@@ -66,16 +66,19 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
   const [wantToChangeLocker, setWantToChangeLocker] = useState(false);
   const [buyerDeliveryType, setBuyerDeliveryType] = useState<string | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const [sellerHasPickupAddress, setSellerHasPickupAddress] = useState<boolean | null>(null);
+  const [isCheckingPickupAddress, setIsCheckingPickupAddress] = useState(false);
 
   // Pre-commit checklist states
   const [isPackagedSecurely, setIsPackagedSecurely] = useState(false);
   const [canFulfillOrder, setCanFulfillOrder] = useState(false);
 
-  // Load saved locker and buyer's delivery type when dialog opens and reset state when closing
+  // Load saved locker, buyer's delivery type, and check seller's pickup address when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
       loadSavedLocker();
       fetchBuyerDeliveryType();
+      checkSellerPickupAddress();
       setWantToChangeLocker(false);
       setSelectedLocker(null);
     }
