@@ -205,29 +205,6 @@ const SavedLockersCard = forwardRef<
               </p>
             </div>
 
-            {/* Image Section */}
-            <div className="flex justify-center">
-              {(locker.image_url || locker.pickup_point_provider_logo_url) ? (
-                <div
-                  className="cursor-pointer hover:opacity-80 transition-opacity max-w-xs w-full"
-                  onClick={() => onImageSelect(locker.image_url || locker.pickup_point_provider_logo_url || "")}
-                >
-                  <img
-                    src={locker.image_url || locker.pickup_point_provider_logo_url}
-                    alt={locker.name}
-                    className="w-full h-auto object-cover rounded-lg border border-gray-200 shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-full max-w-xs h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-200 flex items-center justify-center">
-                  <MapPin className="h-8 w-8 text-gray-400" />
-                </div>
-              )}
-            </div>
-
             {/* Details Grid */}
             {fields.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
