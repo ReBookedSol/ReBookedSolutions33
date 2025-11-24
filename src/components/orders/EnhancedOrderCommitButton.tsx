@@ -556,7 +556,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleCommit}
-            disabled={isCommitting || !isFormValid}
+            disabled={isCommitting || !isFormValid || isLoadingPreference}
             className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-sm sm:text-base min-h-[44px]"
           >
             {isCommitting ? (
@@ -568,7 +568,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
               <>
                 <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">
-                  {deliveryMethod === "home"
+                  {preferredPickupMethod === "pickup"
                     ? "Commit with Home Pick-Up"
                     : "Commit with Locker Drop-Off"}
                 </span>
