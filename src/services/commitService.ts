@@ -427,13 +427,26 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
       }
     }
 
-    // If we have book info, update book to mark as available again
+    // If we have book info, update book to mark as available again and restore quantities
     if (book) {
+      // When declining, we need to:
+      // 1. Set sold: false (only one item was sold)
+      // 2. Restore quantities: decrement sold_quantity by 1, increment available_quantity by 1
+      const updateData: any = {
+        sold: false,
+      };
+
+      // Restore quantities if they exist
+      if (typeof book.sold_quantity === 'number' && book.sold_quantity > 0) {
+        updateData.sold_quantity = book.sold_quantity - 1;
+      }
+      if (typeof book.available_quantity === 'number') {
+        updateData.available_quantity = book.available_quantity + 1;
+      }
+
       const { error: updateBookError } = await supabase
         .from("books")
-        .update({
-          sold: false,
-        })
+        .update(updateData)
         .eq("id", book.id)
         .eq("seller_id", user.id);
 
