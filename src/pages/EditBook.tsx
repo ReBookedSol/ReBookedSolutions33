@@ -27,9 +27,10 @@ import Layout from "@/components/Layout";
 import EnhancedMobileImageUpload from "@/components/EnhancedMobileImageUpload";
 import { getBookById } from "@/services/book/bookQueries";
 import { updateBook } from "@/services/book/bookMutations";
-import { CREATE_LISTING_CATEGORIES } from "@/constants/createListingCategories";
+import { getCategoriesByBookType, READER_CATEGORIES, SCHOOL_CATEGORIES, UNIVERSITY_CATEGORIES } from "@/constants/bookTypeCategories";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import useState from "react";
 
 const EditBook = () => {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ const EditBook = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookItemType, setBookItemType] = useState<"textbook" | "reader" | null>(null);
 
   const form = useForm<BookInput>({
     resolver: zodResolver(BookSchema),
