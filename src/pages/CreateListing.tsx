@@ -96,6 +96,17 @@ const CreateListing = () => {
       try {
         const canList = await canUserListBooks(user.id);
         setCanListBooks(canList);
+
+        // Fetch preferred pickup method
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("preferred_pickup_method")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (!error && profile?.preferred_pickup_method) {
+          setPreferredPickupMethod(profile.preferred_pickup_method);
+        }
       } catch (error) {
         console.error("Error checking address status:", error);
         setCanListBooks(false);
