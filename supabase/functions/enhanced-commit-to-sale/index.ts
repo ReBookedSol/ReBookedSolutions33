@@ -109,21 +109,24 @@ serve(async (req) => {
     // Check if already committed
     if (order.status === 'committed' || order.status === 'shipped') {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Order is already committed' 
+        JSON.stringify({
+          success: false,
+          error: 'Order is already committed'
         }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
+    // Use the original pickup type from the order, not the delivery_method parameter
+    const actualPickupType = order.pickup_type || 'door';
+
     let shipmentResult = null;
 
-    // Handle locker delivery
-    if (delivery_method === "locker" && use_locker_api) {
+    // Handle locker delivery (only if order's original pickup_type is locker)
+    if (actualPickupType === "locker" && use_locker_api) {
       console.log('📦 Creating locker shipment...');
       
       try {
