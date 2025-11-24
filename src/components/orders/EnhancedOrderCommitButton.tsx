@@ -408,41 +408,6 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
         </AlertDialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Pre-commit Checklist */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                <Package className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Pre-Commit Checklist</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="packaged-securely"
-                  checked={isPackagedSecurely}
-                  onCheckedChange={(checked) => setIsPackagedSecurely(checked as boolean)}
-                  className="mt-1 flex-shrink-0"
-                />
-                <Label htmlFor="packaged-securely" className="text-xs sm:text-sm leading-relaxed cursor-pointer">
-                  I confirm this item is packaged securely (e.g., padded envelope or sturdy box).
-                </Label>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="can-fulfill"
-                  checked={canFulfillOrder}
-                  onCheckedChange={(checked) => setCanFulfillOrder(checked as boolean)}
-                  className="mt-1 flex-shrink-0"
-                />
-                <Label htmlFor="can-fulfill" className="text-xs sm:text-sm leading-relaxed cursor-pointer">
-                  I commit to fulfilling this order and understand my obligations.
-                </Label>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Delivery Method Display - Shows only the preferred method */}
           <Card>
             <CardHeader className="pb-3">
