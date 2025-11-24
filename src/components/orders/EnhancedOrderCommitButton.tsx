@@ -81,6 +81,39 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     }
   }, [isDialogOpen]);
 
+  const loadPreferredPickupMethod = async () => {
+    try {
+      setIsLoadingPreference(true);
+
+      // Fetch seller's preferred pickup method
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("preferred_pickup_method")
+        .eq("id", sellerId)
+        .single();
+
+      if (error) {
+        console.warn("Failed to load seller's preferred pickup method:", error);
+        // Default to locker if not set
+        setPreferredPickupMethod("locker");
+        return;
+      }
+
+      if (profile?.preferred_pickup_method) {
+        setPreferredPickupMethod(profile.preferred_pickup_method);
+        console.log("✅ Seller's preferred pickup method:", profile.preferred_pickup_method);
+      } else {
+        // Default to locker if not set
+        setPreferredPickupMethod("locker");
+      }
+    } catch (error) {
+      console.error("Error loading preferred pickup method:", error);
+      setPreferredPickupMethod("locker");
+    } finally {
+      setIsLoadingPreference(false);
+    }
+  };
+
   const fetchBuyerDeliveryType = async () => {
     try {
       setIsLoadingOrder(true);
