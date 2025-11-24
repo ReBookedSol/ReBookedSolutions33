@@ -209,7 +209,7 @@ serve(async (req) => {
     }
 
     // Create notification for buyer
-    const notificationMessage = delivery_method === "locker" 
+    const notificationMessage = actualPickupType === "locker"
       ? `Your order for "${order.book?.title}" has been committed with locker delivery. Tracking: ${shipmentResult?.trackingNumber || 'N/A'}`
       : `Your order for "${order.book?.title}" has been committed. Courier pickup scheduled.`;
 
@@ -222,7 +222,7 @@ serve(async (req) => {
         type: 'order_committed',
         metadata: {
           order_id: order_id,
-          delivery_method: delivery_method,
+          pickup_type: actualPickupType,
           ...(shipmentResult && {
             tracking_number: shipmentResult.trackingNumber,
             qr_code_url: shipmentResult.qrCodeUrl
