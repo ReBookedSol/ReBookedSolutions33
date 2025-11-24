@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { getAllDeliveryQuotes, UnifiedQuote } from "@/services/unifiedDeliveryService";
 import { MapPin, Truck, Timer, Zap, DollarSign, RefreshCw } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const provinces = [
   "Eastern Cape",
@@ -64,6 +65,7 @@ const NumberInput: React.FC<{
 );
 
 const BobGoRatesExplorer: React.FC = () => {
+  const { user } = useAuth();
   const [fromCity, setFromCity] = useState("");
   const [fromProvince, setFromProvince] = useState("");
   const [fromPostal, setFromPostal] = useState("");
@@ -99,12 +101,13 @@ const BobGoRatesExplorer: React.FC = () => {
         length,
         width,
         height,
+        user_id: user?.id,
       });
       setQuotes(results);
     } finally {
       setLoading(false);
     }
-  }, [fromCity, fromProvince, fromPostal, toCity, toProvince, toPostal, weight, length, width, height]);
+  }, [fromCity, fromProvince, fromPostal, toCity, toProvince, toPostal, weight, length, width, height, user?.id]);
 
   const cheapest = useMemo(() => (quotes.length ? [...quotes].sort((a,b)=>a.cost-b.cost)[0] : undefined), [quotes]);
   const fastest = useMemo(() => (quotes.length ? [...quotes].sort((a,b)=>a.transit_days-b.transit_days)[0] : undefined), [quotes]);

@@ -13,11 +13,13 @@ export interface Book {
   additionalImages?: string[];
   sold: boolean;
   createdAt: string;
+  itemType: "textbook" | "reader";
   grade?: string;
   universityYear?: string;
   university?: string;
   curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
   universityBookType?: 'Study Guide' | 'Course Book';
+  genre?: string;
   province?: string;
   // Quantity fields
   initialQuantity?: number;
@@ -42,11 +44,13 @@ export interface BookFormData {
   backCover?: string;
   insidePages?: string;
   additionalImages?: string[];
+  itemType: "textbook" | "reader";
   grade?: string;
   universityYear?: string;
   university?: string;
   curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
   universityBookType?: 'Study Guide' | 'Course Book';
+  genre?: string;
   province?: string;
   // Quantity to create listing with
   quantity?: number;

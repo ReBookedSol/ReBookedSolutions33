@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React, { useEffect, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BookImageCarousel from "@/components/BookImageCarousel";
 
 import {
@@ -230,22 +230,20 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
 
   const OrderHeaderDetails: React.FC<{ order: Order }> = ({ order }) => {
     const role = getUserRole(order);
-    const img = order.book?.additional_images?.[0] || order.book?.image_url || "/placeholder.svg";
+    const bookImages = getBookImages(order);
+    const img = bookImages[0] || "/placeholder.svg";
     const otherPartyName = role === "buyer"
       ? (order.seller?.full_name || order.seller?.name || "Seller")
       : (order.buyer?.full_name || order.buyer?.name || "Buyer");
 
-    const bookImages = getBookImages(order);
     const hasMultipleImages = bookImages.length > 1;
 
     return (
-      <div className="flex gap-4">
+      <div className="flex gap-3 items-start">
         <button
           onClick={() => setSelectedOrderForGallery(order)}
-          className={`w-16 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all ${
-            hasMultipleImages ? 'cursor-pointer hover:shadow-md hover:ring-2 hover:ring-book-600' : ''
-          }`}
-          title={hasMultipleImages ? "Click to view all photos" : undefined}
+          className="w-14 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0 transition-all cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400"
+          title="Click to view book photo"
         >
           <img
             src={img}
@@ -254,22 +252,22 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
           />
         </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-lg font-semibold">
+        <div className="flex-1 min-w-0 py-0.5">
+          <div className="grid grid-cols-3 gap-3 items-start">
+            <div className="col-span-2">
+              <h3 className="text-base font-semibold text-gray-900 leading-tight">
                 {order.book?.title || "Unknown Book"}
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-0.5">
-                {order.book?.author ? `by ${order.book.author}` : ""}
+              </h3>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {order.book?.author || "No author"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Order #{order.id.slice(-8)} • {role === "buyer" ? "Seller" : "Buyer"}: {otherPartyName}
+              <p className="text-xs text-gray-500 mt-1">
+                Order #{order.id.slice(-8)} • {otherPartyName}
               </p>
             </div>
             <div className="text-right">
               {typeof order.book?.price === "number" && (
-                <div className="text-lg font-semibold text-emerald-600">R{order.book.price}</div>
+                <div className="text-base font-semibold text-emerald-600">R{order.book.price}</div>
               )}
               <div className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</div>
             </div>
@@ -285,68 +283,62 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     const tracking = order.tracking_number || order.tracking_data?.tracking_number;
     const deliveryProgress = (order.delivery_status || "").toLowerCase();
     return (
-      <div className="space-y-3 text-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <div className="text-gray-500">Order status</div>
-            <div className="font-medium capitalize flex items-center gap-2">
-              <Badge variant="secondary" className="capitalize">{order.status.replaceAll("_", " ")}</Badge>
-            </div>
+      <div className="space-y-2 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="space-y-0.5">
+            <div className="text-gray-500 font-medium">Order Status</div>
+            <Badge variant="secondary" className="capitalize text-xs">{order.status.replaceAll("_", " ")}</Badge>
           </div>
-          <div className="space-y-1">
-            <div className="text-gray-500">Tracking</div>
-            <div className="font-mono text-gray-700 break-all">{tracking || "—"}</div>
-            {tracking && (
-              <div className="text-xs mt-1">
+          <div className="space-y-0.5">
+            <div className="text-gray-500 font-medium">Tracking</div>
+            {tracking ? (
+              <div className="space-y-0.5">
+                <div className="font-mono text-gray-700 break-all text-xs">{tracking}</div>
                 <a
                   href={`https://track.bobgo.co.za/${encodeURIComponent(tracking)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-700 underline"
+                  className="text-blue-600 underline text-xs inline-block"
                 >
                   Open in BobGo
                 </a>
               </div>
+            ) : (
+              <span className="text-gray-500">Pending</span>
             )}
           </div>
-          <div className="space-y-1">
-            <div className="text-gray-500">Courier / Service</div>
-            <div className="font-medium flex flex-wrap items-center gap-2">
-              {courier ? <Badge variant="outline">{courier}</Badge> : <span>—</span>}
-              {service ? <Badge variant="outline">{service}</Badge> : null}
+          <div className="space-y-0.5">
+            <div className="text-gray-500 font-medium">Courier / Service</div>
+            <div className="flex flex-wrap items-center gap-1">
+              {courier ? <Badge variant="outline" className="text-xs">{courier}</Badge> : <span>���</span>}
+              {service ? <Badge variant="outline" className="text-xs">{service}</Badge> : null}
             </div>
           </div>
         </div>
 
-        <div>
-          <div className="text-gray-500">Delivery progress</div>
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${deliveryProgress === "delivered" ? "bg-green-500" : deliveryProgress === "in_transit" ? "bg-blue-500" : deliveryProgress === "pickup_failed" ? "bg-red-500" : "bg-amber-500"}`} />
-            <span className="capitalize">{deliveryProgress || "pending"}</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${deliveryProgress === "delivered" ? "bg-green-500" : deliveryProgress === "in_transit" ? "bg-blue-500" : deliveryProgress === "pickup_failed" ? "bg-red-500" : "bg-amber-500"}`} />
+          <span className="capitalize font-medium text-gray-700">{deliveryProgress || "pending"}</span>
         </div>
 
         {order.tracking_data?.events && Array.isArray(order.tracking_data.events) && order.tracking_data.events.length > 0 && (
-          <div>
-            <div className="text-xs text-gray-500 mb-1">Recent tracking events</div>
-            <ul className="text-xs space-y-1 max-h-32 overflow-auto pr-1">
-              {order.tracking_data.events.slice(-5).reverse().map((ev: any, idx: number) => (
-                <li key={idx} className="flex items-center gap-2 text-gray-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                  <span className="whitespace-nowrap">{formatDate(ev.timestamp || ev.date_time)}</span>
-                  <span className="capitalize">{(ev.status || ev.description || "").toString().toLowerCase()}</span>
-                  {ev.location && <span className="text-gray-400">• {ev.location}</span>}
+          <div className="pt-1">
+            <div className="text-xs text-gray-600 font-medium mb-1">Recent events</div>
+            <ul className="text-xs space-y-0.5 max-h-24 overflow-auto pr-1">
+              {order.tracking_data.events.slice(-4).reverse().map((ev: any, idx: number) => (
+                <li key={idx} className="flex items-start gap-1.5 text-gray-600">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 flex-shrink-0 mt-1" />
+                  <span className="flex-1">
+                    <span className="whitespace-nowrap">{formatDate(ev.timestamp || ev.date_time)}</span>
+                    {" • "}
+                    <span className="capitalize">{(ev.status || ev.description || "").toString().toLowerCase()}</span>
+                    {ev.location && <span className="text-gray-500"> • {ev.location}</span>}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
         )}
-
-        <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2">
-          {!tracking && (
-            <span>Tracking link will appear once assigned</span>
-          )}
-        </div>
       </div>
     );
   };
@@ -363,7 +355,16 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     ].includes(order.status);
 
     const deliveryStatus = (order.delivery_status || "created").toLowerCase();
-    const steps = ["created", "collected", "in_transit", "out_for_delivery", "delivered"] as const;
+
+    // Determine if this is a locker-to-locker delivery
+    const isLockerDelivery = order.delivery_data?.zone_type === "locker-to-locker" ||
+                             (order.delivery_data?.delivery_type === "locker" && order.delivery_data?.pickup_type === "locker");
+
+    // Dynamic steps based on delivery type
+    const baseSteps = ["created", "collected", "in_transit"] as const;
+    const steps = isLockerDelivery
+      ? [...baseSteps, "ready_for_pickup", "delivered"] as const
+      : [...baseSteps, "out_for_delivery", "delivered"] as const;
 
     const statusToIndex: Record<string, number> = {
       created: 0,
@@ -373,29 +374,38 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
       picked_up: 1,
       in_transit: 2,
       out_for_delivery: 3,
-      delivered: 4,
+      ready_for_pickup: 3,
+      ready: 3,
+      delivered: isLockerDelivery ? 4 : 4,
     };
 
     const currentIndex = statusToIndex[deliveryStatus] ?? 0;
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {/* Keep green status indicator for committed vs not committed */}
-        <div className="flex items-center space-x-2 text-sm">
+        <div className="flex items-center space-x-2 text-xs">
           <div
-            className={`w-3 h-3 rounded-full ${
+            className={`w-2 h-2 rounded-full ${
               order.status === "pending_commit" ? "bg-amber-500" : committed ? "bg-green-500" : "bg-gray-300"
             }`}
           />
-          <span>{order.status === "pending_commit" ? "Not Committed" : "Committed"}</span>
+          <span className="text-gray-700 font-medium">{order.status === "pending_commit" ? "Not Committed" : "Committed"}</span>
         </div>
 
+        {/* Delivery method indicator */}
+        {isLockerDelivery && (
+          <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded inline-block">
+            📦 Locker-to-Locker
+          </div>
+        )}
+
         {/* Delivery stages */}
-        <div className="grid grid-cols-5 gap-2">
+        <div className={`grid gap-1 ${steps.length > 5 ? "grid-cols-3 md:grid-cols-6" : "grid-cols-5"}`}>
           {steps.map((step, idx) => (
             <div key={step} className="flex flex-col items-center text-xs">
               <div
-                className={`w-3 h-3 rounded-full ${
+                className={`w-2.5 h-2.5 rounded-full ${
                   idx < currentIndex
                     ? "bg-green-500"
                     : idx === currentIndex
@@ -405,8 +415,8 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
                     : "bg-gray-300"
                 }`}
               />
-              <span className="mt-1 capitalize text-gray-600">
-                {step.replaceAll("_", " ")}
+              <span className="mt-0.5 capitalize text-gray-600 text-center leading-tight text-xs">
+                {step === "ready_for_pickup" ? "Ready" : step === "out_for_delivery" ? "Out" : step.replaceAll("_", " ")}
               </span>
             </div>
           ))}
@@ -428,10 +438,10 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
     };
 
     return (
-      <Card className="mb-4 border border-gray-200 shadow-sm rounded-lg">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
+      <Card className="mb-3 border border-gray-200 shadow-sm rounded-lg">
+        <CardHeader className="py-2 px-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
               <OrderHeaderDetails order={order} />
             </div>
             {isCollapsible && (
@@ -439,17 +449,15 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleToggle}
-                className="ml-2"
+                className="ml-2 flex-shrink-0 h-8"
               >
                 {isExpanded ? (
                   <>
-                    <ChevronUp className="h-4 w-4 mr-1" />
-                    Hide Details
+                    <ChevronUp className="h-3 w-3" />
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-4 w-4 mr-1" />
-                    View More
+                    <ChevronDown className="h-3 w-3" />
                   </>
                 )}
               </Button>
@@ -458,61 +466,61 @@ const OrderManagementView: React.FC<OrderManagementViewProps> = () => {
         </CardHeader>
         
         {isExpanded && (
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2 px-4 py-2">
             {order.delivery_status === "pickup_failed" && userRole === "seller" && (
-              <Alert className="border-orange-200 bg-orange-50">
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-                <AlertDescription className="text-orange-800">
-                  <strong>Action Required:</strong> Courier attempted pickup but you were unavailable. Please reschedule or cancel within 24 hours.
+              <Alert className="border-orange-200 bg-orange-50 py-2 px-3">
+                <AlertTriangle className="h-3 w-3 text-orange-600 mt-0.5" />
+                <AlertDescription className="text-xs text-orange-800 ml-2">
+                  <strong>Action Required:</strong> Courier attempted pickup but unavailable. Reschedule or cancel within 24 hours.
                 </AlertDescription>
               </Alert>
             )}
 
             {order.delivery_status === "pickup_failed" && userRole === "buyer" && (
-              <Alert className="border-blue-200 bg-blue-50">
-                <Clock className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
-                  <strong>Pickup Delayed:</strong> The seller missed the scheduled pickup. We'll update you once they take action.
+              <Alert className="border-blue-200 bg-blue-50 py-2 px-3">
+                <Clock className="h-3 w-3 text-blue-600 mt-0.5" />
+                <AlertDescription className="text-xs text-blue-800 ml-2">
+                  <strong>Pickup Delayed:</strong> Seller missed pickup. We'll update you once they take action.
                 </AlertDescription>
               </Alert>
             )}
 
             {order.delivery_status === "rescheduled_by_seller" && (
-              <Alert className="border-blue-200 bg-blue-50">
-                <Calendar className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
+              <Alert className="border-blue-200 bg-blue-50 py-2 px-3">
+                <Calendar className="h-3 w-3 text-blue-600 mt-0.5" />
+                <AlertDescription className="text-xs text-blue-800 ml-2">
                   <strong>Pickup Rescheduled</strong>
                 </AlertDescription>
               </Alert>
             )}
 
-            <Separator />
+            <div className="pt-1" />
             <OrderTimeline order={order} />
-            <Separator />
+            <div className="pt-1" />
             <OrderShipmentSummary order={order} />
-            <Separator />
+            <div className="pt-1" />
 
             <OrderActionsPanel order={order} userRole={userRole} onOrderUpdate={fetchOrders} />
 
             {userRole === "buyer" && (["delivered", "completed"].includes(order.status) || order.delivery_status === "delivered") && (
-              <>
-                <Separator />
+              <div className="pt-1">
                 <OrderCompletionCard
                   orderId={order.id}
                   bookTitle={order.book?.title || "Book"}
                   sellerName={order.seller?.name || "Seller"}
                   deliveredDate={order.updated_at}
                   onFeedbackSubmitted={handleFeedbackSubmitted}
+                  totalAmount={order.total_amount || 0}
+                  sellerId={order.seller_id || ""}
                 />
-              </>
+              </div>
             )}
 
-            <Separator />
             {["delivered", "completed"].includes(order.status) && userRole === "seller" && (
-              <div className="text-xs text-gray-500">Completed on {formatDate(order.updated_at)}</div>
+              <div className="text-xs text-gray-500 pt-1">Completed on {formatDate(order.updated_at)}</div>
             )}
             {order.status === "cancelled" && (
-              <div className="text-xs text-red-600">Cancelled: {order.cancellation_reason || "Cancelled"} {order.cancelled_at ? `• ${formatDate(order.cancelled_at)}` : ""}</div>
+              <div className="text-xs text-red-600 pt-1">Cancelled: {order.cancellation_reason || "Cancelled"} {order.cancelled_at ? `• ${formatDate(order.cancelled_at)}` : ""}</div>
             )}
           </CardContent>
         )}

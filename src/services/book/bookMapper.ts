@@ -1,5 +1,6 @@
 import { Book } from "@/types/book";
 import { BookQueryResult } from "./bookTypes";
+import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 
 export const mapBookFromDatabase = (bookData: BookQueryResult): Book => {
   const profile = bookData.profiles;
@@ -11,6 +12,12 @@ export const mapBookFromDatabase = (bookData: BookQueryResult): Book => {
   // Ensure we have required fields
   if (!bookData.id || !bookData.seller_id) {
     throw new Error("Invalid book data: missing required fields");
+  }
+
+  // Determine province: use book.province, or fall back to seller's locker province
+  let province = bookData.province || null;
+  if (!province && profile?.preferred_delivery_locker_data) {
+    province = getProvinceFromLocker(profile.preferred_delivery_locker_data);
   }
 
   return {
@@ -38,11 +45,13 @@ export const mapBookFromDatabase = (bookData: BookQueryResult): Book => {
     additionalImages: Array.isArray(bookData.additional_images) ? bookData.additional_images : [],
     sold: bookData.sold || false,
     createdAt: bookData.created_at || new Date().toISOString(),
+    itemType: (bookData.item_type as 'textbook' | 'reader') || 'textbook',
     grade: bookData.grade,
+    genre: bookData.genre || undefined,
     universityYear: bookData.university_year,
     university: bookData.university,
     curriculum: (bookData as any).curriculum || undefined,
-    province: bookData.province || null,
+    province: province,
     // Quantity fields
     initialQuantity: bookData.initial_quantity ?? undefined,
     availableQuantity: bookData.available_quantity ?? undefined,

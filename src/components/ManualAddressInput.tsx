@@ -1,11 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, CheckCircle } from "lucide-react";
+import { fetchSuggestions, fetchAddressDetails, type Suggestion } from "@/services/addressAutocompleteService";
 
 export interface AddressData {
   formattedAddress: string;
@@ -15,6 +11,14 @@ export interface AddressData {
   postalCode: string;
   country: string;
   additional_info?: string;
+}
+
+interface AddressFormData {
+  street_address: string;
+  city: string;
+  province: string;
+  postal_code: string;
+  country: string;
 }
 
 interface ManualAddressInputProps {
@@ -27,7 +31,7 @@ interface ManualAddressInputProps {
 
 const SA_PROVINCES = [
   "Eastern Cape",
-  "Free State", 
+  "Free State",
   "Gauteng",
   "KwaZulu-Natal",
   "Limpopo",
@@ -37,154 +41,263 @@ const SA_PROVINCES = [
   "Western Cape",
 ];
 
-const ManualAddressInput: React.FC<ManualAddressInputProps> = ({
+export const ManualAddressInput = ({
   onAddressSelect,
   label = "Address",
   required = false,
   defaultValue = {},
   className = "",
-}) => {
-  const [street, setStreet] = useState(defaultValue?.street || "");
-  const [city, setCity] = useState(defaultValue?.city || "");
-  const [province, setProvince] = useState(defaultValue?.province || "");
-  const [postalCode, setPostalCode] = useState(defaultValue?.postalCode || "");
-  const [additionalInfo, setAdditionalInfo] = useState(defaultValue?.additional_info || "");
-  const [isValid, setIsValid] = useState(false);
+}: ManualAddressInputProps) => {
+  const [searchInput, setSearchInput] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [additionalInfo, setAdditionalInfo] = useState(
+    defaultValue?.additional_info || ""
+  );
+  const [formData, setFormData] = useState<AddressFormData>({
+    street_address: defaultValue?.street || "",
+    city: defaultValue?.city || "",
+    province: defaultValue?.province || "",
+    postal_code: defaultValue?.postalCode || "",
+    country: defaultValue?.country || "South Africa",
+  });
 
+  const debounceTimer = useRef<NodeJS.Timeout>();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch suggestions as user types
+  const handleSearch = async (value: string) => {
+    setSearchInput(value);
+
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    if (!value.trim()) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    // Set new timer for debouncing (300ms as per guide)
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        setIsLoading(true);
+        const results = await fetchSuggestions(value);
+        setSuggestions(results);
+        setShowDropdown(results.length > 0);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+  };
+
+  // Handle suggestion selection and auto-fill
+  const handleSelectSuggestion = async (placeId: string, description: string) => {
+    setSearchInput(description);
+    setShowDropdown(false);
+
+    try {
+      setIsLoading(true);
+      const details = await fetchAddressDetails(placeId);
+
+      if (details) {
+        // Use the parsed components directly from the API response
+        setFormData({
+          street_address: details.street_address || '',
+          city: details.city || '',
+          province: details.province || '',
+          postal_code: details.postal_code || '',
+          country: details.country || 'South Africa',
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching address details:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Close dropdown when clicking outside
   useEffect(() => {
-    const complete = street.trim() && city.trim() && province && postalCode.trim();
-    setIsValid(!!complete);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
 
-    if (complete) {
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDropdown]);
+
+  // Trigger callback when form is valid
+  useEffect(() => {
+    if (
+      formData.street_address &&
+      formData.city &&
+      formData.province &&
+      formData.postal_code
+    ) {
       const addressData: AddressData = {
-        formattedAddress: `${street.trim()}, ${city.trim()}, ${province}, ${postalCode.trim()}, South Africa`,
-        street: street.trim(),
-        city: city.trim(),
-        province,
-        postalCode: postalCode.trim(),
-        country: "South Africa",
-        additional_info: additionalInfo.trim() || undefined,
+        formattedAddress: `${formData.street_address}, ${formData.city}, ${formData.province}, ${formData.postal_code}, ${formData.country}`,
+        street: formData.street_address,
+        city: formData.city,
+        province: formData.province,
+        postalCode: formData.postal_code,
+        country: formData.country,
+        additional_info: additionalInfo || undefined,
       };
       onAddressSelect(addressData);
     }
-  }, [street, city, province, postalCode, additionalInfo, onAddressSelect]);
+  }, [formData, additionalInfo]);
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`w-full max-w-2xl space-y-6 ${className}`}>
       {label && (
-        <Label className="text-base font-medium flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
+        <Label className="text-base font-medium">
           {label} {required && <span className="text-red-500">*</span>}
         </Label>
       )}
 
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            {/* Street Address */}
-            <div>
-              <Label htmlFor="street" className="text-sm font-medium">
-                Street Address *
-              </Label>
-              <Input
-                id="street"
-                type="text"
-                placeholder="123 Main Street"
-                value={street}
-                onChange={(e) => setStreet(e.target.value)}
-                required={required}
-                className="mt-1"
-              />
-            </div>
-
-            {/* City and Postal Code */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="city" className="text-sm font-medium">
-                  City *
-                </Label>
-                <Input
-                  id="city"
-                  type="text"
-                  placeholder="Cape Town"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required={required}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="postalCode" className="text-sm font-medium">
-                  Postal Code *
-                </Label>
-                <Input
-                  id="postalCode"
-                  type="text"
-                  placeholder="8001"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  required={required}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            {/* Province */}
-            <div>
-              <Label htmlFor="province" className="text-sm font-medium">
-                Province *
-              </Label>
-              <Select value={province} onValueChange={setProvince}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select a province" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SA_PROVINCES.map((prov) => (
-                    <SelectItem key={prov} value={prov}>
-                      {prov}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Additional Information */}
-            <div>
-              <Label htmlFor="additional_info" className="text-sm font-medium">
-                Additional Information (Optional)
-              </Label>
-              <Textarea
-                id="additional_info"
-                placeholder="e.g., Building entrance details, security gate code, special instructions..."
-                value={additionalInfo}
-                onChange={(e) => setAdditionalInfo(e.target.value)}
-                rows={3}
-                className="mt-1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Include any helpful details for pickup/delivery (gate codes, building access, etc.)
-              </p>
-            </div>
-          </div>
-
-          {/* Address Preview */}
-          {isValid && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800 mb-1">
-                    Complete Address:
-                  </p>
-                  <p className="text-sm text-green-700">
-                    {street}, {city}, {province} {postalCode}, South Africa
-                  </p>
-                </div>
+      {/* Address Search Input */}
+      <div className="relative" ref={dropdownRef}>
+        <Label htmlFor="address-search">Search Address</Label>
+        <div className="relative mt-2">
+          <Input
+            id="address-search"
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Start typing an address..."
+            className="pr-10"
+          />
+          {/* Mini Loading Indicator */}
+          {isLoading && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Suggestions Dropdown */}
+        {showDropdown && suggestions.length > 0 && (
+          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion.place_id}
+                onClick={() =>
+                  handleSelectSuggestion(suggestion.place_id, suggestion.description)
+                }
+                className="w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors border-b last:border-b-0"
+                type="button"
+              >
+                {suggestion.description}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Auto-filled Form Fields */}
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="street">Street Address</Label>
+          <Input
+            id="street"
+            value={formData.street_address}
+            onChange={(e) =>
+              setFormData({ ...formData, street_address: e.target.value })
+            }
+            placeholder="Street address"
+            className="mt-2"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              value={formData.city}
+              onChange={(e) =>
+                setFormData({ ...formData, city: e.target.value })
+              }
+              placeholder="City"
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="province">Province</Label>
+            <Input
+              id="province"
+              value={formData.province}
+              onChange={(e) =>
+                setFormData({ ...formData, province: e.target.value })
+              }
+              placeholder="Province"
+              className="mt-2"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="postal">Postal Code</Label>
+            <Input
+              id="postal"
+              value={formData.postal_code}
+              onChange={(e) =>
+                setFormData({ ...formData, postal_code: e.target.value })
+              }
+              placeholder="Postal code"
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="country">Country</Label>
+            <Input
+              id="country"
+              value={formData.country}
+              onChange={(e) =>
+                setFormData({ ...formData, country: e.target.value })
+              }
+              placeholder="Country"
+              className="mt-2"
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="additional_info">Additional Information (Optional)</Label>
+          <textarea
+            id="additional_info"
+            value={additionalInfo}
+            onChange={(e) => setAdditionalInfo(e.target.value)}
+            placeholder="e.g., Building entrance details, security gate code, special instructions..."
+            className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+            rows={3}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Include any helpful details for pickup/delivery (gate codes, building access, etc.)
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

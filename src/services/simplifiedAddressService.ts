@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CheckoutAddress } from "@/types/checkout";
+import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 
 interface SimpleAddress {
   streetAddress: string;
@@ -78,7 +79,8 @@ const decryptAddress = async (params: { table: string; target_id: string; addres
       .maybeSingle();
 
     if (fetchError) {
-      console.error("❌ Error fetching encrypted data:", fetchError);
+      const errorMsg = fetchError instanceof Error ? fetchError.message : JSON.stringify(fetchError);
+      console.error("❌ Error fetching encrypted data:", errorMsg);
       return null;
     }
 
@@ -139,22 +141,30 @@ const decryptAddress = async (params: { table: string; target_id: string; addres
       }
     };
 
-    const { data, error } = await (isMobile ? retryWithBackoff(makeRequest, 3, 1000) : makeRequest());
+    try {
+      const { data, error } = await (isMobile ? retryWithBackoff(makeRequest, 3, 1000) : makeRequest());
 
-    console.log("🔐 Edge function response:", {
-      data: data ? { success: data.success, hasData: !!data.data } : null,
-      error: error ? { message: (error as any).message, status: (error as any).status } : null
-    });
+      console.log("🔐 Edge function response:", {
+        data: data ? { success: data.success, hasData: !!data.data } : null,
+        error: error ? { message: (error as any).message, status: (error as any).status } : null
+      });
 
-    if (error) {
-      return null;
-    }
+      if (error) {
+        const errorMsg = error instanceof Error ? error.message : JSON.stringify(error);
+        console.warn("❌ Decryption error:", errorMsg);
+        return null;
+      }
 
-    if (data?.success && data?.data) {
-      console.log("✅ Decryption successful");
-      return data.data;
-    } else {
-      console.warn("❌ Decryption failed:", data?.error?.message || "Unknown error");
+      if (data?.success && data?.data) {
+        console.log("✅ Decryption successful");
+        return data.data;
+      } else {
+        console.warn("❌ Decryption failed:", data?.error?.message || "Unknown error");
+        return null;
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.warn(`🔐 Decryption service error on ${isMobile ? 'mobile' : 'desktop'}:`, errorMsg);
       return null;
     }
   } catch (error) {
@@ -234,7 +244,7 @@ export const getSellerDeliveryAddress = async (
       console.error("❌ Alternative encrypted address source failed:", fallbackError);
     }
 
-    console.log("❌ No address data found for seller");
+    console.log("❌ No physical address found for seller");
     return null;
   } catch (error) {
     console.error("❌ Error getting seller address:", error);

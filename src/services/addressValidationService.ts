@@ -24,8 +24,29 @@ export const validateAddress = (address: Address): boolean => {
 export const canUserListBooks = async (userId: string): Promise<boolean> => {
   try {
     let hasValidAddress = false;
+    let hasSavedLocker = false;
 
-    // 1) Try the preferred encrypted path (profiles/books decryption via edge function)
+    // 1) Check for saved locker first (simpler check)
+    try {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("preferred_delivery_locker_data")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!error && profile?.preferred_delivery_locker_data) {
+        const lockerData = profile.preferred_delivery_locker_data as any;
+        if (lockerData.id && lockerData.name) {
+          hasSavedLocker = true;
+          console.log("📍 User has saved locker for listing");
+          return true; // Can list if they have a locker
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to check saved locker:", error);
+    }
+
+    // 2) Try the preferred encrypted path (profiles/books decryption via edge function)
     try {
       const { getSellerDeliveryAddress } = await import("@/services/simplifiedAddressService");
       const decrypted = await getSellerDeliveryAddress(userId);
@@ -43,7 +64,7 @@ export const canUserListBooks = async (userId: string): Promise<boolean> => {
       return true;
     }
 
-    // 2) Fallback: check simplified stored addresses (unencrypted user_addresses table / fallback service)
+    // 3) Fallback: check simplified stored addresses (unencrypted user_addresses table / fallback service)
     try {
       const fallbackModule = await import("@/services/fallbackAddressService");
       const fallbackSvc = fallbackModule?.default || fallbackModule?.fallbackAddressService;
@@ -63,7 +84,7 @@ export const canUserListBooks = async (userId: string): Promise<boolean> => {
       console.warn("Fallback user_addresses check failed:", error);
     }
 
-    // 3) Fallback: legacy plaintext pickup_address on profiles or books table
+    // 4) Fallback: legacy plaintext pickup_address on profiles or books table
     try {
       const { getUserAddresses, getSellerPickupAddress } = await import("@/services/addressService");
 
@@ -95,7 +116,7 @@ export const canUserListBooks = async (userId: string): Promise<boolean> => {
       console.warn("Legacy addressService fallback failed:", error);
     }
 
-    console.log(`❌ User ${userId} cannot list books - no valid pickup address found`);
+    console.log(`❌ User ${userId} cannot list books - no valid pickup address or locker found`);
     return false;
   } catch (error) {
     safeLogError("Error in canUserListBooks", error, { userId });

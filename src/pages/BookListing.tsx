@@ -41,15 +41,44 @@ const BookListing = () => {
   const [selectedCondition, setSelectedCondition] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedUniversityYear, setSelectedUniversityYear] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
   const [selectedProvince, setSelectedProvince] = useState(
     searchParams.get("province") || "",
   );
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [bookType, setBookType] = useState<"all" | "school" | "university">(
+  const [bookType, setBookType] = useState<"all" | "school" | "university" | "reader">(
     "all",
   );
+
+  // Helper function to filter books based on book type requirements
+  const filterBooksByType = (booksToFilter: Book[], type: "all" | "school" | "university" | "reader"): Book[] => {
+    if (type === "all") {
+      return booksToFilter;
+    }
+
+    return booksToFilter.filter((book) => {
+      if (type === "school") {
+        // School books: must have a grade OR be a study guide/course book
+        const hasGrade = book.grade && book.grade.trim() !== "";
+        const isSchoolTextType = book.universityBookType === "Study Guide" || book.universityBookType === "Course Book";
+        return hasGrade || isSchoolTextType;
+      }
+
+      if (type === "university") {
+        // University books: must have a university year
+        return book.universityYear && book.universityYear.trim() !== "";
+      }
+
+      if (type === "reader") {
+        // Reader books: must have a genre
+        return book.genre && book.genre.trim() !== "";
+      }
+
+      return true;
+    });
+  };
 
   // Memoize loadBooks function to prevent infinite loops
   const loadBooks = useCallback(async () => {
@@ -61,6 +90,7 @@ const BookListing = () => {
       const searchQuery = searchParams.get("search") || "";
       const category = searchParams.get("category") || "";
       const grade = searchParams.get("grade") || "";
+      const genre = searchParams.get("genre") || "";
       const curriculum = searchParams.get("curriculum") || "";
       const universityYear = searchParams.get("universityYear") || "";
       const province = searchParams.get("province") || "";
@@ -70,18 +100,21 @@ const BookListing = () => {
         category?: string;
         condition?: string;
         grade?: string;
+        genre?: string;
         curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
         universityYear?: string;
         university?: string;
         province?: string;
         minPrice?: number;
         maxPrice?: number;
+        itemType?: 'textbook' | 'reader' | 'all';
       } = {};
 
       if (searchQuery) filters.search = searchQuery;
       if (category) filters.category = category;
       if (selectedCondition) filters.condition = selectedCondition;
       if (grade) filters.grade = grade;
+      if (genre || selectedGenre) filters.genre = genre || selectedGenre;
       if (curriculum || selectedCurriculum) filters.curriculum = (curriculum || selectedCurriculum) as any;
       if (universityYear) filters.universityYear = universityYear;
       if (selectedUniversity) filters.university = selectedUniversity;
@@ -96,7 +129,15 @@ const BookListing = () => {
       console.log("📚 BookListing: Received books from service:", loadedBooks?.length || 0);
 
       // Ensure we have an array
-      const booksArray = Array.isArray(loadedBooks) ? loadedBooks : [];
+      let booksArray = Array.isArray(loadedBooks) ? loadedBooks : [];
+
+      // Apply book type specific filtering
+      if (bookType !== "all") {
+        console.log(`🔍 BookListing: Filtering ${bookType} books (before: ${booksArray.length})`);
+        booksArray = filterBooksByType(booksArray, bookType);
+        console.log(`🔍 BookListing: Filtered ${bookType} books (after: ${booksArray.length})`);
+      }
+
       setTotalBooks(booksArray.length);
       console.log("📊 BookListing: Total books set to:", booksArray.length);
 
@@ -135,7 +176,7 @@ const BookListing = () => {
       setIsLoading(false);
       console.log("🏁 BookListing: Loading complete, isLoading set to false");
     }
-  }, [searchParams, selectedCondition, selectedUniversity, selectedProvince, selectedCurriculum, priceRange, currentPage]);
+  }, [searchParams, selectedCondition, selectedUniversity, selectedProvince, selectedCurriculum, selectedGenre, priceRange, currentPage, bookType]);
 
   // Initial load
   useEffect(() => {
@@ -160,6 +201,9 @@ const BookListing = () => {
     if (selectedGrade) {
       newSearchParams.set("grade", selectedGrade);
     }
+    if (selectedGenre) {
+      newSearchParams.set("genre", selectedGenre);
+    }
     if (selectedUniversityYear) {
       newSearchParams.set("universityYear", selectedUniversityYear);
     }
@@ -177,7 +221,9 @@ const BookListing = () => {
     searchQuery,
     selectedCategory,
     selectedGrade,
+    selectedGenre,
     selectedUniversityYear,
+    selectedCurriculum,
     selectedProvince,
     setSearchParams,
   ]);
@@ -187,6 +233,7 @@ const BookListing = () => {
     setSelectedCategory("");
     setSelectedCondition("");
     setSelectedGrade("");
+    setSelectedGenre("");
     setSelectedUniversityYear("");
     setSelectedCurriculum("");
     setSelectedUniversity("");
@@ -266,6 +313,10 @@ const BookListing = () => {
             setSelectedCondition={setSelectedCondition}
             selectedGrade={selectedGrade}
             setSelectedGrade={setSelectedGrade}
+            selectedCurriculum={selectedCurriculum}
+            setSelectedCurriculum={setSelectedCurriculum}
+            selectedGenre={selectedGenre}
+            setSelectedGenre={setSelectedGenre}
             selectedUniversityYear={selectedUniversityYear}
             setSelectedUniversityYear={setSelectedUniversityYear}
             selectedUniversity={selectedUniversity}

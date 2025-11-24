@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Package, User, MapPin, ArrowRight, X } from "lucide-react";
 import { CheckoutBook, CheckoutAddress } from "@/types/checkout";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Step1OrderSummaryProps {
   book: CheckoutBook;
@@ -22,6 +23,8 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
 }) => {
   // Use useState to make cart data reactive
   const [cartData, setCartData] = useState(null);
+  const [sellerFullName, setSellerFullName] = useState<string | null>(null);
+  const [sellerCartFullNames, setSellerCartFullNames] = useState<{ [key: string]: string }>({});
 
   // Function to load cart data from localStorage
   const loadCartData = () => {
@@ -80,6 +83,59 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
       clearInterval(interval);
     };
   }, []);
+
+  // Fetch seller full name from profiles table
+  useEffect(() => {
+    const fetchSellerFullName = async () => {
+      try {
+        if (book.seller_id) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', book.seller_id)
+            .single();
+
+          if (error) {
+            console.warn('Failed to fetch seller full name:', error);
+          } else if (data?.full_name) {
+            setSellerFullName(data.full_name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching seller full name:', error);
+      }
+    };
+
+    fetchSellerFullName();
+  }, [book.seller_id]);
+
+  // Fetch cart seller full name if cart has a seller ID
+  useEffect(() => {
+    const fetchCartSellerFullName = async () => {
+      if (cartData && cartData.sellerId) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', cartData.sellerId)
+            .single();
+
+          if (error) {
+            console.warn('Failed to fetch cart seller full name:', error);
+          } else if (data?.full_name) {
+            setSellerCartFullNames((prev) => ({
+              ...prev,
+              [cartData.sellerId]: data.full_name,
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching cart seller full name:', error);
+        }
+      }
+    };
+
+    fetchCartSellerFullName();
+  }, [cartData?.sellerId]);
 
   // For debugging: show cart checkout if cart data exists (even for single item)
   const isCartCheckout = cartData && cartData.items && cartData.items.length >= 1;
@@ -218,7 +274,10 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
           <div className="space-y-3">
             <div>
               <p className="font-medium">
-                {isCartCheckout ? cartData.sellerName : (book.seller_name || "Anonymous Seller")}
+                {isCartCheckout
+                  ? (sellerCartFullNames[cartData.sellerId] || cartData.sellerName)
+                  : (sellerFullName || book.seller_name)
+                }
               </p>
               <p className="text-sm text-gray-600">
                 Seller ID: {isCartCheckout ? cartData.sellerId : book.seller_id}

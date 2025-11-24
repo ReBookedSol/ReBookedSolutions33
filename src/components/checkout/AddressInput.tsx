@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MapPin, Save } from "lucide-react";
 import { CheckoutAddress } from "@/types/checkout";
+import { fetchSuggestions, fetchAddressDetails, type Suggestion } from "@/services/addressAutocompleteService";
 
 interface AddressInputProps {
   initialAddress?: Partial<CheckoutAddress>;
@@ -55,6 +56,87 @@ const AddressInput: React.FC<AddressInputProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveToProfile, setSaveToProfile] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceTimer = useRef<NodeJS.Timeout>();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch suggestions as user types
+  const handleSearch = async (value: string) => {
+    setSearchInput(value);
+
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    if (!value.trim()) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    // Set new timer for debouncing (300ms)
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        setIsSearching(true);
+        const results = await fetchSuggestions(value);
+        setSuggestions(results);
+        setShowDropdown(results.length > 0);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  };
+
+  // Handle suggestion selection and auto-fill
+  const handleSelectSuggestion = async (placeId: string, description: string) => {
+    setSearchInput(description);
+    setShowDropdown(false);
+
+    try {
+      setIsSearching(true);
+      const details = await fetchAddressDetails(placeId);
+
+      if (details) {
+        // Use the parsed components directly from the API response
+        setAddress({
+          street: details.street_address || '',
+          city: details.city || '',
+          province: details.province || '',
+          postal_code: details.postal_code || '',
+          country: details.country || 'South Africa',
+          additional_info: address.additional_info,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching address details:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDropdown]);
 
   const validateAddress = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -123,6 +205,49 @@ const AddressInput: React.FC<AddressInputProps> = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Address Search/Autocomplete */}
+          <div className="relative" ref={dropdownRef}>
+            <Label htmlFor="address-search">Search Address (Optional)</Label>
+            <div className="relative mt-2">
+              <Input
+                id="address-search"
+                type="text"
+                value={searchInput}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Start typing your address..."
+                className="pr-10 min-h-[44px] text-sm sm:text-base"
+              />
+              {/* Mini Loading Indicator */}
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Suggestions Dropdown */}
+            {showDropdown && suggestions.length > 0 && (
+              <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.place_id}
+                    onClick={() =>
+                      handleSelectSuggestion(suggestion.place_id, suggestion.description)
+                    }
+                    className="w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors border-b last:border-b-0 text-sm sm:text-base"
+                    type="button"
+                  >
+                    {suggestion.description}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Street Address */}
           <div>
             <Label htmlFor="street">Street Address *</Label>

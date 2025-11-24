@@ -25,7 +25,9 @@ import {
   getBuyerCheckoutData,
 } from "@/services/checkoutValidationService";
 import { supabase } from "@/integrations/supabase/client";
+import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 import Step1OrderSummary from "./Step1OrderSummary";
+import Step1point5DeliveryMethod from "./Step1point5DeliveryMethod";
 import Step2DeliveryOptions from "./Step2DeliveryOptions";
 import Step3Payment from "./Step3Payment";
 import Step4Confirmation from "./Step4Confirmation";
@@ -47,9 +49,13 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     book,
     buyer_address: null,
     seller_address: null,
+    seller_locker_data: null,
+    seller_preferred_pickup_method: null,
     delivery_options: [],
     selected_delivery: null,
     order_summary: null,
+    delivery_method: null,
+    selected_locker: null,
     loading: true,
     error: null,
   });
@@ -165,9 +171,56 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
 
       console.log("🔍 Raw seller address result:", sellerAddress);
 
-      if (!sellerAddress) {
+      // Fetch seller's preferred pickup method and locker data
+      let sellerLockerData = null;
+      let sellerPreferredPickupMethod: "locker" | "pickup" | null = null;
+
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("preferred_delivery_locker_data, preferred_pickup_method")
+          .eq("id", bookData.seller_id)
+          .maybeSingle();
+
+        if (!profileError && profile) {
+          // Load preferred pickup method
+          if (profile.preferred_pickup_method) {
+            sellerPreferredPickupMethod = profile.preferred_pickup_method;
+            console.log("✅ Seller's preferred pickup method:", sellerPreferredPickupMethod);
+          }
+
+          // Only load locker if preferred method is locker
+          if (profile.preferred_pickup_method === "locker" && profile.preferred_delivery_locker_data) {
+            const lockerData = profile.preferred_delivery_locker_data as any;
+            if (lockerData.id && lockerData.name && lockerData.provider_slug) {
+              sellerLockerData = lockerData;
+              console.log("✅ Found seller's preferred locker:", lockerData.name);
+            }
+          }
+
+          // Fallback: if no preferred method set but has locker, use locker as preference
+          if (!sellerPreferredPickupMethod && profile.preferred_delivery_locker_data) {
+            const lockerData = profile.preferred_delivery_locker_data as any;
+            if (lockerData.id && lockerData.name && lockerData.provider_slug) {
+              sellerLockerData = lockerData;
+              sellerPreferredPickupMethod = "locker";
+              console.log("�� Using locker as default preference");
+            }
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to fetch seller's preferred pickup method:", error);
+        // Default to pickup method if we have an address, otherwise locker
+        if (sellerAddress) {
+          sellerPreferredPickupMethod = "pickup";
+        } else {
+          sellerPreferredPickupMethod = "locker";
+        }
+      }
+
+      if (!sellerAddress && !sellerLockerData) {
         // Let's check what's in the database directly for debugging
-        console.log("❌ getSellerDeliveryAddress returned null, checking database directly...");
+        console.log("❌ No seller address or locker data found, checking database...");
 
         // First, let's verify the book's seller_id is correct
         const { data: bookCheck, error: bookError } = await supabase
@@ -178,7 +231,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
 
         console.log("📚 Book verification:", { bookCheck, bookError });
 
-        // Check if seller has encrypted address setup
+        // Check if seller profile exists
         const { data: profiles, error: profileError } = await supabase
           .from("profiles")
           .select("id, first_name, last_name, email, encryption_status")
@@ -191,8 +244,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           profile_count: profiles?.length || 0,
           first_profile: profile
         });
-
-        console.log("📊 Direct database check:", { profile, profileError });
 
         // If no profile found, do some additional debugging
         if (!profile && profileError?.code === 'PGRST116') {
@@ -269,19 +320,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         if (!profile) {
           errorMessage += "The seller's profile setup is incomplete.";
         } else {
-          // Try to get encrypted address to validate it exists
-          try {
-            const sellerAddress = await import("@/services/addressService").then(module =>
-              module.getSellerPickupAddress(bookData.seller_id)
-            );
-            if (!sellerAddress) {
-              errorMessage += "The seller hasn't set up their pickup address yet.";
-            } else {
-              errorMessage += "There was an issue retrieving the seller's address.";
-            }
-          } catch {
-            errorMessage += "The seller hasn't set up their pickup address yet.";
-          }
+          errorMessage += "The seller hasn't set up their pickup address or preferred locker location yet.";
         }
 
         // Mobile-specific guidance
@@ -291,7 +330,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
 
         // If this is the current user's book, give them guidance
         if (user?.id === bookData.seller_id) {
-          errorMessage += " You can fix this by updating your pickup address in your profile settings.";
+          errorMessage += " You can fix this by updating your pickup address or setting a preferred locker in your profile settings.";
         } else {
           if (isMobile) {
             errorMessage += " Mobile users can also try switching to a WiFi connection.";
@@ -331,27 +370,35 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         throw new Error(errorMessage);
       }
 
-      console.log("✅ Seller address retrieved:", {
-        streetAddress: sellerAddress.streetAddress || sellerAddress.street,
-        city: sellerAddress.city,
-        province: sellerAddress.province,
-        postalCode: sellerAddress.postalCode || sellerAddress.postal_code
-      });
+      if (sellerAddress) {
+        console.log("✅ Seller address retrieved:", {
+          streetAddress: sellerAddress.streetAddress || sellerAddress.street,
+          city: sellerAddress.city,
+          province: sellerAddress.province,
+          postalCode: sellerAddress.postalCode || sellerAddress.postal_code
+        });
 
-      if (
-        !(sellerAddress.streetAddress || sellerAddress.street) ||
-        !sellerAddress.city ||
-        !sellerAddress.province ||
-        !(sellerAddress.postalCode || sellerAddress.postal_code)
-      ) {
-        throw new Error(
-          `Seller address is incomplete. Missing fields: ${[
-            !(sellerAddress.streetAddress || sellerAddress.street) && 'streetAddress',
-            !sellerAddress.city && 'city',
-            !sellerAddress.province && 'province',
-            !(sellerAddress.postalCode || sellerAddress.postal_code) && 'postalCode'
-          ].filter(Boolean).join(', ')}. Raw address: ${JSON.stringify(sellerAddress)}`,
-        );
+        if (
+          !(sellerAddress.streetAddress || sellerAddress.street) ||
+          !sellerAddress.city ||
+          !sellerAddress.province ||
+          !(sellerAddress.postalCode || sellerAddress.postal_code)
+        ) {
+          throw new Error(
+            `Seller address is incomplete. Missing fields: ${[
+              !(sellerAddress.streetAddress || sellerAddress.street) && 'streetAddress',
+              !sellerAddress.city && 'city',
+              !sellerAddress.province && 'province',
+              !(sellerAddress.postalCode || sellerAddress.postal_code) && 'postalCode'
+            ].filter(Boolean).join(', ')}. Raw address: ${JSON.stringify(sellerAddress)}`,
+          );
+        }
+      } else if (sellerLockerData) {
+        console.log("✅ Seller locker data retrieved:", {
+          name: sellerLockerData.name,
+          address: sellerLockerData.address || sellerLockerData.full_address,
+          provider_slug: sellerLockerData.provider_slug
+        });
       }
 
       // Update book with complete seller data
@@ -381,7 +428,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           const { getSimpleUserAddresses } = await import("@/services/simplifiedAddressService");
           const addrData = await getSimpleUserAddresses(user.id);
           const sa: any = addrData?.shipping_address || addrData?.pickup_address;
-          if (sa?.streetAddress && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
+          if ((sa?.streetAddress || sa?.street) && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
             buyerAddress = {
               street: sa.streetAddress || sa.street,
               city: sa.city,
@@ -399,7 +446,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           const { getUserAddresses } = await import("@/services/addressService");
           const full = await getUserAddresses(user.id);
           const sa: any = full?.shipping_address || full?.pickup_address;
-          if (sa?.street && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
+          if ((sa?.street || sa?.streetAddress) && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
             buyerAddress = {
               street: sa.street || sa.streetAddress,
               city: sa.city,
@@ -422,6 +469,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         ...prev,
         book: updatedBook,
         seller_address: sellerAddress,
+        seller_locker_data: sellerLockerData,
+        seller_preferred_pickup_method: sellerPreferredPickupMethod,
         buyer_address: buyerAddress,
         loading: false,
       }));
@@ -456,7 +505,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     }
   };
 
-  const goToStep = (step: 1 | 2 | 3 | 4) => {
+  const goToStep = (step: 1 | 2 | 3 | 4 | 5) => {
     setCheckoutState((prev) => ({
       ...prev,
       step: {
@@ -469,21 +518,49 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
   };
 
   const handleDeliverySelection = (delivery: DeliveryOption) => {
-    if (!checkoutState.buyer_address) {
+    // For locker delivery, we need the locker; for home delivery, we need the buyer address
+    const isLockerDelivery = checkoutState.delivery_method === "locker" && checkoutState.selected_locker;
+
+    if (!isLockerDelivery && !checkoutState.buyer_address) {
       toast.error("Please set your delivery address first");
       return;
     }
 
     const PLATFORM_FEE = 20; // R20 platform fee
+
+    // For locker delivery, show locker location as delivery address
+    let deliveryAddress = checkoutState.buyer_address || {
+      street: "",
+      city: "",
+      province: "",
+      postal_code: "",
+      country: "South Africa",
+    };
+    if (checkoutState.delivery_method === "locker" && checkoutState.selected_locker) {
+      const locker = checkoutState.selected_locker;
+      const lockerProvince = (locker as any).province || getProvinceFromLocker(locker);
+      deliveryAddress = {
+        street: (locker as any).full_address || (locker as any).address || "",
+        city: (locker as any).city || (locker as any).suburb || "Locker Location",
+        province: lockerProvince || "",
+        postal_code: (locker as any).postal_code || (locker as any).postalCode || "",
+        country: "South Africa",
+        additional_info: `Pickup at: ${locker.name}`,
+      };
+    }
+
     const orderSummary: OrderSummary = {
       book: checkoutState.book!,
       delivery,
-      buyer_address: checkoutState.buyer_address,
-      seller_address: checkoutState.seller_address!,
+      buyer_address: deliveryAddress,
+      seller_address: checkoutState.seller_address,
+      seller_locker_data: checkoutState.seller_locker_data,
       book_price: checkoutState.book!.price,
       delivery_price: delivery.price,
       platform_fee: PLATFORM_FEE,
       total_price: checkoutState.book!.price + delivery.price + PLATFORM_FEE,
+      delivery_method: checkoutState.delivery_method,
+      selected_locker: checkoutState.selected_locker,
     };
 
     setCheckoutState((prev) => ({
@@ -492,7 +569,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       order_summary: orderSummary,
     }));
 
-    goToStep(3);
+    goToStep(4);
   };
 
   const handlePaymentSuccess = async (orderData: OrderConfirmation) => {
@@ -555,7 +632,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       });
     }
 
-    goToStep(4);
+    goToStep(5);
   };
 
     const handlePaymentError = (error: string) => {
@@ -605,11 +682,22 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         additional_info: address.additional_info,
       };
 
+      // Get existing addresses to preserve pickup address if it exists
+      const { getSimpleUserAddresses } = await import(
+        "@/services/simplifiedAddressService"
+      );
+
+      const existingAddresses = await getSimpleUserAddresses(user.id);
+
+      // Save the entered address as shipping, preserve existing pickup address
+      const pickupToSave = existingAddresses?.pickup_address || simpleAddress;
+      const shippingToSave = simpleAddress;
+
       await saveSimpleUserAddresses(
         user.id,
-        simpleAddress, // Use as pickup address
-        simpleAddress, // Use as shipping address
-        true, // Addresses are the same
+        pickupToSave,
+        shippingToSave,
+        false, // Addresses are different
       );
 
       toast.success("Address saved to your profile!");
@@ -638,12 +726,14 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
   const getProgressValue = () => {
     switch (checkoutState.step.current) {
       case 1:
-        return 25;
+        return 20;
       case 2:
-        return 50;
+        return 40;
       case 3:
-        return 75;
+        return 60;
       case 4:
+        return 80;
+      case 5:
         return 100;
       default:
         return 0;
@@ -655,10 +745,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       case 1:
         return "Order Summary";
       case 2:
-        return "Delivery Options";
+        return "Delivery Method";
       case 3:
-        return "Payment";
+        return "Delivery Options";
       case 4:
+        return "Payment";
+      case 5:
         return "Confirmation";
       default:
         return "Checkout";
@@ -714,7 +806,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           <Progress value={getProgressValue()} className="h-2 mx-2 sm:mx-0" />
           <div className="flex justify-between mt-2 text-xs sm:text-sm text-gray-500 px-2 sm:px-0">
             <span className="text-center flex-1">Summary</span>
-            <span className="text-center flex-1">Delivery</span>
+            <span className="text-center flex-1">Method</span>
+            <span className="text-center flex-1">Options</span>
             <span className="text-center flex-1">Payment</span>
             <span className="text-center flex-1">Complete</span>
           </div>
@@ -731,31 +824,65 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 2 &&
-          checkoutState.buyer_address &&
-          checkoutState.seller_address &&
-          !isEditingAddress && (
-            <Step2DeliveryOptions
-              buyerAddress={checkoutState.buyer_address}
-              sellerAddress={checkoutState.seller_address}
-              onSelectDelivery={handleDeliverySelection}
-              onBack={() => goToStep(1)}
-              onCancel={handleCancelCheckout}
-              onEditAddress={handleEditAddress}
-              selectedDelivery={checkoutState.selected_delivery}
-            />
-          )}
-
-        {checkoutState.step.current === 2 && !checkoutState.buyer_address && (
-          <AddressInput
-            title="Enter Your Delivery Address"
-            onAddressSubmit={handleAddressSubmit}
-            onSaveToProfile={handleSaveAddressToProfile}
+        {checkoutState.step.current === 2 && (
+          <Step1point5DeliveryMethod
+            bookTitle={checkoutState.book?.title || "your book"}
+            onSelectDeliveryMethod={(method, locker) => {
+              setCheckoutState((prev) => ({
+                ...prev,
+                delivery_method: method,
+                selected_locker: locker || null,
+              }));
+              goToStep(3);
+            }}
+            onBack={() => goToStep(1)}
+            onCancel={handleCancelCheckout}
             loading={checkoutState.loading}
           />
         )}
 
-        {checkoutState.step.current === 2 &&
+        {checkoutState.step.current === 3 &&
+          (checkoutState.seller_address || checkoutState.seller_locker_data) &&
+          !isEditingAddress && (
+            <>
+              {checkoutState.delivery_method === "locker" && checkoutState.selected_locker ? (
+                <Step2DeliveryOptions
+                  buyerAddress={checkoutState.buyer_address || { street: "", city: "", province: "", postal_code: "", country: "" }}
+                  sellerAddress={checkoutState.seller_address}
+                  sellerLockerData={checkoutState.seller_locker_data}
+                  sellerPreferredPickupMethod={checkoutState.seller_preferred_pickup_method}
+                  onSelectDelivery={handleDeliverySelection}
+                  onBack={() => goToStep(2)}
+                  onCancel={handleCancelCheckout}
+                  onEditAddress={handleEditAddress}
+                  selectedDelivery={checkoutState.selected_delivery}
+                  preSelectedLocker={checkoutState.selected_locker}
+                />
+              ) : checkoutState.buyer_address ? (
+                <Step2DeliveryOptions
+                  buyerAddress={checkoutState.buyer_address}
+                  sellerAddress={checkoutState.seller_address}
+                  sellerLockerData={checkoutState.seller_locker_data}
+                  sellerPreferredPickupMethod={checkoutState.seller_preferred_pickup_method}
+                  onSelectDelivery={handleDeliverySelection}
+                  onBack={() => goToStep(2)}
+                  onCancel={handleCancelCheckout}
+                  onEditAddress={handleEditAddress}
+                  selectedDelivery={checkoutState.selected_delivery}
+                  preSelectedLocker={null}
+                />
+              ) : (
+                <AddressInput
+                  title="Enter Your Delivery Address"
+                  onAddressSubmit={handleAddressSubmit}
+                  onSaveToProfile={handleSaveAddressToProfile}
+                  loading={checkoutState.loading}
+                />
+              )}
+            </>
+          )}
+
+        {checkoutState.step.current === 3 &&
           checkoutState.buyer_address &&
           isEditingAddress && (
           <AddressInput
@@ -768,17 +895,17 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 3 && checkoutState.order_summary && (
+        {checkoutState.step.current === 4 && checkoutState.order_summary && (
           <Step3Payment
             orderSummary={checkoutState.order_summary}
-            onBack={() => goToStep(2)}
+            onBack={() => goToStep(3)}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
             userId={user.id}
           />
         )}
 
-        {checkoutState.step.current === 4 && orderConfirmation && (
+        {checkoutState.step.current === 5 && orderConfirmation && (
           <Step4Confirmation
             orderData={orderConfirmation}
             onViewOrders={handleViewOrders}

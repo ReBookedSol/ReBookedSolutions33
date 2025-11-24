@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Filter, Search, School, GraduationCap, BookOpen, MapPin } from "lucide-react";
 import { UniversitySelector } from "@/components/ui/university-selector";
 import { UNIVERSITY_YEARS } from "@/constants/universities";
-import { CREATE_LISTING_CATEGORIES } from "@/constants/createListingCategories";
+import { getCategoriesByBookType, READER_CATEGORIES, SCHOOL_CATEGORIES, UNIVERSITY_CATEGORIES } from "@/constants/bookTypeCategories";
+import { ALL_READER_GENRES } from "@/constants/readerGenres";
 
 interface BookFiltersProps {
   searchQuery: string;
@@ -20,6 +21,8 @@ interface BookFiltersProps {
   setSelectedGrade: (grade: string) => void;
   selectedCurriculum: string;
   setSelectedCurriculum: (curriculum: string) => void;
+  selectedGenre: string;
+  setSelectedGenre: (genre: string) => void;
   selectedUniversityYear: string;
   setSelectedUniversityYear: (year: string) => void;
   selectedUniversity: string;
@@ -28,8 +31,8 @@ interface BookFiltersProps {
   setSelectedProvince: (province: string) => void;
   priceRange: [number, number];
   setPriceRange: (range: [number, number]) => void;
-  bookType: "all" | "school" | "university";
-  setBookType: (type: "all" | "school" | "university") => void;
+  bookType: "all" | "school" | "university" | "reader";
+  setBookType: (type: "all" | "school" | "university" | "reader") => void;
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
   onSearch: (e: React.FormEvent) => void;
@@ -48,6 +51,8 @@ const BookFilters = ({
   setSelectedGrade,
   selectedCurriculum,
   setSelectedCurriculum,
+  selectedGenre,
+  setSelectedGenre,
   selectedUniversityYear,
   setSelectedUniversityYear,
   selectedUniversity,
@@ -64,7 +69,18 @@ const BookFilters = ({
   onUpdateFilters,
   onClearFilters,
 }: BookFiltersProps) => {
-  const categories = CREATE_LISTING_CATEGORIES;
+  // Get categories based on selected book type, or combine all if "all" is selected
+  const getDisplayCategories = () => {
+    if (bookType === "all") {
+      // Combine all categories from all types and remove duplicates, then sort
+      const allCats = new Set<string>();
+      [...SCHOOL_CATEGORIES, ...UNIVERSITY_CATEGORIES, ...READER_CATEGORIES].forEach(cat => allCats.add(cat));
+      return Array.from(allCats).sort((a, b) => a.localeCompare(b));
+    }
+    return getCategoriesByBookType(bookType as "school" | "university" | "reader");
+  };
+
+  const categories = getDisplayCategories();
   const conditions = ["New", "Good", "Better", "Average", "Below Average"];
   const grades = [
     "Grade 1",
@@ -131,13 +147,22 @@ const BookFilters = ({
     setSelectedProvince(province === selectedProvince ? "" : province);
   };
 
-  const handleBookTypeChange = (type: "all" | "school" | "university") => {
+  const handleBookTypeChange = (type: "all" | "school" | "university" | "reader") => {
     setBookType(type);
     if (type === "school") {
       setSelectedUniversityYear("");
       setSelectedUniversity("");
+      setSelectedGrade("");
+      setSelectedGenre("");
     } else if (type === "university") {
       setSelectedGrade("");
+      setSelectedUniversityYear("");
+      setSelectedUniversity("");
+      setSelectedGenre("");
+    } else if (type === "reader") {
+      setSelectedGrade("");
+      setSelectedUniversityYear("");
+      setSelectedUniversity("");
     }
   };
 
@@ -147,6 +172,7 @@ const BookFilters = ({
     selectedCondition ||
     selectedGrade ||
     selectedCurriculum ||
+    selectedGenre ||
     selectedUniversityYear ||
     selectedUniversity ||
     selectedProvince
@@ -241,11 +267,20 @@ const BookFilters = ({
                 <GraduationCap className="mr-1 h-4 w-4" />
                 University
               </Button>
+              <Button
+                variant={bookType === "reader" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleBookTypeChange("reader")}
+                className="flex items-center"
+              >
+                <BookOpen className="mr-1 h-4 w-4" />
+                Readers
+              </Button>
             </div>
           </div>
 
           {/* Grade Filter */}
-          {(bookType === "school" || bookType === "all") && (
+          {bookType === "school" && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Grade</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -271,7 +306,7 @@ const BookFilters = ({
           )}
 
           {/* Curriculum Filter */}
-          {(bookType === "school" || bookType === "all") && (
+          {bookType === "school" && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Curriculum</h3>
               <Select value={selectedCurriculum} onValueChange={(value) => setSelectedCurriculum(value)}>
@@ -288,7 +323,7 @@ const BookFilters = ({
           )}
 
           {/* University Selection */}
-          {(bookType === "university" || bookType === "all") && (
+          {bookType === "university" && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">
                 University
@@ -302,7 +337,7 @@ const BookFilters = ({
           )}
 
           {/* University Year Filter */}
-          {(bookType === "university" || bookType === "all") && (
+          {bookType === "university" && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">
                 University Year
@@ -326,6 +361,25 @@ const BookFilters = ({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Genre Filter - for Reader books */}
+          {bookType === "reader" && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Genre</h3>
+              <Select value={selectedGenre} onValueChange={(value) => setSelectedGenre(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select genre" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {ALL_READER_GENRES.map((genre) => (
+                    <SelectItem key={genre} value={genre}>
+                      {genre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 

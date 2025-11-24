@@ -3,18 +3,22 @@ export interface BookFilters {
   category?: string;
   condition?: string;
   grade?: string;
+  genre?: string;
   universityYear?: string;
   university?: string;
   province?: string;
   curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
   minPrice?: number;
   maxPrice?: number;
+  itemType?: 'textbook' | 'reader' | 'all';
 }
 
 export interface ProfileData {
   id: string;
   name: string;
   email: string;
+  preferred_delivery_locker_data?: any;
+  has_pickup_address?: boolean;
 }
 
 export interface BookQueryResult {
@@ -32,7 +36,9 @@ export interface BookQueryResult {
   additional_images?: string[] | null;
   sold: boolean;
   created_at: string;
+  item_type?: 'textbook' | 'reader';
   grade?: string;
+  genre?: string;
   university_year?: string;
   university?: string;
   curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
