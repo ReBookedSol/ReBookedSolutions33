@@ -429,23 +429,24 @@ const ModernAddressTab = ({
                 </div>
 
                 {/* Home Address Option */}
-                <div className="flex items-start space-x-3 p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
-                  onClick={() => !isSavingPreference && savePreferredPickupMethod("pickup")}
+                <div className={`flex items-start space-x-3 p-4 border-2 border-blue-200 rounded-lg transition-colors ${!pickupAddress ? "opacity-50 cursor-not-allowed bg-gray-50" : "hover:bg-blue-50 cursor-pointer"}`}
+                  onClick={() => pickupAddress && !isSavingPreference && savePreferredPickupMethod("pickup")}
                 >
                   <RadioGroupItem
                     value="pickup"
                     id="prefer-pickup"
-                    disabled={isSavingPreference}
+                    disabled={isSavingPreference || !pickupAddress}
                     className="mt-1 flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="prefer-pickup" className="cursor-pointer">
+                    <Label htmlFor="prefer-pickup" className={pickupAddress ? "cursor-pointer" : "cursor-not-allowed"}>
                       <div className="flex items-center gap-2 mb-1">
-                        <Home className="h-4 w-4 text-blue-600" />
-                        <span className="font-semibold text-blue-900">Home Address</span>
+                        <Home className={`h-4 w-4 ${pickupAddress ? "text-blue-600" : "text-gray-400"}`} />
+                        <span className={`font-semibold ${pickupAddress ? "text-blue-900" : "text-gray-500"}`}>Home Address</span>
+                        {!pickupAddress && <span className="text-xs text-gray-500">(No address saved)</span>}
                       </div>
-                      <p className="text-sm text-gray-600 ml-6">
-                        Use your home pickup address. Courier will collect from your address, but may involve rescheduling and higher costs.
+                      <p className={`text-sm ml-6 ${pickupAddress ? "text-gray-600" : "text-gray-400"}`}>
+                        Use your home pickup address. Courier will collect from your address. We only recommend if it's your only option.
                       </p>
                     </Label>
                   </div>
@@ -456,10 +457,10 @@ const ModernAddressTab = ({
               </div>
             </RadioGroup>
 
-            <Alert className="bg-amber-50 border-amber-200">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800 text-sm">
-                <strong>Note:</strong> Locker is recommended to avoid courier rescheduling, missed pickups, and extra costs. Your rate calculations will be based on your selection.
+            <Alert className="bg-blue-50 border-blue-200">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800 text-sm">
+                <strong>Note:</strong> Your rate calculations will be based on your preferred pickup method selection.
               </AlertDescription>
             </Alert>
           </CardContent>
