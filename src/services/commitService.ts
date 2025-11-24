@@ -350,13 +350,13 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
     let order = null;
     let book = null;
 
-    // First, try to get the order
+    // First, try to get the order (check both pending_commit and pending statuses)
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .select("*")
       .eq("id", orderIdOrBookId)
       .eq("seller_id", user.id)
-      .eq("status", "pending_commit")
+      .in("status", ["pending_commit", "pending"])
       .single();
 
     if (!orderError && orderData) {
