@@ -201,11 +201,13 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     orderStatus === "courier_scheduled" ||
     orderStatus === "shipped";
 
-  // Check if form is valid
+  // Check if form is valid based on preferred method
   const isFormValid =
     isPackagedSecurely &&
     canFulfillOrder &&
-    ((deliveryMethod === "home" && sellerHasPickupAddress) || (deliveryMethod === "locker" && (selectedLocker || (savedLocker && !wantToChangeLocker))));
+    preferredPickupMethod &&
+    ((preferredPickupMethod === "pickup" && deliveryMethod === "home") ||
+      (preferredPickupMethod === "locker" && deliveryMethod === "locker" && (selectedLocker || savedLocker)));
 
   const handleCommit = async () => {
     setIsCommitting(true);
