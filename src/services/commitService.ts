@@ -432,44 +432,85 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
       // When declining, we need to:
       // 1. Set sold: false (since only one item was sold and we're restoring it)
       // 2. Restore quantities: decrement sold_quantity by 1, increment available_quantity by 1
-      // 3. Ensure total_quantity = available_quantity + sold_quantity
+      // 3. Ensure: available_quantity + sold_quantity ≤ initial_quantity
 
       const currentSoldQuantity = (book.sold_quantity || 0);
       const currentAvailableQuantity = (book.available_quantity || 0);
+      const initialQuantity = (book.initial_quantity || 1);
+
       const newSoldQuantity = Math.max(0, currentSoldQuantity - 1);
-      const newAvailableQuantity = currentAvailableQuantity + 1;
+      const newAvailableQuantity = Math.min(
+        currentAvailableQuantity + 1,
+        initialQuantity // Ensure we don't exceed initial_quantity
+      );
 
-      const updateData: any = {
-        sold: false,
-        sold_quantity: newSoldQuantity,
-        available_quantity: newAvailableQuantity,
-        updated_at: new Date().toISOString(),
-      };
-
-      console.log("[CommitService] Restoring book quantities:", {
-        bookId: book.id,
-        currentSoldQuantity,
-        currentAvailableQuantity,
-        newSoldQuantity,
-        newAvailableQuantity,
-      });
-
-      const { error: updateBookError } = await supabase
-        .from("books")
-        .update(updateData)
-        .eq("id", book.id)
-        .eq("seller_id", user.id);
-
-      if (updateBookError) {
-        console.error("[CommitService] Error updating book status:", {
-          message: updateBookError.message || 'Unknown error',
-          code: updateBookError.code,
-          details: updateBookError.details,
+      // Validate the constraint: available_quantity + sold_quantity <= initial_quantity
+      const totalAfterRestore = newAvailableQuantity + newSoldQuantity;
+      if (totalAfterRestore > initialQuantity) {
+        console.warn("[CommitService] Quantity restore would violate constraint, using fallback", {
           bookId: book.id,
-          updateData
+          currentSoldQuantity,
+          currentAvailableQuantity,
+          initialQuantity,
+          newSoldQuantity,
+          newAvailableQuantity,
+          totalAfterRestore,
         });
-        // Don't throw here as the order decline is more important
-        console.warn("Book status update failed, but order was declined successfully");
+        // Fallback: just mark as not sold without changing quantities
+        const { error: updateBookError } = await supabase
+          .from("books")
+          .update({
+            sold: false,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", book.id)
+          .eq("seller_id", user.id);
+
+        if (updateBookError) {
+          console.error("[CommitService] Error updating book sold status:", {
+            message: updateBookError.message || 'Unknown error',
+            code: updateBookError.code,
+            details: updateBookError.details,
+            bookId: book.id,
+          });
+          // Don't throw here as the order decline is more important
+          console.warn("Book sold status update failed, but order was declined successfully");
+        }
+      } else {
+        const updateData: any = {
+          sold: false,
+          sold_quantity: newSoldQuantity,
+          available_quantity: newAvailableQuantity,
+          updated_at: new Date().toISOString(),
+        };
+
+        console.log("[CommitService] Restoring book quantities:", {
+          bookId: book.id,
+          currentSoldQuantity,
+          currentAvailableQuantity,
+          initialQuantity,
+          newSoldQuantity,
+          newAvailableQuantity,
+          totalAfterRestore,
+        });
+
+        const { error: updateBookError } = await supabase
+          .from("books")
+          .update(updateData)
+          .eq("id", book.id)
+          .eq("seller_id", user.id);
+
+        if (updateBookError) {
+          console.error("[CommitService] Error updating book status:", {
+            message: updateBookError.message || 'Unknown error',
+            code: updateBookError.code,
+            details: updateBookError.details,
+            bookId: book.id,
+            updateData,
+          });
+          // Don't throw here as the order decline is more important
+          console.warn("Book status update failed, but order was declined successfully");
+        }
       }
     }
 
