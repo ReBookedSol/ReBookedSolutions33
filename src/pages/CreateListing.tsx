@@ -36,6 +36,7 @@ import { BookTypeSection } from "@/components/create-listing/BookTypeSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { canUserListBooks } from "@/services/addressValidationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 const CreateListing = () => {
   const { user, profile } = useAuth();
@@ -81,6 +82,7 @@ const CreateListing = () => {
   const [sellerPolicyAccepted, setSellerPolicyAccepted] = useState(false);
   const [canListBooks, setCanListBooks] = useState<boolean | null>(null);
   const [isCheckingAddress, setIsCheckingAddress] = useState(true);
+  const [preferredPickupMethod, setPreferredPickupMethod] = useState<"locker" | "pickup" | null>(null);
 
   // Check if user can list books on component mount
   useEffect(() => {
