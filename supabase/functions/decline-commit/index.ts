@@ -49,22 +49,55 @@ serve(async (req) => {
 
     console.log("🔄 Processing decline for order:", order_id);
 
-    // Get order details with buyer and seller info
+    // Get order details with buyer and seller info - using maybeSingle() instead of single()
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select("id, buyer_id, seller_id, buyer_email, seller_email, buyer_full_name, seller_full_name, payment_reference, amount, total_amount, selected_shipping_cost, status, tracking_number, book_id, items")
       .eq("id", order_id)
       .eq("seller_id", seller_id)
       .eq("status", "pending_commit")
-      .single();
+      .maybeSingle();
 
-    if (orderError || !order) {
-      console.error("❌ Order fetch error:", orderError);
+    if (orderError) {
+      console.error("❌ Database error fetching order:", orderError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "DATABASE_ERROR",
+          message: "Failed to fetch order from database",
+          details: orderError.message,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!order) {
+      console.error("❌ Order not found or invalid:", { order_id, seller_id });
+
+      // Check if order exists at all to provide better error message
+      const { data: existingOrder } = await supabase
+        .from("orders")
+        .select("id, seller_id, status")
+        .eq("id", order_id)
+        .maybeSingle();
+
+      let errorMessage = "Order not found";
+      if (existingOrder) {
+        if (existingOrder.seller_id !== seller_id) {
+          errorMessage = "You are not authorized to decline this order";
+        } else if (existingOrder.status !== "pending_commit") {
+          errorMessage = `Order is in ${existingOrder.status} status and cannot be declined`;
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: false,
           error: "ORDER_NOT_FOUND",
-          message: "Order not found or not in pending_commit status",
+          message: errorMessage,
         }),
         {
           status: 404,
