@@ -347,7 +347,36 @@ const ModernAddressTab = ({
       </Alert>
 
       {/* BobGo Locations Section - Moved to Top */}
-      <BobGoLocationsSection onLockerSaved={() => savedLockersCardRef.current?.loadSavedLockers()} />
+      <BobGoLocationsSection onLockerSaved={() => {
+        savedLockersCardRef.current?.loadSavedLockers();
+        // Reload preference and locker status when a new locker is saved
+        setIsLoadingPreference(true);
+        (async () => {
+          try {
+            const {
+              data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) return;
+
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("preferred_pickup_method, preferred_delivery_locker_data")
+              .eq("id", user.id)
+              .single();
+
+            if (profile) {
+              setHasSavedLocker(!!profile.preferred_delivery_locker_data);
+              // Auto-select locker if it's the only option now
+              if (!profile.preferred_pickup_method && profile.preferred_delivery_locker_data) {
+                await savePreferredPickupMethod("locker");
+              }
+            }
+          } finally {
+            setIsLoadingPreference(false);
+          }
+        })();
+      }} />
 
       {/* Preferred Pickup Method Selection - Only show if both locker and address exist */}
       {!isLoadingPreference && hasSavedLocker && pickupAddress && (
