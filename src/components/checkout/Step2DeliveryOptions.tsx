@@ -27,6 +27,7 @@ interface Step2DeliveryOptionsProps {
   buyerAddress: CheckoutAddress;
   sellerAddress: CheckoutAddress | null;
   sellerLockerData?: BobGoLocation | null;
+  sellerPreferredPickupMethod?: "locker" | "pickup" | null;
   onSelectDelivery: (option: DeliveryOption) => void;
   onBack: () => void;
   onCancel?: () => void;
@@ -534,7 +535,7 @@ const Step2DeliveryOptions: React.FC<Step2DeliveryOptionsProps> = ({
       <Alert className="bg-amber-50 border-amber-200">
         <AlertTriangle className="h-4 w-4 text-amber-600" />
         <AlertDescription className="text-amber-800">
-          Note: “Same day delivery” refers to the courier service level. The seller must first confirm/commit the order before pickup can be scheduled.
+          Note: ���Same day delivery” refers to the courier service level. The seller must first confirm/commit the order before pickup can be scheduled.
         </AlertDescription>
       </Alert>
 
