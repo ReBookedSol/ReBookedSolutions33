@@ -109,21 +109,24 @@ serve(async (req) => {
     // Check if already committed
     if (order.status === 'committed' || order.status === 'shipped') {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Order is already committed' 
+        JSON.stringify({
+          success: false,
+          error: 'Order is already committed'
         }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
+    // Use the original pickup type from the order, not the delivery_method parameter
+    const actualPickupType = order.pickup_type || 'door';
+
     let shipmentResult = null;
 
-    // Handle locker delivery
-    if (delivery_method === "locker" && use_locker_api) {
+    // Handle locker delivery (only if order's original pickup_type is locker)
+    if (actualPickupType === "locker" && use_locker_api) {
       console.log('📦 Creating locker shipment...');
       
       try {
@@ -168,13 +171,11 @@ serve(async (req) => {
     // Update order status
     const updateData: any = {
       status: 'committed',
-      delivery_method: delivery_method,
       committed_at: new Date().toISOString(),
     };
 
-    // Add locker-specific data
-    if (delivery_method === "locker") {
-      updateData.locker_id = locker_id;
+    // Add locker-specific data if the original order pickup_type is locker
+    if (actualPickupType === "locker") {
       if (shipmentResult) {
         updateData.tracking_number = shipmentResult.trackingNumber;
         updateData.qr_code_url = shipmentResult.qrCodeUrl;
@@ -208,7 +209,7 @@ serve(async (req) => {
     }
 
     // Create notification for buyer
-    const notificationMessage = delivery_method === "locker" 
+    const notificationMessage = actualPickupType === "locker"
       ? `Your order for "${order.book?.title}" has been committed with locker delivery. Tracking: ${shipmentResult?.trackingNumber || 'N/A'}`
       : `Your order for "${order.book?.title}" has been committed. Courier pickup scheduled.`;
 
@@ -221,7 +222,7 @@ serve(async (req) => {
         type: 'order_committed',
         metadata: {
           order_id: order_id,
-          delivery_method: delivery_method,
+          pickup_type: actualPickupType,
           ...(shipmentResult && {
             tracking_number: shipmentResult.trackingNumber,
             qr_code_url: shipmentResult.qrCodeUrl
@@ -232,15 +233,15 @@ serve(async (req) => {
     console.log('✅ Enhanced commit completed successfully');
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Order committed with ${delivery_method} delivery`,
+      JSON.stringify({
+        success: true,
+        message: `Order committed with ${actualPickupType} pickup`,
         order: updatedOrder,
         shipment: shipmentResult
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 

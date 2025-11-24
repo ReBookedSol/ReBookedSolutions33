@@ -350,13 +350,13 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
     let order = null;
     let book = null;
 
-    // First, try to get the order
+    // First, try to get the order (check both pending_commit and pending statuses)
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .select("*")
       .eq("id", orderIdOrBookId)
       .eq("seller_id", user.id)
-      .eq("status", "pending_commit")
+      .in("status", ["pending_commit", "pending"])
       .single();
 
     if (!orderError && orderData) {
@@ -368,10 +368,10 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
       const firstItem = items[0] || {};
 
       if (firstItem.book_id) {
-        // Try to get book details
+        // Try to get book details (include ALL fields needed for decline operation)
         const { data: bookData } = await supabase
           .from("books")
-          .select("id, title, author, price")
+          .select("*")
           .eq("id", firstItem.book_id)
           .single();
         book = bookData;
@@ -402,7 +402,98 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
     const targetName = order ? `order ${order.id}` : `book ${book?.title || orderIdOrBookId}`;
     console.log("[CommitService] Processing decline for", targetName);
 
-    // If we have an order, update the order status to declined
+    // IMPORTANT: Update book FIRST before updating order status
+    // This is because changing order status to "declined" might trigger a database trigger
+    // that tries to update book quantities. By fixing quantities first, we avoid constraint violations.
+
+    // If we have book info, update book to mark as available again and restore quantities
+    if (book) {
+      // When declining, we need to:
+      // 1. Set sold: false (since only one item was sold and we're restoring it)
+      // 2. Restore quantities: decrement sold_quantity by 1, increment available_quantity by 1
+      // 3. Ensure: available_quantity + sold_quantity ≤ initial_quantity
+
+      const currentSoldQuantity = (book.sold_quantity || 0);
+      const currentAvailableQuantity = (book.available_quantity || 0);
+      const initialQuantity = (book.initial_quantity || 1);
+
+      const newSoldQuantity = Math.max(0, currentSoldQuantity - 1);
+      const newAvailableQuantity = Math.min(
+        currentAvailableQuantity + 1,
+        initialQuantity // Ensure we don't exceed initial_quantity
+      );
+
+      // Validate the constraint: available_quantity + sold_quantity <= initial_quantity
+      const totalAfterRestore = newAvailableQuantity + newSoldQuantity;
+      if (totalAfterRestore > initialQuantity) {
+        console.warn("[CommitService] Quantity restore would violate constraint, using fallback", {
+          bookId: book.id,
+          currentSoldQuantity,
+          currentAvailableQuantity,
+          initialQuantity,
+          newSoldQuantity,
+          newAvailableQuantity,
+          totalAfterRestore,
+        });
+        // Fallback: just mark as not sold without changing quantities
+        const { error: updateBookError } = await supabase
+          .from("books")
+          .update({
+            sold: false,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", book.id)
+          .eq("seller_id", user.id);
+
+        if (updateBookError) {
+          console.error("[CommitService] Error updating book sold status:", {
+            message: updateBookError.message || 'Unknown error',
+            code: updateBookError.code,
+            details: updateBookError.details,
+            bookId: book.id,
+          });
+          // Don't throw here as the order decline is more important
+          console.warn("Book sold status update failed, but order was declined successfully");
+        }
+      } else {
+        const updateData: any = {
+          sold: false,
+          sold_quantity: newSoldQuantity,
+          available_quantity: newAvailableQuantity,
+          updated_at: new Date().toISOString(),
+        };
+
+        console.log("[CommitService] Restoring book quantities:", {
+          bookId: book.id,
+          currentSoldQuantity,
+          currentAvailableQuantity,
+          initialQuantity,
+          newSoldQuantity,
+          newAvailableQuantity,
+          totalAfterRestore,
+        });
+
+        const { error: updateBookError } = await supabase
+          .from("books")
+          .update(updateData)
+          .eq("id", book.id)
+          .eq("seller_id", user.id);
+
+        if (updateBookError) {
+          console.error("[CommitService] Error updating book status:", {
+            message: updateBookError.message || 'Unknown error',
+            code: updateBookError.code,
+            details: updateBookError.details,
+            bookId: book.id,
+            updateData,
+          });
+          // Don't throw here as the order decline is more important
+          console.warn("Book status update failed, but order was declined successfully");
+        }
+      }
+    }
+
+    // Now update the order status to declined (AFTER book has been fixed)
     if (order) {
       const { error: updateOrderError } = await supabase
         .from("orders")
@@ -424,28 +515,6 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
         throw new Error(
           `Failed to decline order: ${updateOrderError.message || "Database update failed"}`,
         );
-      }
-    }
-
-    // If we have book info, update book to mark as available again
-    if (book) {
-      const { error: updateBookError } = await supabase
-        .from("books")
-        .update({
-          sold: false,
-        })
-        .eq("id", book.id)
-        .eq("seller_id", user.id);
-
-      if (updateBookError) {
-        console.error("[CommitService] Error updating book status:", {
-          message: updateBookError.message || 'Unknown error',
-          code: updateBookError.code,
-          details: updateBookError.details,
-          bookId: book.id
-        });
-        // Don't throw here as the order decline is more important
-        console.warn("Book status update failed, but order was declined successfully");
       }
     }
 

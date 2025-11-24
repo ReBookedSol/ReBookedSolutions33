@@ -9,12 +9,7 @@ import {
   CheckCircle,
   AlertCircle,
   Home,
-  Package,
-  Clock,
-  DollarSign,
-  Info,
-  QrCode,
-  MapPin
+  MapPin,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -27,14 +22,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import FallbackCommitService from "@/services/fallbackCommitService";
-import BobGoLockerSelector from "@/components/checkout/BobGoLockerSelector";
-import { BobGoLocation } from "@/services/bobgoLocationsService";
 
 interface EnhancedOrderCommitButtonProps {
   orderId: string;
@@ -59,141 +48,48 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
 }) => {
   const [isCommitting, setIsCommitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [deliveryMethod, setDeliveryMethod] = useState<"home" | "locker">("home");
-  const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
-  const [savedLocker, setSavedLocker] = useState<BobGoLocation | null>(null);
-  const [isLoadingSavedLocker, setIsLoadingSavedLocker] = useState(false);
-  const [buyerDeliveryType, setBuyerDeliveryType] = useState<string | null>(null);
+  const [pickupType, setPickupType] = useState<"door" | "locker" | null>(null);
+  const [deliveryType, setDeliveryType] = useState<"door" | "locker" | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
-  const [preferredPickupMethod, setPreferredPickupMethod] = useState<"locker" | "pickup" | null>(null);
-  const [isLoadingPreference, setIsLoadingPreference] = useState(false);
 
-  // Pre-commit checklist states
-  const [isPackagedSecurely, setIsPackagedSecurely] = useState(false);
-  const [canFulfillOrder, setCanFulfillOrder] = useState(false);
-
-  // Load seller's preferred pickup method, buyer's delivery type, and saved locker when dialog opens
+  // Load order details to get original pickup and delivery types
   useEffect(() => {
     if (isDialogOpen) {
-      loadPreferredPickupMethod();
-      fetchBuyerDeliveryType();
-      loadSavedLocker();
+      fetchOrderDetails();
     }
   }, [isDialogOpen]);
 
-  const loadPreferredPickupMethod = async () => {
-    try {
-      setIsLoadingPreference(true);
-
-      // Fetch seller's preferred pickup method
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("preferred_pickup_method")
-        .eq("id", sellerId)
-        .single();
-
-      if (error) {
-        console.warn("Failed to load seller's preferred pickup method:", error);
-        // Default to locker if not set
-        setPreferredPickupMethod("locker");
-        return;
-      }
-
-      if (profile?.preferred_pickup_method) {
-        setPreferredPickupMethod(profile.preferred_pickup_method);
-        console.log("✅ Seller's preferred pickup method:", profile.preferred_pickup_method);
-      } else {
-        // Default to locker if not set
-        setPreferredPickupMethod("locker");
-      }
-    } catch (error) {
-      console.error("Error loading preferred pickup method:", error);
-      setPreferredPickupMethod("locker");
-    } finally {
-      setIsLoadingPreference(false);
-    }
-  };
-
-  const fetchBuyerDeliveryType = async () => {
+  const fetchOrderDetails = async () => {
     try {
       setIsLoadingOrder(true);
 
-      // Fetch the order to check the buyer's delivery type
+      // Fetch the order to get the original pickup_type and delivery_type
       const { data: order, error } = await supabase
         .from("orders")
-        .select("delivery_type")
+        .select("pickup_type, delivery_type")
         .eq("id", orderId)
         .single();
 
       if (error) {
-        console.warn("Failed to load order delivery type:", error);
-        setBuyerDeliveryType(null);
+        console.warn("Failed to load order details:", error);
+        setPickupType("door");
+        setDeliveryType("door");
         return;
       }
 
-      if (order?.delivery_type) {
-        setBuyerDeliveryType(order.delivery_type);
-        console.log("✅ Buyer's delivery type:", order.delivery_type);
+      if (order) {
+        setPickupType(order.pickup_type || "door");
+        setDeliveryType(order.delivery_type || "door");
+        console.log("✅ Order details loaded:", { pickup_type: order.pickup_type, delivery_type: order.delivery_type });
       }
     } catch (error) {
-      console.error("Error loading order delivery type:", error);
+      console.error("Error loading order details:", error);
+      setPickupType("door");
+      setDeliveryType("door");
     } finally {
       setIsLoadingOrder(false);
     }
   };
-
-  const loadSavedLocker = async () => {
-    try {
-      setIsLoadingSavedLocker(true);
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoadingSavedLocker(false);
-        return;
-      }
-
-      // Fetch user profile with locker preferences
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("preferred_delivery_locker_data")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        console.warn("Failed to load saved locker:", error);
-        setIsLoadingSavedLocker(false);
-        return;
-      }
-
-      if (profile?.preferred_delivery_locker_data) {
-        const lockerData = profile.preferred_delivery_locker_data as BobGoLocation;
-        setSavedLocker(lockerData);
-        console.log("✅ Loaded saved locker from profile:", lockerData);
-      }
-    } catch (error) {
-      console.error("Error loading saved locker:", error);
-    } finally {
-      setIsLoadingSavedLocker(false);
-    }
-  };
-
-  // Set delivery method based on preferred pickup method
-  useEffect(() => {
-    if (preferredPickupMethod) {
-      if (preferredPickupMethod === "locker") {
-        setDeliveryMethod("locker");
-        // Auto-select saved locker if available
-        if (savedLocker) {
-          setSelectedLocker(savedLocker);
-        }
-      } else if (preferredPickupMethod === "pickup") {
-        setDeliveryMethod("home");
-        setSelectedLocker(null);
-      }
-    }
-  }, [preferredPickupMethod, savedLocker]);
 
   // Check if order is already committed
   const isAlreadyCommitted =
@@ -201,39 +97,17 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
     orderStatus === "courier_scheduled" ||
     orderStatus === "shipped";
 
-  // Check if form is valid based on preferred method
-  const isFormValid =
-    isPackagedSecurely &&
-    canFulfillOrder &&
-    preferredPickupMethod &&
-    ((preferredPickupMethod === "pickup" && deliveryMethod === "home") ||
-      (preferredPickupMethod === "locker" && deliveryMethod === "locker" && (selectedLocker || savedLocker)));
-
   const handleCommit = async () => {
     setIsCommitting(true);
     setIsDialogOpen(false);
 
     try {
-      console.log(`🚀 Committing to sale for order: ${orderId} with delivery method: ${deliveryMethod}`);
+      console.log(`🚀 Committing to sale for order: ${orderId} with pickup type: ${pickupType}`);
 
-      // Use saved locker if no custom locker selected and we're not changing
-      const lockerToUse = selectedLocker || (savedLocker && !wantToChangeLocker ? savedLocker : null);
-
-      if (deliveryMethod === "locker" && lockerToUse) {
-        console.log(`📍 Using locker: ${lockerToUse.id} - ${lockerToUse.name}`);
-      }
-
-      // Prepare the commit data with delivery method and locker info
+      // Prepare the commit data
       const commitData = {
         order_id: orderId,
         seller_id: sellerId,
-        delivery_method: deliveryMethod,
-        ...(deliveryMethod === "locker" && lockerToUse ? {
-          locker_id: lockerToUse.id,
-          locker_name: lockerToUse.name,
-          locker_address: lockerToUse.address || lockerToUse.full_address,
-          locker_data: lockerToUse,
-        } : {}),
       };
 
       let data, error;
@@ -258,10 +132,6 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
         const fallbackResult = await FallbackCommitService.commitToSale({
           order_id: orderId,
           seller_id: sellerId,
-          delivery_method: deliveryMethod,
-          ...(deliveryMethod === "locker" && selectedLocker ? {
-            locker_id: selectedLocker.id,
-          } : {}),
         });
 
         if (fallbackResult.success) {
@@ -299,14 +169,14 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
 
       console.log("Commit successful:", data);
 
-      // Show success message based on delivery method
-      if (deliveryMethod === "locker") {
-        toast.success(`Order committed! Drop-off at ${lockerToUse?.name}`, {
+      // Show success message based on pickup type
+      if (pickupType === "locker") {
+        toast.success("Order committed! Book will be dropped at locker.", {
           duration: 5000,
         });
 
         toast.info(
-          `Seller to drop book at: ${lockerToUse?.address || lockerToUse?.full_address}. Details sent to email.`,
+          "Locker details and pickup instructions sent to your email.",
           {
             duration: 7000,
           },
@@ -406,7 +276,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-            <span className="line-clamp-2 sm:line-clamp-none">Commit to Sale - Enhanced Options</span>
+            <span className="line-clamp-2 sm:line-clamp-none">Commit to Sale</span>
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm sm:text-base">
             You are about to commit to selling <strong>"{bookTitle}"</strong> to {buyerName}.
@@ -414,42 +284,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
         </AlertDialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Pre-commit Checklist */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                <Package className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Pre-Commit Checklist</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="packaged-securely"
-                  checked={isPackagedSecurely}
-                  onCheckedChange={(checked) => setIsPackagedSecurely(checked as boolean)}
-                  className="mt-1 flex-shrink-0"
-                />
-                <Label htmlFor="packaged-securely" className="text-xs sm:text-sm leading-relaxed cursor-pointer">
-                  I confirm this item is packaged securely (e.g., padded envelope or sturdy box).
-                </Label>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="can-fulfill"
-                  checked={canFulfillOrder}
-                  onCheckedChange={(checked) => setCanFulfillOrder(checked as boolean)}
-                  className="mt-1 flex-shrink-0"
-                />
-                <Label htmlFor="can-fulfill" className="text-xs sm:text-sm leading-relaxed cursor-pointer">
-                  I commit to fulfilling this order and understand my obligations.
-                </Label>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Delivery Method Display - Shows only the preferred method */}
+          {/* Delivery Method Display - Shows the original method */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
@@ -458,70 +293,42 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isLoadingPreference ? (
+              {isLoadingOrder ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
                 </div>
-              ) : preferredPickupMethod === "locker" ? (
-                // Show Locker Drop-Off (Preferred)
+              ) : pickupType === "locker" ? (
+                // Show Locker Drop-Off
                 <div className="p-4 border-2 border-purple-500 bg-purple-50 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <Badge className="bg-purple-600 text-white flex-shrink-0 mt-1">Preferred</Badge>
+                    <Badge className="bg-purple-600 text-white flex-shrink-0 mt-1">Pickup Method</Badge>
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
                         <MapPin className="w-4 h-4 flex-shrink-0" />
                         BobGo Locker Drop-Off
                       </h4>
                       <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                        Drop the book at your preferred BobGo locker location. This is the method we used to calculate your rates.
+                        You selected locker drop-off when creating this order. The book will be dropped at your designated locker location.
                       </p>
                     </div>
                   </div>
-
-                  {/* Locker Selection Section */}
-                  {isLoadingSavedLocker ? (
-                    <div className="flex items-center justify-center py-4 mt-4">
-                      <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
-                    </div>
-                  ) : savedLocker ? (
-                    <div className="mt-4 pt-4 border-t border-purple-200">
-                      <div className="p-3 bg-white border border-green-300 rounded-lg">
-                        <p className="font-semibold text-gray-900 flex items-center gap-2 text-sm">
-                          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                          Your Locker
-                        </p>
-                        <p className="text-sm text-gray-700 mt-2">{savedLocker.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">{savedLocker.address || savedLocker.full_address}</p>
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
-              ) : preferredPickupMethod === "pickup" ? (
-                // Show Home Pick-Up (Preferred)
+              ) : (
+                // Show Home Pick-Up
                 <div className="p-4 border-2 border-blue-500 bg-blue-50 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <Badge className="bg-blue-600 text-white flex-shrink-0 mt-1">Preferred</Badge>
+                    <Badge className="bg-blue-600 text-white flex-shrink-0 mt-1">Pickup Method</Badge>
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
                         <Home className="w-4 h-4 flex-shrink-0" />
                         Home Pick-Up (Courier Collection)
                       </h4>
                       <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                        Our courier will collect the book from your address at a scheduled time. This is the method we used to calculate your rates.
+                        You selected home pick-up when creating this order. Our courier will collect the book from your address.
                       </p>
                     </div>
                   </div>
                 </div>
-              ) : null}
-
-              {/* Alert for incompatible buyer delivery type */}
-              {buyerDeliveryType === "door" && preferredPickupMethod === "locker" && (
-                <Alert className="bg-amber-50 border-amber-200">
-                  <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                  <AlertDescription className="text-amber-800 text-xs sm:text-sm">
-                    Note: The buyer selected home delivery, but your preference is locker drop-off. You'll need to use your preferred locker location for this order.
-                  </AlertDescription>
-                </Alert>
               )}
             </CardContent>
           </Card>
@@ -533,7 +340,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
             </h4>
             <ul className="text-xs sm:text-sm text-blue-700 space-y-1">
               <li>• Courier pickup will be automatically scheduled</li>
-              <li>• You'll receive pickup details via email</li>
+              <li>• You'll receive pickup/drop-off details via email</li>
               <li>• You must be available during pickup time window</li>
               <li>• Standard payment processing timeline</li>
             </ul>
@@ -556,7 +363,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleCommit}
-            disabled={isCommitting || !isFormValid || isLoadingPreference}
+            disabled={isCommitting || isLoadingOrder}
             className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-sm sm:text-base min-h-[44px]"
           >
             {isCommitting ? (
@@ -567,11 +374,7 @@ const EnhancedOrderCommitButton: React.FC<EnhancedOrderCommitButtonProps> = ({
             ) : (
               <>
                 <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">
-                  {preferredPickupMethod === "pickup"
-                    ? "Commit with Home Pick-Up"
-                    : "Commit with Locker Drop-Off"}
-                </span>
+                <span className="truncate">Confirm Commitment</span>
               </>
             )}
           </AlertDialogAction>
