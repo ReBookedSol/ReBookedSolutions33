@@ -26,15 +26,12 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🚀 Processing book purchase request...');
-    
     // Parse request body
     let requestBody;
     try {
       const rawBody = await req.text();
       requestBody = JSON.parse(rawBody);
     } catch (error) {
-      console.error('❌ Error parsing request body:', error);
       return jsonResponse({
         success: false,
         error: "INVALID_JSON",
@@ -55,8 +52,6 @@ serve(async (req) => {
       shipping_address
     } = requestBody;
 
-    // Request parameters validated
-
     // Validate required fields
     const missingFields = [];
     if (!book_id) missingFields.push("book_id");
@@ -66,7 +61,6 @@ serve(async (req) => {
     if (!payment_reference) missingFields.push("payment_reference");
 
     if (missingFields.length > 0) {
-      console.error('❌ Missing required fields:', missingFields);
       return jsonResponse({
         success: false,
         error: "MISSING_REQUIRED_FIELDS",
@@ -80,7 +74,6 @@ serve(async (req) => {
 
     // Validate amount format
     if (typeof amount !== "number" || amount <= 0) {
-      // Invalid amount detected
       return jsonResponse({
         success: false,
         error: "INVALID_AMOUNT_FORMAT",
@@ -91,8 +84,6 @@ serve(async (req) => {
         },
       }, { status: 400 });
     }
-
-    // All validations passed
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -107,7 +98,6 @@ serve(async (req) => {
     const book = books && books.length > 0 ? books[0] : null;
 
     if (bookError || !book) {
-      // Book not available or sold
       return jsonResponse({
         success: false,
         error: "BOOK_NOT_AVAILABLE",
@@ -120,11 +110,8 @@ serve(async (req) => {
       }, { status: 404 });
     }
 
-    // Book details retrieved
-
     // Validate amount matches book price
     if (Math.abs(amount - parseFloat(book.price)) > 0.01) {
-      console.error('❌ Amount mismatch:', { expected: book.price, provided: amount });
       return jsonResponse({
         success: false,
         error: "AMOUNT_MISMATCH",
@@ -143,7 +130,6 @@ serve(async (req) => {
     ]);
 
     if (buyerError || !buyer) {
-      // Buyer profile not found
       return jsonResponse({
         success: false,
         error: "BUYER_NOT_FOUND",
@@ -155,7 +141,6 @@ serve(async (req) => {
     }
 
     if (sellerError || !seller) {
-      // Seller profile not found
       return jsonResponse({
         success: false,
         error: "SELLER_NOT_FOUND",
@@ -166,11 +151,8 @@ serve(async (req) => {
       }, { status: 404 });
     }
 
-    // User profiles retrieved
-
     // Prevent self-purchase
     if (buyer_id === seller_id) {
-      // Self-purchase attempt detected
       return jsonResponse({
         success: false,
         error: "SELF_PURCHASE_NOT_ALLOWED",
@@ -191,7 +173,6 @@ serve(async (req) => {
       .eq("sold", false); // Ensure it's still available
 
     if (bookUpdateError) {
-      // Failed to mark book as sold
       return jsonResponse({
         success: false,
         error: "BOOK_UPDATE_FAILED",
@@ -240,8 +221,6 @@ serve(async (req) => {
       .single();
 
     if (orderError) {
-      // Order creation failed
-      
       // Rollback book sale if order creation fails
       await supabase
         .from("books")
@@ -258,8 +237,6 @@ serve(async (req) => {
       }, { status: 500 });
     }
 
-    // Order created successfully
-
     // Create notifications
     const notificationPromises = [
       supabase.from("notifications").insert({
@@ -271,13 +248,12 @@ serve(async (req) => {
       supabase.from("notifications").insert({
         user_id: seller_id,
         type: "info",
-        title: "���� New Sale!",
+        title: "📦 New Sale!",
         message: `You have a new order for "${book.title}" worth R${amount.toFixed(2)}. Please commit within 48 hours. Order ID: ${order.id}`
       })
     ];
 
     await Promise.all(notificationPromises);
-    // Notifications created
 
     // Log activity
     await supabase.from("order_activity_log").insert({
@@ -291,8 +267,6 @@ serve(async (req) => {
         payment_reference: finalPaymentRef
       }
     });
-
-    // Book purchase completed successfully
 
     return jsonResponse({
       success: true,
@@ -312,12 +286,6 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('❌ Error in process-book-purchase:', error);
-    console.error('❌ Error type:', typeof error);
-    console.error('❌ Error constructor:', error?.constructor?.name);
-    console.error('❌ Error message:', error?.message);
-    console.error('❌ Error stack:', error?.stack);
-
     // Extract a meaningful error message
     let errorMessage = "Unknown internal server error";
     if (error instanceof Error) {

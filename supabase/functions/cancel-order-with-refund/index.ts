@@ -43,8 +43,6 @@ serve(async (req) => {
 
     const { order_id, reason } = bodyResult.data!;
 
-    console.log('Processing cancel and refund for order:', order_id);
-
     // Get order details with all fields needed
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -53,21 +51,11 @@ serve(async (req) => {
       .single();
 
     if (orderError || !order) {
-      console.error('Order fetch error:', orderError);
       return new Response(
         JSON.stringify({ success: false, error: 'Order not found' }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log('Order found:', {
-      id: order.id,
-      tracking_number: order.tracking_number,
-      status: order.status,
-      buyer_id: order.buyer_id,
-      seller_id: order.seller_id,
-      has_tracking: !!order.tracking_number
-    });
 
     // Check if user is authorized (admin, buyer, or seller)
     const { data: profile } = await supabase
@@ -105,22 +93,13 @@ serve(async (req) => {
       );
     }
 
-    console.log('Authorization check passed');
-
     // STEP 1: Cancel shipment with BobGo
     let shipmentCancelled = false;
     let shipmentCancelError = null;
 
     if (order.tracking_number || order.id) {
-      console.log('STEP 1: Attempting to cancel shipment with BobGo...');
-      console.log('Shipment details:', {
-        tracking_number: order.tracking_number,
-        order_id: order.id
-      });
-
       try {
         const cancelShipmentUrl = `${SUPABASE_URL}/functions/v1/bobgo-cancel-shipment`;
-        console.log('Calling:', cancelShipmentUrl);
 
         const shipmentResponse = await fetch(cancelShipmentUrl, {
           method: 'POST',
@@ -136,41 +115,25 @@ serve(async (req) => {
           }),
         });
 
-        console.log('Shipment response status:', shipmentResponse.status);
         const shipmentResult = await shipmentResponse.json();
-        console.log('Shipment result:', shipmentResult);
 
         if (shipmentResponse.ok && shipmentResult.success) {
-          console.log('✓ Shipment cancelled successfully');
           shipmentCancelled = true;
         } else {
-          console.error('✗ Shipment cancellation failed:', shipmentResult.error);
           shipmentCancelError = shipmentResult.error || 'Unknown error';
-          console.warn('Continuing with refund despite shipment cancellation failure');
         }
       } catch (error: any) {
-        console.error('✗ Exception calling bobgo-cancel-shipment:', error);
         shipmentCancelError = error.message;
-        console.warn('Continuing with refund despite shipment cancellation exception');
       }
-    } else {
-      console.log('STEP 1: Skipping shipment cancellation (no tracking number)');
     }
 
     // STEP 2: Process refund with BobPay
-    console.log('STEP 2: Processing refund with BobPay...');
-    console.log('Refund details:', {
-      order_id: order_id,
-      reason: reason || 'Order cancelled by user'
-    });
-
     let refundProcessed = false;
     let refundId = null;
     let refundAmount = null;
 
     try {
       const refundUrl = `${SUPABASE_URL}/functions/v1/bobpay-refund`;
-      console.log('Calling:', refundUrl);
 
       const refundResponse = await fetch(refundUrl, {
         method: 'POST',
@@ -185,21 +148,16 @@ serve(async (req) => {
         }),
       });
 
-      console.log('Refund response status:', refundResponse.status);
       const refundResult = await refundResponse.json();
-      console.log('Refund result:', refundResult);
 
       if (refundResponse.ok && refundResult.success) {
-        console.log('✓ Refund processed successfully');
         refundProcessed = true;
         refundId = refundResult.data?.refund_id;
         refundAmount = refundResult.data?.amount;
       } else {
-        console.error('✗ Refund failed:', refundResult.error);
         throw new Error(refundResult.error || 'Refund processing failed');
       }
     } catch (error: any) {
-      console.error('✗ Error processing refund:', error);
       return new Response(
         JSON.stringify({
           success: false,
@@ -224,10 +182,6 @@ serve(async (req) => {
       })
       .eq('id', order_id);
 
-    if (updateError) {
-      console.error('Failed to update order status:', updateError);
-    }
-
     // STEP 4: Create notifications
     try {
       await supabase.from('order_notifications').insert([
@@ -247,11 +201,8 @@ serve(async (req) => {
         },
       ]);
     } catch (notifError) {
-      console.error('Failed to create notifications:', notifError);
-      // Don't fail the whole operation for notifications
+      // Notification error - don't fail the whole operation
     }
-
-    console.log('✓ Order cancellation and refund completed successfully');
 
     return new Response(
       JSON.stringify({
@@ -271,7 +222,6 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error: any) {
-    console.error('Error in cancel-and-refund-order:', error);
     return new Response(
       JSON.stringify({
         success: false,

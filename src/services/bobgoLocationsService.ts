@@ -45,8 +45,6 @@ export async function getBobGoLocations(
     params.append("min_lng", bounds.min_lng.toString());
     params.append("max_lng", bounds.max_lng.toString());
 
-    console.log("Fetching BobGo locations with bounds:", bounds);
-
     const response = await fetch(
       `${ENV.VITE_SUPABASE_URL}/functions/v1/bobgo-get-locations?${params.toString()}`,
       {
@@ -58,12 +56,10 @@ export async function getBobGoLocations(
     );
 
     if (!response.ok) {
-      console.error("Failed to fetch BobGo locations:", response.statusText);
       return [];
     }
 
     const data = await response.json();
-    console.log("BobGo API response:", data);
 
     let locations: BobGoLocation[] = [];
 
@@ -102,10 +98,8 @@ export async function getBobGoLocations(
       locations = data.results;
     }
 
-    console.log("Parsed locations:", locations);
     return locations;
   } catch (error) {
-    console.error("Error fetching BobGo locations:", error);
     return [];
   }
 }

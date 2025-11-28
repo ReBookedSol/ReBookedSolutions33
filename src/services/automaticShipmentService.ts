@@ -68,17 +68,15 @@ export const getUserProfileWithAddresses = async (
             pickup_address: addressData.pickup_address,
             shipping_address: addressData.shipping_address,
           };
-          console.log("🔐 Using encrypted addresses for automatic shipment");
         }
       }
     } catch (error) {
-      console.warn("Failed to get encrypted addresses for shipment:", error);
+      // Failed to get encrypted addresses
     }
 
     // No plaintext fallback allowed; if encrypted unavailable, we'll handle as manual shipment
 
     if (!profile) {
-      console.warn(`[AutoShipment] No profile found for user ${userId}`);
       return null;
     }
 
@@ -90,10 +88,6 @@ export const getUserProfileWithAddresses = async (
       addresses_same: profile.addresses_same || false,
     };
   } catch (error) {
-    console.error(
-      `[AutoShipment] Unexpected error fetching profile for ${userId}:`,
-      error,
-    );
     return null;
   }
 };
@@ -122,8 +116,6 @@ export const createManualShipmentNotification = async (
   buyerId: string,
 ): Promise<void> => {
   try {
-    console.log("[AutoShipment] Creating manual shipment notification");
-
     // In a real implementation, this would:
     // 1. Notify admin team to arrange manual shipment
     // 2. Send notification to seller to prepare book
@@ -131,10 +123,7 @@ export const createManualShipmentNotification = async (
 
     return;
   } catch (error) {
-    console.error(
-      "[AutoShipment] Failed to create manual shipment notification:",
-      error,
-    );
+    // Error creating notification
   }
 };
 
@@ -146,45 +135,24 @@ export const createAutomaticShipment = async (
   buyerId: string,
 ): Promise<any> => {
   try {
-    console.log("[AutoShipment] Attempting to create automatic shipment:", {
-      bookId: bookDetails.id,
-      sellerId: bookDetails.sellerId,
-      buyerId,
-    });
-
     // Validate input parameters
     if (!bookDetails?.sellerId || !buyerId) {
-      console.error("[AutoShipment] Invalid parameters:", {
-        sellerId: bookDetails?.sellerId,
-        buyerId,
-      });
       return null;
     }
 
     // Get seller information (sender)
     const seller = await getUserProfileWithAddresses(bookDetails.sellerId);
     if (!seller) {
-      console.warn(
-        "[AutoShipment] Seller profile not found - shipment will be manual",
-        { sellerId: bookDetails.sellerId },
-      );
       return null;
     }
 
     if (!seller.pickup_address) {
-      console.warn(
-        "[AutoShipment] Seller pickup address not configured - shipment will be manual",
-      );
       return null;
     }
 
     // Get buyer information (recipient)
     const buyer = await getUserProfileWithAddresses(buyerId);
     if (!buyer) {
-      console.warn(
-        "[AutoShipment] Buyer profile not found - shipment will be manual",
-        { buyerId },
-      );
       return null;
     }
 
@@ -194,9 +162,6 @@ export const createAutomaticShipment = async (
       : buyer.shipping_address;
 
     if (!buyerDeliveryAddress) {
-      console.warn(
-        "[AutoShipment] Buyer delivery address not configured - shipment will be manual",
-      );
       return null;
     }
 
@@ -247,26 +212,11 @@ export const createAutomaticShipment = async (
       instructions: `Book purchase: ${bookDetails.title}`,
     };
 
-    console.log("[AutoShipment] Creating shipment with Courier Guy...");
-
     // Create the shipment
     const shipmentResult = await createCourierGuyShipment(shipmentData);
 
-    console.log(
-      "[AutoShipment] ✅ Automatic shipment created successfully:",
-      shipmentResult,
-    );
-
     return shipmentResult;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("[AutoShipment] Automatic shipment creation failed:", {
-      error: errorMessage,
-      bookId: bookDetails.id,
-      sellerId: bookDetails.sellerId,
-      buyerId,
-    });
-
     // Create manual shipment notification as fallback
     await createManualShipmentNotification(bookDetails, buyerId);
 
@@ -327,7 +277,6 @@ export const checkShipmentEligibility = async (
 
     return { canSell, canBuy, errors };
   } catch (error) {
-    console.error("Error validating shipment eligibility:", error);
     return {
       canSell: false,
       canBuy: false,
