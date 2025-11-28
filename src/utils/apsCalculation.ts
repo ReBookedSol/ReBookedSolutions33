@@ -176,7 +176,6 @@ export const validateSubjectMarks = (marks: number): boolean => {
   try {
     return typeof marks === "number" && marks >= 0 && marks <= 100;
   } catch (error) {
-    console.error("Error validating subject marks:", error);
     return false;
   }
 };
@@ -185,7 +184,6 @@ export const getSubjectLevel = (marks: number): number => {
   try {
     return convertPercentageToPoints(marks);
   } catch (error) {
-    console.error("Error getting subject level:", error);
     return 0;
   }
 };
@@ -198,7 +196,6 @@ export const formatAPSScore = (score: number): string => {
 
     return `${Math.max(0, Math.floor(score))} points`;
   } catch (error) {
-    console.error("Error formatting APS score:", error);
     return "0 points";
   }
 };
@@ -233,7 +230,6 @@ export const getEligibilityStatus = (
       };
     }
   } catch (error) {
-    console.error("Error getting eligibility status:", error);
     return {
       eligible: false,
       message: "Error checking eligibility",
