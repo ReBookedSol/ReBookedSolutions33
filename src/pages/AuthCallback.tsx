@@ -45,14 +45,12 @@ const AuthCallback = () => {
       const access_token = getParam("access_token");
 
       if (type === "recovery" || isRecoveryHint()) {
-        console.log("🔐 Authenticated user in recovery flow - redirecting directly to reset password");
         navigate("/reset-password", { replace: true });
         return;
       }
 
       // If user is authenticated but came via confirmation link, show success message
       if (type === "signup" || token_hash || access_token) {
-        console.log("✅ User already authenticated via confirmation link");
 
         // Mark email confirmation for welcome message if this is a signup
         if (type === "signup") {
@@ -64,7 +62,6 @@ const AuthCallback = () => {
         return;
       }
 
-      console.log("🔄 User already authenticated, redirecting from auth callback");
       toast.success("You are already logged in!");
       navigate("/profile", { replace: true });
       return;
@@ -78,17 +75,12 @@ const AuthCallback = () => {
     }
     const handleAuthCallback = async () => {
       try {
-        console.log("🔍 Processing auth callback");
-        console.log("📍 Current URL:", window.location.href);
-        console.log("📍 Search params:", window.location.search);
-        console.log("📍 Hash:", window.location.hash);
 
         // FIRST: Check if Supabase has already authenticated the user automatically
         // This happens in many cases where the callback URL contains valid tokens
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
         if (!sessionError && sessionData.session && sessionData.user) {
-          console.log("✅ User already authenticated automatically by Supabase!");
           setStatus("success");
 
           const type = new URLSearchParams(window.location.search).get("type") ||
