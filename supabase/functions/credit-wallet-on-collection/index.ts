@@ -335,8 +335,6 @@ serve(async (req) => {
     }
 
     // No banking details - credit wallet
-    console.log("💳 Crediting wallet with book price:", bookPrice);
-
     // Call RPC with explicit numeric type cast
     const { data: creditResult, error: creditError } = await supabase
       .rpc('credit_wallet_on_collection', {
