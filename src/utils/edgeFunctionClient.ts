@@ -191,11 +191,6 @@ export async function testEdgeFunctionConnectivity(functionName: string = 'healt
     timeout: 10000 // 10 second timeout for testing
   });
 
-  if (result.success) {
-    console.log(`✅ ${functionName} is accessible`);
-  } else {
-    console.log(`❌ ${functionName} failed:`, result.error);
-  }
 
   return result;
 }
