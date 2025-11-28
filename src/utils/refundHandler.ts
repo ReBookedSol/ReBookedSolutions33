@@ -28,7 +28,6 @@ export const detectPaymentProvider = async (
       .single();
 
     if (error || !transaction) {
-      console.warn('Could not detect payment provider:', error);
       return 'unknown';
     }
 
