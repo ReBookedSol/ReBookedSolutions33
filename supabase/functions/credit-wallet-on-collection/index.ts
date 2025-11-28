@@ -321,7 +321,6 @@ serve(async (req) => {
 
     // If seller has active banking details, payment will be sent directly
     if (bankingDetails) {
-      console.log("🏦 Seller has banking details - payment via direct transfer");
       return new Response(
         JSON.stringify({
           success: true,
