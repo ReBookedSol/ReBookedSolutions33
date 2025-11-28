@@ -59,7 +59,6 @@ export function useEnhancedAPSStorage() {
 
         // ✅ VERIFY SAVE SUCCESS
         const verification = localStorage.getItem(APS_STORAGE_KEY);
-        console.log("🔍 Profile saved and verified:", !!verification);
 
         // Update state
         setUserProfileState(profileWithTimestamp);
