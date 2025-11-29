@@ -63,7 +63,6 @@ export const initializeBobPayPayment = async (
     });
 
     if (error) {
-      console.error('BobPay initialization error:', error);
       return {
         success: false,
         error: error.message || 'Failed to initialize payment',
@@ -79,7 +78,6 @@ export const initializeBobPayPayment = async (
 
     return data;
   } catch (err) {
-    console.error('BobPay initialization exception:', err);
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error occurred',
@@ -129,7 +127,6 @@ export const processBobPayRefund = async (
     });
 
     if (error) {
-      console.error('BobPay refund error:', error);
       return {
         success: false,
         error: error.message || 'Failed to process refund',
@@ -145,7 +142,6 @@ export const processBobPayRefund = async (
 
     return data;
   } catch (err) {
-    console.error('BobPay refund exception:', err);
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error occurred',
