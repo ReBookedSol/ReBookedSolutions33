@@ -48,15 +48,9 @@ export class ActivityService {
           message: "Your profile has been successfully updated",
         });
       } catch (notifError) {
-        console.warn('Failed to create profile update notification:', notifError);
       }
 
-
     } catch (error) {
-      console.error("Error logging profile update activity:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
     }
   }
 
@@ -66,7 +60,6 @@ export class ActivityService {
   static async logBankingUpdate(userId: string, isUpdate: boolean = true): Promise<void> {
     try {
       if (!userId) {
-        console.warn("❌ No userId provided for banking update logging");
         return;
       }
 
@@ -74,9 +67,6 @@ export class ActivityService {
       const description = isUpdate
         ? "Your banking information has been successfully updated"
         : "Your banking information has been successfully added";
-
-      // Log to console
-      console.log(`🏦 Banking details ${isUpdate ? 'updated' : 'added'} for user: ${userId}`);
 
       // Log the activity
       const result = await this.logActivity(
@@ -91,17 +81,7 @@ export class ActivityService {
         }
       );
 
-      if (result.success) {
-        console.log("✅ Banking update activity logged successfully");
-      } else {
-        console.warn("⚠️ Banking update activity logging failed:", result.error);
-      }
-
     } catch (error) {
-      console.error("Error logging banking update activity:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
     }
   }
 
@@ -119,18 +99,11 @@ export class ActivityService {
       // Validate required parameters
       if (!userId || !type || !title || !description) {
         const error = "Missing required parameters for activity logging";
-        console.warn("❌ Activity validation failed:", {
-          userId: !!userId,
-          type: !!type,
-          title: !!title,
-          description: !!description,
-        });
         return { success: false, error };
       }
 
       // For silent activities, we can create a simple log without notification
       if (SILENT_ACTIVITY_TYPES.has(type)) {
-        console.log(`📝 Silent activity logged: ${type} - ${title}`);
         return { success: true };
       }
 
@@ -162,20 +135,14 @@ export class ActivityService {
           throw notificationError;
         }
 
-        console.log(`✅ Activity notification created: ${type} - ${title}`);
         return { success: true };
       } catch (notificationError) {
-        console.warn(
-          "⚠️ Failed to create activity notification:",
-          notificationError.message || notificationError,
-        );
         return {
           success: true, // Don't fail the whole operation for notification issues
           warning: "Notification not created",
         };
       }
     } catch (error) {
-      this.logDetailedError("Exception during activity logging", error);
       return {
         success: false,
         error: "Exception occurred during activity logging",
@@ -194,11 +161,8 @@ export class ActivityService {
   ): Promise<Activity[]> {
     try {
       if (!userId) {
-        console.warn("⚠️ No userId provided for getUserActivities");
         return [];
       }
-
-      console.log(`🔄 Fetching activities for user: ${userId}`);
 
       // Try to get activities from a dedicated activity_logs table first
       try {
@@ -231,14 +195,9 @@ export class ActivityService {
         }
       } catch (activitiesError) {
         // Activity_logs table might not exist, fall back to notifications
-        console.log(
-          "Activity_logs table not available, falling back to notifications",
-        );
       }
 
       // Fallback: Get activities from notifications table AND create sample activities
-      console.log("🔄 Fetching activities from notifications table...");
-
       try {
         const notifQuery = supabase
           .from("notifications")
@@ -300,14 +259,9 @@ export class ActivityService {
           };
         });
       } catch (fallbackError) {
-        this.logDetailedError(
-          "Exception during notifications fallback",
-          fallbackError,
-        );
         return [];
       }
     } catch (error) {
-      this.logDetailedError("Error fetching user activities", error);
       return [];
     }
   }
@@ -360,49 +314,4 @@ export class ActivityService {
     }
   }
 
-  /**
-   * Helper method for detailed error logging
-   */
-  private static logDetailedError(message: string, error: unknown): void {
-    let errorMessage = "Unknown error";
-    let errorDetails = null;
-    let errorStack = null;
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      errorStack = error.stack;
-    } else if (typeof error === "object" && error !== null) {
-      // Handle Supabase errors and other objects
-      const errorObj = error as any;
-      errorMessage =
-        errorObj.message ||
-        errorObj.error_description ||
-        errorObj.msg ||
-        "Database operation failed";
-      errorDetails = errorObj.details || errorObj.hint || errorObj.code;
-      errorStack = errorObj.stack;
-
-      // Better logging for debugging
-      try {
-        console.error(
-          `❌ ${message} - Full error object:`,
-          JSON.stringify(error, null, 2),
-        );
-      } catch (stringifyError) {
-        console.error(`❌ ${message} - Error object (unstringifiable):`, error);
-      }
-    } else if (typeof error === "string") {
-      errorMessage = error;
-    } else {
-      errorMessage = String(error);
-    }
-
-    console.error(`❌ ${message}:`, {
-      message: errorMessage,
-      details: errorDetails,
-      stack: errorStack,
-      timestamp: new Date().toISOString(),
-      originalError: import.meta.env.DEV ? error : undefined, // Only log full error in development
-    });
-  }
 }
