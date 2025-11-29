@@ -474,7 +474,6 @@ This is an automated system report from ReBooked Solutions.
           }),
         });
       } catch (adminEmailError) {
-        console.error("Failed to send admin notification:", adminEmailError);
       }
     }
 
@@ -490,7 +489,6 @@ This is an automated system report from ReBooked Solutions.
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
-    console.error("Process order reminders error:", error);
     return new Response(
       JSON.stringify({
         success: false,
