@@ -57,16 +57,8 @@ export const getAllContactMessages = async (): Promise<ContactMessage[]> => {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("❌ Contact messages database error:", {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint
-    });
     throw new Error(`Contact messages error: ${error.message}`);
   }
-
-  console.log(`✅ Successfully fetched ${data?.length || 0} contact messages`);
 
   return (data || []).map((message) => ({
     ...message,
