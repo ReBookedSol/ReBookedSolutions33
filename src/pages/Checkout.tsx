@@ -134,7 +134,6 @@ const Checkout: React.FC = () => {
 
       setBook(checkoutBook);
     } catch (err) {
-      console.error("Error loading cart data:", err);
       setError("Failed to load cart data. Please try again.");
     } finally {
       setLoading(false);
