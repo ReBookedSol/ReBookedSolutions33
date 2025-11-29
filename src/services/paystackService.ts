@@ -65,7 +65,6 @@ export const createPaystackSubaccount = async (
   },
 ): Promise<string | null> => {
   try {
-    console.log("Creating Paystack subaccount for seller:", sellerId);
 
     // In a real implementation, this would call the Paystack API:
     // const response = await fetch('/api/paystack/create-subaccount', {
@@ -92,18 +91,11 @@ export const createPaystackSubaccount = async (
       .eq("id", sellerId);
 
     if (error) {
-      console.error("Error updating profile with subaccount code:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-      });
       throw error;
     }
 
-    console.log("✅ Paystack subaccount created:", mockSubaccountCode);
     return mockSubaccountCode;
   } catch (error) {
-    console.error("Error creating Paystack subaccount:", error);
     return null;
   }
 };
@@ -127,13 +119,6 @@ export const initializePaystackPayment = async (
 
     const reference = `RB_${Date.now()}_${buyerId.slice(0, 8)}`;
 
-    console.log("Initializing Paystack payment:", {
-      totalAmount: totalAmountKobo / 100,
-      sellerAmount: split.sellerAmount,
-      platformFee: split.platformFee,
-      deliveryFee,
-      reference,
-    });
 
     // In a real implementation, this would call the Paystack API:
     // const response = await fetch('/api/paystack/initialize', {
@@ -161,10 +146,8 @@ export const initializePaystackPayment = async (
     // return data.data.authorization_url;
 
     // For now, return a mock payment reference
-    console.log("✅ Mock Paystack payment initialized:", reference);
     return reference;
   } catch (error) {
-    console.error("Error initializing Paystack payment:", error);
     return null;
   }
 };
@@ -176,7 +159,6 @@ export const verifyPaystackPayment = async (
   reference: string,
 ): Promise<boolean> => {
   try {
-    console.log("Verifying Paystack payment:", reference);
 
     // In a real implementation, this would call the Paystack API:
     // const response = await fetch(`/api/paystack/verify/${reference}`, {
@@ -187,10 +169,8 @@ export const verifyPaystackPayment = async (
     // return data.data.status === 'success';
 
     // For now, mock successful verification
-    console.log("✅ Mock Paystack payment verified:", reference);
     return true;
   } catch (error) {
-    console.error("Error verifying Paystack payment:", error);
     return false;
   }
 };
@@ -264,13 +244,6 @@ export const processPaymentMock = async (
 
     const reference = `MOCK_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    console.log("Mock payment processed:", {
-      amount: amount / 100, // Convert from kobo
-      buyerEmail,
-      sellerSubaccount,
-      bookTitle,
-      reference,
-    });
 
     return {
       success: true,

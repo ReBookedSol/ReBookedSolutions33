@@ -86,7 +86,6 @@ const AddressInput: React.FC<AddressInputProps> = ({
         setSuggestions(results);
         setShowDropdown(results.length > 0);
       } catch (error) {
-        console.error("Error fetching suggestions:", error);
         setSuggestions([]);
       } finally {
         setIsSearching(false);
@@ -115,7 +114,6 @@ const AddressInput: React.FC<AddressInputProps> = ({
         });
       }
     } catch (error) {
-      console.error("Error fetching address details:", error);
     } finally {
       setIsSearching(false);
     }

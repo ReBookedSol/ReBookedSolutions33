@@ -231,7 +231,6 @@ const BankingSetupForm: React.FC<BankingSetupFormProps> = ({
 
     try {
       // First, run banking system diagnostics
-      console.log("🔍 Running banking system diagnostics before submission...");
       const diagnostics = await diagnoseBankingIssues();
 
       // Check if we can proceed
