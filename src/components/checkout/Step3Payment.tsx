@@ -50,7 +50,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         const email = await getUserEmail();
         setUserEmail(email);
       } catch (err) {
-        console.error("Failed to fetch user email:", err);
       }
     };
     fetchUserEmail();
@@ -60,8 +59,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
     setProcessing(true);
     setError(null);
     try {
-      console.log("Initiating BobPay payment for order:", orderSummary);
-
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData.user?.email) {
         throw new Error("User authentication error");
@@ -71,7 +68,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       const baseUrl = window.location.origin;
 
       // Step 1: Fetch buyer and seller profiles for denormalized data
-      console.log("🔍 Fetching buyer and seller profiles...");
       const { data: buyerProfile, error: buyerError } = await supabase
         .from("profiles")
         .select("id, full_name, name, first_name, last_name, email, phone_number")
@@ -103,7 +99,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       // Step 2: Encrypt the shipping address (only for door deliveries)
       let shipping_address_encrypted = "";
       if (deliveryType === "door") {
-        console.log("🔐 Encrypting shipping address...");
         const shippingObject = {
           streetAddress: orderSummary.buyer_address.street,
           city: orderSummary.buyer_address.city,
@@ -124,12 +119,9 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         }
 
         shipping_address_encrypted = JSON.stringify(encResult.data);
-      } else {
-        console.log("📦 Locker delivery selected - skipping address encryption");
       }
 
       // Step 3: Create the order (before payment)
-      console.log("📦 Creating order before payment initialization...");
 
       const { data: createdOrder, error: orderError } = await supabase
         .from("orders")
@@ -200,11 +192,8 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         .single();
 
       if (orderError) {
-        console.error("❌ Failed to create order:", orderError);
         throw new Error(`Failed to create order: ${orderError.message}`);
       }
-
-      console.log("✅ Order created successfully:", createdOrder.id);
 
       // Step 3.5: Process affiliate earning if seller was referred
       supabase.functions.invoke('process-affiliate-earning', {
@@ -214,10 +203,7 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
           seller_id: orderSummary.book.seller_id,
         },
       }).then(() => {
-        console.log('✅ Affiliate earning processed successfully');
       }).catch((affiliateErr) => {
-        console.warn('Warning: Failed to process affiliate earning:', affiliateErr);
-        // Non-blocking error - affiliate processing is secondary
       });
 
       // Step 4: Initialize BobPay payment with the order_id
@@ -236,8 +222,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         buyer_id: userId,
       };
 
-      console.log("Calling bobpay-initialize-payment with order_id:", paymentRequest.order_id);
-
       const { data: bobpayResult, error: bobpayError } = await supabase.functions.invoke(
         "bobpay-initialize-payment",
         { body: paymentRequest }
@@ -254,13 +238,11 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         throw new Error("No payment URL received from BobPay");
       }
 
-      console.log("BobPay payment URL:", paymentUrl);
       toast.success("Redirecting to payment page...");
 
       // Open payment page in the same tab
       window.location.href = paymentUrl;
     } catch (err) {
-      console.error("BobPay initialization error:", err);
       const errorMessage = err instanceof Error ? err.message : "Payment initialization failed";
       const classifiedError = classifyPaymentError(errorMessage);
       setError(classifiedError);
