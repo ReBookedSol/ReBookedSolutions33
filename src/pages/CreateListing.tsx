@@ -108,7 +108,6 @@ const CreateListing = () => {
           setPreferredPickupMethod(profile.preferred_pickup_method);
         }
       } catch (error) {
-        console.error("Error checking address status:", error);
         setCanListBooks(false);
       } finally {
         setIsCheckingAddress(false);

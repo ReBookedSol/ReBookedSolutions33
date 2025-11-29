@@ -73,7 +73,6 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log("📧 Resending verification email using same method as password reset...");
       const { supabase } = await import("@/integrations/supabase/client");
 
       // Use the same reliable method as password reset
@@ -86,7 +85,6 @@ const Login = () => {
       });
 
       if (error) {
-        console.warn("⚠️ Supabase resend failed:", error.message);
 
         // Provide user-friendly error message
         if (error.message.includes("Email not found") || error.message.includes("user not found")) {
@@ -106,9 +104,7 @@ const Login = () => {
         toast.error(
           "Unable to resend verification email. Please contact support if this continues.",
         );
-        console.error("Supabase resend error:", error);
       } else {
-        console.log("✅ Verification email sent successfully");
         toast.success(
           "📧 Verification email sent! Please check your inbox and spam folder.",
         );
@@ -116,7 +112,6 @@ const Login = () => {
         setErrorType(null);
       }
     } catch (error) {
-      console.error("❌ Exception during resend verification:", error);
       toast.error("Failed to resend verification email. Please try again.");
     } finally {
       setIsLoading(false);
@@ -139,7 +134,6 @@ const Login = () => {
       // Give a moment for auth state to update, then check if we're authenticated
       setTimeout(() => {
         if (isAuthenticated) {
-          console.log("✅ Login successful - user is authenticated");
           navigate("/profile", { replace: true });
         }
       }, 100);
@@ -149,7 +143,6 @@ const Login = () => {
       // Sometimes login succeeds but throws an error due to network issues
       setTimeout(async () => {
         if (isAuthenticated) {
-          console.log("✅ Login actually succeeded despite error - redirecting user");
           toast.success("Login successful!");
           navigate("/profile", { replace: true });
           return;
@@ -158,14 +151,6 @@ const Login = () => {
         // Only show error if user is definitely not authenticated
         const errorMessage =
           error instanceof Error ? error.message : "Login failed";
-
-        // Better error logging
-        console.group("🔐 Login Error Details");
-        console.error("Error:", error);
-        console.error("Message:", errorMessage);
-        console.error("Email:", email);
-        console.error("Is Authenticated:", isAuthenticated);
-        console.groupEnd();
 
         setLoginError(errorMessage);
 
