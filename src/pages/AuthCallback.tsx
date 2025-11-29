@@ -307,7 +307,6 @@ const AuthCallback = () => {
           });
 
           if (manualResult.success) {
-            console.log(`✅ Manual verification succeeded via ${manualResult.method}`);
             setStatus("success");
 
             if (type === "signup") {
