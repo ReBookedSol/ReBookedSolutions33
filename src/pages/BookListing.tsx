@@ -144,7 +144,7 @@ const BookListing = () => {
       setBooks(paginatedBooks);
 
       if (booksArray.length === 0) {
-        console.log("��️ BookListing: No books found with current filters");
+        //"��️ BookListing: No books found with current filters");
       }
     } catch (error) {
       const userMessage =
