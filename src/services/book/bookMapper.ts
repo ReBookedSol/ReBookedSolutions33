@@ -5,10 +5,6 @@ import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 export const mapBookFromDatabase = (bookData: BookQueryResult): Book => {
   const profile = bookData.profiles;
 
-  if (import.meta.env.DEV) {
-    console.log("Mapping book data");
-  }
-
   // Ensure we have required fields
   if (!bookData.id || !bookData.seller_id) {
     throw new Error("Invalid book data: missing required fields");

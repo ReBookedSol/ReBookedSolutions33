@@ -309,7 +309,6 @@ export const setupSellerBanking = async (
       subaccountCode,
     };
   } catch (error) {
-    console.error("Error setting up seller banking:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Banking setup failed",

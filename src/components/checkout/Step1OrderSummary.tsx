@@ -35,40 +35,22 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
         // Validate cart data is recent (within 1 hour)
         const oneHourAgo = Date.now() - (60 * 60 * 1000);
         if (parsedData.timestamp && parsedData.timestamp > oneHourAgo) {
-          console.log('Loading cart data in Step1OrderSummary:', {
-            sellerId: parsedData.sellerId,
-            sellerName: parsedData.sellerName,
-            itemCount: parsedData.items?.length,
-            timestamp: new Date(parsedData.timestamp).toLocaleTimeString(),
-            items: parsedData.items?.map(item => ({
-              title: item.title,
-              author: item.author,
-              price: item.price,
-              imageUrl: item.imageUrl,
-              hasImage: !!item.imageUrl
-            }))
-          });
           setCartData(parsedData);
           return;
         }
       }
     } catch (error) {
-      console.error("Error parsing cart data:", error);
     }
     setCartData(null);
   };
 
   // Load cart data on component mount and when localStorage changes
   useEffect(() => {
-    console.log('🔍 Step1OrderSummary: Component mounted, loading cart data...');
-    console.log('🔍 Step1OrderSummary: Current URL:', window.location.href);
-    console.log('🔍 Step1OrderSummary: LocalStorage checkoutCart:', localStorage.getItem('checkoutCart'));
     loadCartData();
 
     // Listen for storage events to detect cart changes
     const handleStorageChange = (e) => {
       if (e.key === 'checkoutCart') {
-        console.log('Cart data changed, reloading...');
         loadCartData();
       }
     };
@@ -96,13 +78,11 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
             .single();
 
           if (error) {
-            console.warn('Failed to fetch seller full name:', error);
           } else if (data?.full_name) {
             setSellerFullName(data.full_name);
           }
         }
       } catch (error) {
-        console.error('Error fetching seller full name:', error);
       }
     };
 
@@ -121,7 +101,6 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
             .single();
 
           if (error) {
-            console.warn('Failed to fetch cart seller full name:', error);
           } else if (data?.full_name) {
             setSellerCartFullNames((prev) => ({
               ...prev,
@@ -129,7 +108,6 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
             }));
           }
         } catch (error) {
-          console.error('Error fetching cart seller full name:', error);
         }
       }
     };
@@ -139,17 +117,6 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
 
   // For debugging: show cart checkout if cart data exists (even for single item)
   const isCartCheckout = cartData && cartData.items && cartData.items.length >= 1;
-
-  console.log('🔍 Step1OrderSummary cart detection:', {
-    hasCartData: !!cartData,
-    cartItems: cartData?.items?.length || 0,
-    isCartCheckout,
-    cartData: cartData ? {
-      sellerId: cartData.sellerId,
-      sellerName: cartData.sellerName,
-      itemCount: cartData.items.length
-    } : null
-  });
   return (
     <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
       <div className="text-center mb-4 sm:mb-8">
@@ -181,19 +148,7 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
                       alt={item.title || "Book cover"}
                       className="w-full h-full object-cover rounded-lg border"
                       onError={(e) => {
-                        console.log('❌ Cart item image failed to load:', {
-                          title: item.title,
-                          imageUrl: item.imageUrl,
-                          image_url: item.image_url,
-                          currentSrc: e.currentTarget.src
-                        });
                         e.currentTarget.src = "/placeholder.svg";
-                      }}
-                      onLoad={(e) => {
-                        console.log('✅ Cart item image loaded successfully:', {
-                          title: item.title,
-                          src: e.currentTarget.src
-                        });
                       }}
                     />
                   </div>
@@ -226,19 +181,7 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
                   alt={book.title || "Book cover"}
                   className="w-full h-full object-cover rounded-lg border bg-gray-100"
                   onError={(e) => {
-                    console.log('❌ Single book image failed to load:', {
-                      title: book.title,
-                      image_url: book.image_url,
-                      imageUrl: book.imageUrl,
-                      currentSrc: e.currentTarget.src
-                    });
                     e.currentTarget.src = "/placeholder.svg";
-                  }}
-                  onLoad={(e) => {
-                    console.log('✅ Single book image loaded successfully:', {
-                      title: book.title,
-                      src: e.currentTarget.src
-                    });
                   }}
                 />
               </div>
