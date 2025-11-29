@@ -530,7 +530,6 @@ serve(async (req) => {
       updated_at: new Date().toISOString()
     }).eq("id", order_id);
     if (updateError) {
-      console.error("[commit-to-sale] Failed to update order:", updateError);
       throw new Error("Failed to update order");
     }
     // Email templates
@@ -668,7 +667,6 @@ serve(async (req) => {
         // Handle notification creation error silently
       }
     }
-    console.log(`[commit-to-sale] Order ${order_id} committed successfully`);
     return new Response(JSON.stringify({
       success: true,
       message: "Order committed successfully",
@@ -684,7 +682,6 @@ serve(async (req) => {
       status: 200
     });
   } catch (error) {
-    console.error("[commit-to-sale] Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({
       success: false,

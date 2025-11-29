@@ -434,7 +434,6 @@ Deno.serve(async (req) => {
     // Webhook processed
     return new Response('OK', { status: 200, headers: corsHeaders });
   } catch (error) {
-    console.error('Error processing webhook:', error);
     // Return 200 to prevent retries for processing errors
     return new Response('Received', { status: 200, headers: corsHeaders });
   }

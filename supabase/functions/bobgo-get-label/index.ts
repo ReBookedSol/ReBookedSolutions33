@@ -13,7 +13,6 @@ serve(async (req) => {
 
     const { shipment_id, tracking_number } = bodyResult.data!;
 
-    console.log("Label request:", { shipment_id, tracking_number });
 
     if (!shipment_id && !tracking_number) {
       return new Response(
@@ -37,14 +36,11 @@ serve(async (req) => {
     }
 
     const BOBGO_BASE_URL = resolveBaseUrl();
-    console.log("Using BobGo URL:", BOBGO_BASE_URL);
 
     // BobGo uses tracking_number as the primary identifier, not shipment_id
     const identifier = tracking_number || shipment_id!;
-    console.log("Using identifier:", identifier, "(tracking_number preferred)");
 
     if (!BOBGO_API_KEY) {
-      console.warn("No BOBGO_API_KEY - returning simulated label");
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -57,7 +53,6 @@ serve(async (req) => {
     }
 
     try {
-      console.log("Retrieving shipment details for:", identifier);
       
       // First, get the shipment details to find the waybill URL
       const shipmentResp = await fetch(`${BOBGO_BASE_URL}/shipments/${identifier}`, {
@@ -70,12 +65,10 @@ serve(async (req) => {
 
       if (!shipmentResp.ok) {
         const text = await shipmentResp.text().catch(() => "");
-        console.error("BobGo shipment details HTTP error:", shipmentResp.status, text);
         throw new Error(`BobGo shipment HTTP ${shipmentResp.status}: ${text}`);
       }
 
       const shipmentData = await shipmentResp.json();
-      console.log("Shipment data received:", JSON.stringify(shipmentData).slice(0, 500));
 
       // Extract waybill URL from shipment data
       const waybillUrl = shipmentData.waybill_url || 
@@ -85,7 +78,6 @@ serve(async (req) => {
                         shipmentData.documents?.label;
 
       if (waybillUrl) {
-        console.log("Found existing waybill URL:", waybillUrl);
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -125,12 +117,10 @@ serve(async (req) => {
       }
 
       const contentType = waybillResp.headers.get("content-type") || "";
-      console.log("Waybill response content type:", contentType);
 
       if (contentType.includes("application/pdf")) {
         const arrayBuffer = await waybillResp.arrayBuffer();
         const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-        console.log("Received PDF label, size:", arrayBuffer.byteLength);
         
         return new Response(
           JSON.stringify({ 
@@ -143,7 +133,6 @@ serve(async (req) => {
         );
       } else if (contentType.includes("application/json")) {
         const json = await waybillResp.json();
-        console.log("Received JSON response:", json);
         
         return new Response(
           JSON.stringify({ 
@@ -158,14 +147,12 @@ serve(async (req) => {
         throw new Error(`Unexpected content type: ${contentType}`);
       }
     } catch (err: any) {
-      console.error("bobgo-get-label error:", err);
       return new Response(
         JSON.stringify({ success: false, error: err.message || "Failed to get label" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error: any) {
-    console.error("bobgo-get-label fatal:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message || "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

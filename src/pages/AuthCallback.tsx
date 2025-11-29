@@ -145,7 +145,6 @@ const AuthCallback = () => {
 
         // Handle errors first
         if (error) {
-          console.error("��� Auth callback error:", error, error_description);
           setStatus("error");
           const safeErrorMsg = getSafeErrorMessage(error_description || error, 'Authentication failed');
           setMessage(safeErrorMsg);
@@ -292,12 +291,6 @@ const AuthCallback = () => {
         }
 
         // Try manual verification as a last resort
-        console.warn("⚠��� No valid auth parameters found, attempting manual verification");
-        console.log("Available parameters:", {
-          searchParams: Object.fromEntries(searchParams.entries()),
-          hashParams: window.location.hash ? Object.fromEntries(new URLSearchParams(window.location.hash.substring(1)).entries()) : {}
-        });
-
         try {
           const manualResult = await attemptManualVerification({
             token_hash,
@@ -307,7 +300,6 @@ const AuthCallback = () => {
           });
 
           if (manualResult.success) {
-            console.log(`✅ Manual verification succeeded via ${manualResult.method}`);
             setStatus("success");
 
             if (type === "signup") {

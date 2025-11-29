@@ -82,7 +82,6 @@ const BookListing = () => {
 
   // Memoize loadBooks function to prevent infinite loops
   const loadBooks = useCallback(async () => {
-    console.log("🔍 BookListing: Starting to load books...");
     setIsLoading(true);
     setError(null);
 
@@ -233,10 +232,6 @@ const BookListing = () => {
       // Reload books after commit
       loadBooks();
     } catch (error) {
-      console.error(
-        "Failed to commit book:",
-        error instanceof Error ? error.message : String(error),
-      );
       toast.error("Failed to commit sale. Please try again.");
     }
   };
