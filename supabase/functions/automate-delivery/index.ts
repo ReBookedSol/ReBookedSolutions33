@@ -55,10 +55,7 @@ serve(async (req) => {
       .single();
 
     if (orderError || !order) {
-      console.warn(
-        "Order not found, proceeding with automation anyway:",
-        orderError?.message,
-      );
+      // Order not found, proceeding with automation anyway
     }
 
     // Step 1: Get quotes from Bob Go
@@ -110,12 +107,10 @@ serve(async (req) => {
         }));
       }
     } catch (quoteError) {
-      console.error("Failed to get Bob Go rates:", quoteError);
     }
 
     // Add fallback quote if no quotes received
     if (quotes.length === 0) {
-      console.warn("No quotes received, adding fallback Bob Go quote");
       quotes.push({
         courier: "bobgo",
         service_name: "Standard Delivery",
@@ -164,7 +159,6 @@ serve(async (req) => {
         const shipmentData = await shipmentResponse.json();
         shipmentResult = shipmentData;
       } catch (shipmentError) {
-        console.error("Failed to create Bob Go shipment:", shipmentError);
       }
     }
 
@@ -192,7 +186,6 @@ serve(async (req) => {
         .eq("id", order_id);
 
       if (updateError) {
-        console.error("Failed to update order:", updateError);
       }
     }
 
@@ -209,10 +202,6 @@ serve(async (req) => {
         created_at: new Date().toISOString(),
       });
     } catch (logError) {
-      console.warn(
-        "Failed to log automation activity (table may not exist):",
-        logError?.message,
-      );
       // Don't fail for logging errors
     }
 
@@ -231,7 +220,6 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error("Automate delivery error:", error);
 
     const errorMessage = error instanceof Error ? error.message :
                         typeof error === "string" ? error :
