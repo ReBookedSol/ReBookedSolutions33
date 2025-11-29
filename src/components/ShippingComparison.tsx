@@ -79,7 +79,6 @@ const ShippingComparison = () => {
       setQuotes(data.quotes || []);
       toast.success("Quotes retrieved successfully!");
     } catch (error) {
-      console.error("Error getting quotes:", error);
       toast.error("Failed to get delivery quotes");
     } finally {
       setLoading(false);

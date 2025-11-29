@@ -46,15 +46,12 @@ class LockerShippingService {
   static async getLockers(): Promise<Locker[]> {
     try {
       if (!this.API_KEY) {
-        console.warn("Locker API key not configured, returning mock data");
         return this.getMockLockers();
       }
 
-      console.log("🔍 Fetching lockers from Courier Guy API...");
       
       // In development, return mock data for now
       if (import.meta.env.DEV) {
-        console.log("🧪 Development mode: Using mock locker data");
         return this.getMockLockers();
       }
 
@@ -71,11 +68,9 @@ class LockerShippingService {
       }
 
       const data = await response.json();
-      console.log("✅ Lockers fetched successfully:", data.lockers?.length || 0);
       
       return data.lockers || [];
     } catch (error) {
-      console.error("❌ Error fetching lockers:", error);
       toast.error("Failed to load locker locations");
       // Return mock data as fallback
       return this.getMockLockers();
@@ -91,11 +86,9 @@ class LockerShippingService {
         throw new Error("Locker API key not configured");
       }
 
-      console.log("📦 Creating locker shipment:", shipmentData.orderId);
 
       // In development, return mock response
       if (import.meta.env.DEV) {
-        console.log("🧪 Development mode: Using mock shipment response");
         return this.getMockShipmentResponse(shipmentData);
       }
 
@@ -134,7 +127,6 @@ class LockerShippingService {
       }
 
       const result = await response.json();
-      console.log("✅ Locker shipment created successfully:", result);
 
       return {
         success: true,
@@ -144,7 +136,6 @@ class LockerShippingService {
         reference: result.reference,
       };
     } catch (error) {
-      console.error("❌ Error creating locker shipment:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       
       return {
@@ -163,7 +154,6 @@ class LockerShippingService {
         throw new Error("Locker API key not configured");
       }
 
-      console.log("📍 Tracking locker shipment:", trackingNumber);
 
       const response = await fetch(`${this.API_BASE_URL}/tracking/${trackingNumber}`, {
         method: "GET",
@@ -178,11 +168,9 @@ class LockerShippingService {
       }
 
       const trackingData = await response.json();
-      console.log("✅ Tracking data retrieved:", trackingData);
       
       return trackingData;
     } catch (error) {
-      console.error("❌ Error tracking shipment:", error);
       throw error;
     }
   }

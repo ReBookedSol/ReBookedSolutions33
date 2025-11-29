@@ -167,7 +167,6 @@ export const getAllDeliveryQuotes = async (
         locationId: request.sellerCollectionPickupPoint.locationId,
         providerSlug: request.sellerCollectionPickupPoint.providerSlug,
       };
-      console.log("🚀 Calculating rates from locker pickup point:", request.sellerCollectionPickupPoint);
     } else {
       const provinceCode = toProvinceCode(request.from.province);
       body.fromAddress = {
@@ -179,7 +178,6 @@ export const getAllDeliveryQuotes = async (
         country: "ZA",
         code: request.from.postalCode,
       };
-      console.log("🚀 Calculating rates from address:", request.from.city);
     }
 
     // If delivery locker is specified, use it instead of toAddress
@@ -188,7 +186,6 @@ export const getAllDeliveryQuotes = async (
         locationId: request.deliveryLocker.locationId,
         providerSlug: request.deliveryLocker.providerSlug,
       };
-      console.log("🚀 Calculating rates to locker:", request.deliveryLocker);
     } else {
       const toProvinceCode_value = toProvinceCode(request.to.province);
       body.toAddress = {
@@ -200,7 +197,6 @@ export const getAllDeliveryQuotes = async (
         country: "ZA",
         code: request.to.postalCode,
       };
-      console.log("🚀 Calculating rates to address:", request.to.city);
     }
 
     // Pass user_id for preference lookup
@@ -208,32 +204,22 @@ export const getAllDeliveryQuotes = async (
       body.user_id = request.user_id;
     }
 
-    console.log("📡 Calling bobgo-get-rates edge function with body:", JSON.stringify(body, null, 2));
 
     const { data, error } = await supabase.functions.invoke("bobgo-get-rates", { body });
 
-    console.log("📡 Edge function response - error:", error, "data:", JSON.stringify(data, null, 2));
 
     if (error) {
-      console.error("❌ Edge function error:", error.message);
       throw new Error(`Edge function error: ${error.message}`);
     }
 
     if (!data) {
-      console.warn("⚠️ Edge function returned no data");
       return generateFallbackQuotes(request);
     }
 
     if (!data.success) {
-      console.error("❌ Edge function returned success: false", data.error);
       return generateFallbackQuotes(request);
     }
 
-    console.log("✅ Edge function returned data:", {
-      hasQuotes: !!data.quotes,
-      quotesLength: data.quotes?.length,
-      simulated: data.simulated,
-    });
 
     // Map the quotes directly from the response
     let quotes: UnifiedQuote[] = (data.quotes || []).map((q: any) => ({
@@ -251,18 +237,14 @@ export const getAllDeliveryQuotes = async (
       terms: undefined,
     }));
 
-    console.log(`✅ Mapped ${quotes.length} quotes from response`);
 
     if (!quotes.length) {
-      console.warn("⚠️ No quotes found, returning fallback quotes");
       return generateFallbackQuotes(request);
     }
 
     quotes.sort((a, b) => a.cost - b.cost);
-    console.log(`✅ Returning ${quotes.length} sorted quotes`);
     return quotes;
   } catch (err) {
-    console.error("getAllDeliveryQuotes error:", err);
     return generateFallbackQuotes(request);
   }
 };
@@ -349,7 +331,6 @@ export const trackUnifiedShipment = async (
   if (error) throw new Error(error.message);
   const t = data?.tracking || {};
 
-  console.log("Tracking response:", JSON.stringify(t, null, 2));
 
   // Map checkpoints/events to events array
   const events = (t.checkpoints || t.events || []).map((e: any) => ({

@@ -47,7 +47,6 @@ export class BankingEncryptionService {
         };
       }
 
-      console.log("🔒 Calling encrypt-banking-details edge function");
 
       const { data, error } = await supabase.functions.invoke(
         "encrypt-banking-details",
@@ -67,7 +66,6 @@ export class BankingEncryptionService {
       );
 
       if (error) {
-        console.error("Edge function error:", error);
         
         if (error.message?.includes("non-2xx status code") || 
             error.message?.includes("404")) {
@@ -90,14 +88,12 @@ export class BankingEncryptionService {
         };
       }
 
-      console.log("✅ Banking details encrypted successfully");
 
       return {
         success: true,
         data: data.data,
       };
     } catch (error) {
-      console.error("Error in encryptBankingDetails:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -146,7 +142,6 @@ export class BankingEncryptionService {
 
       return hashHex;
     } catch (error) {
-      console.error("Error generating key hash:", error);
       throw error;
     }
   }
