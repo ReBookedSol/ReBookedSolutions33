@@ -606,7 +606,7 @@ const ActivityLog = () => {
                                 bookTitle={commit.bookTitle}
                                 buyerName={commit.buyerName}
                                 onCommitSuccess={() => {
-                                  refreshPendingCommits().catch(console.error);
+                                  refreshPendingCommits().catch(() => {});
                                 }}
                                 disabled={isCommitting || isDeclining}
                                 className="flex-1 lg:flex-none"
