@@ -73,13 +73,11 @@ class FallbackAddressService {
         .single();
 
       if (error) {
-        console.error('Failed to save address:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, address: data };
     } catch (error) {
-      console.error('Address save error:', error);
       return { success: false, error: 'Failed to save address' };
     }
   }
@@ -125,7 +123,6 @@ class FallbackAddressService {
 
       return { success: true, address: data };
     } catch (error) {
-      console.error('Address update error:', error);
       return { success: false, error: 'Failed to update address' };
     }
   }
@@ -157,7 +154,6 @@ class FallbackAddressService {
 
       return { success: true, addresses: data || [] };
     } catch (error) {
-      console.error('Get addresses error:', error);
       return { success: false, error: 'Failed to fetch addresses' };
     }
   }
@@ -193,7 +189,6 @@ class FallbackAddressService {
         source: targetAddress 
       };
     } catch (error) {
-      console.error('Get best address error:', error);
       return { success: false, error: 'Failed to get best address' };
     }
   }
@@ -218,7 +213,6 @@ class FallbackAddressService {
 
       return { success: true };
     } catch (error) {
-      console.error('Delete address error:', error);
       return { success: false, error: 'Failed to delete address' };
     }
   }
@@ -252,7 +246,6 @@ class FallbackAddressService {
 
       return { success: true };
     } catch (error) {
-      console.error('Set primary address error:', error);
       return { success: false, error: 'Failed to set primary address' };
     }
   }
