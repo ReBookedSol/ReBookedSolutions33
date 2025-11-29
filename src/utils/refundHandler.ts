@@ -98,7 +98,6 @@ export const handleIntelligentRefund = async (
 
     // For uncommitted orders, detect payment provider and use appropriate refund function
     const provider = await detectPaymentProvider(order_id);
-    console.log('Detected payment provider:', provider);
 
     if (provider === 'bobpay') {
       // Use BobPay refund for uncommitted BobPay orders
@@ -146,7 +145,6 @@ export const handleIntelligentRefund = async (
       throw new Error('Unable to determine payment provider for refund');
     }
   } catch (err) {
-    console.error('Refund handling error:', err);
     const errorMessage = err instanceof Error ? err.message : 'Refund failed';
     return {
       success: false,

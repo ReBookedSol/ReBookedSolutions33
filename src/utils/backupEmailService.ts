@@ -178,7 +178,6 @@ export class BackupEmailService {
       const result = await this.sendConfirmationEmail({ to: email });
       return result.success;
     } catch (error) {
-      console.error("Resend failed:", error);
       return false;
     }
   }
@@ -198,7 +197,6 @@ export class BackupEmailService {
       }
       return false;
     } catch (error) {
-      console.error("Fallback verification failed:", error);
       return false;
     }
   }

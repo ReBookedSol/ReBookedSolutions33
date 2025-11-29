@@ -66,7 +66,6 @@ export class EnhancedCommitService {
     let emailsSent = false;
     
     try {
-      console.log("🚀 Enhanced commit: Starting commit with email fallback");
       
       // Step 1: Try the main edge function
       try {
@@ -75,17 +74,14 @@ export class EnhancedCommitService {
         });
         
         if (error) {
-          console.warn("🔄 Edge function failed, will use fallback:", error);
           throw new Error(`Edge function error: ${error.message}`);
         }
-        
+
         edgeFunctionSuccess = true;
-        console.log("✅ Edge function succeeded:", data);
         
         // Check if emails were sent by the edge function
         const emailSuccess = data?.email_sent !== false;
         if (!emailSuccess) {
-          console.log("⚠️ Edge function succeeded but emails failed, triggering fallback");
           throw new Error("Edge function emails failed");
         }
         
@@ -98,16 +94,10 @@ export class EnhancedCommitService {
             await this.createCommitNotifications(orderData);
           }
         } catch (notifError) {
-          const serializedError = serializeError(notifError);
-          console.warn("⚠️ Failed to create notifications:", {
-            ...serializedError,
-            context: 'edge-function-success-path',
-            timestamp: new Date().toISOString()
-          });
+          // Failed to create notifications
         }
 
       } catch (edgeError) {
-        console.log("🔄 Edge function failed, using fallback services");
 
         // Step 2: If edge function fails, get order data and handle manually
         const orderData = await this.getOrderDataForCommit(orderId, sellerId);
@@ -124,12 +114,7 @@ export class EnhancedCommitService {
         try {
           await this.createCommitNotifications(orderData);
         } catch (notifError) {
-          const serializedError = serializeError(notifError);
-          console.warn("⚠️ Failed to create notifications:", {
-            ...serializedError,
-            context: 'fallback-path',
-            timestamp: new Date().toISOString()
-          });
+          // Failed to create notifications
         }
       }
       
@@ -146,7 +131,6 @@ export class EnhancedCommitService {
       };
       
     } catch (error) {
-      console.error("❌ Enhanced commit failed:", error);
       
       // Final fallback: Queue emails for manual processing
       try {

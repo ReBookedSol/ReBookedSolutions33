@@ -12,13 +12,11 @@ export const getUserBookCount = async (userId: string): Promise<number> => {
       .eq('seller_id', userId);
 
     if (error) {
-      console.error('Error fetching user book count:', error);
       return 0;
     }
 
     return data?.length || 0;
   } catch (error) {
-    console.error('Exception in getUserBookCount:', error);
     return 0;
   }
 };

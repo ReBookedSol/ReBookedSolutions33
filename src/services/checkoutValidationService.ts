@@ -60,10 +60,9 @@ export const getSellerCheckoutData = async (sellerId: string) => {
           encryptedAddress.postal_code) {
         hasAddress = true;
         sellerAddress = encryptedAddress;
-        console.log("✅ Using encrypted address for seller validation");
       }
     } catch (error) {
-      console.warn("Failed to check encrypted address:", error);
+      // Failed to check encrypted address
     }
 
     // No plaintext fallback allowed
@@ -126,11 +125,10 @@ export const getBuyerCheckoutData = async (userId: string) => {
             postal_code: postal,
             country: "South Africa",
           };
-          console.log("✅ Using encrypted address for buyer");
         }
       }
     } catch (error) {
-      console.warn("Failed to check encrypted buyer address:", error);
+      // Failed to check encrypted buyer address
     }
 
     // Fallback: legacy plaintext JSONB on profiles table
@@ -149,10 +147,9 @@ export const getBuyerCheckoutData = async (userId: string) => {
             postal_code: postal,
             country: "South Africa",
           } as CheckoutAddress;
-          console.log("✅ Using legacy profile shipping_address for buyer");
         }
       } catch (e) {
-        console.warn("Legacy shipping_address fallback failed:", e);
+        // Legacy shipping_address fallback failed
       }
     }
 
