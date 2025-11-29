@@ -160,7 +160,6 @@ const EnhancedMobileImageUpload = ({
       });
 
     if (uploadError) {
-      console.error("Upload error:", uploadError);
       throw uploadError;
     }
 
@@ -216,7 +215,6 @@ const EnhancedMobileImageUpload = ({
       updateImages(newImages);
       toast.success(`${slots[index].label} uploaded successfully!`);
     } catch (error) {
-      console.error("Upload failed:", error);
       toast.error(`Failed to upload ${slots[index].label}. Please try again.`);
       // Remove temporary preview on failure
       const newImages = [...imageArray];

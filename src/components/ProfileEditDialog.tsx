@@ -62,11 +62,6 @@ const ProfileEditDialog = ({ isOpen, onClose }: ProfileEditDialogProps) => {
         .eq("id", user.id);
 
       if (error) {
-        console.error("Error updating profile:", {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-        });
         toast.error("Failed to update profile");
         return;
       }
@@ -76,12 +71,7 @@ const ProfileEditDialog = ({ isOpen, onClose }: ProfileEditDialogProps) => {
       // Log profile update activity
       try {
         await ActivityService.logProfileUpdate(user.id);
-        console.log("✅ Profile update activity logged");
       } catch (activityError) {
-        console.warn(
-          "⚠️ Failed to log profile update activity:",
-          activityError,
-        );
       }
 
       onClose();
@@ -91,10 +81,6 @@ const ProfileEditDialog = ({ isOpen, onClose }: ProfileEditDialogProps) => {
         window.location.reload();
       }, 500);
     } catch (error) {
-      console.error("Failed to update profile:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
       toast.error("Failed to update profile");
     } finally {
       setIsLoading(false);
