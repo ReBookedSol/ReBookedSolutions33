@@ -299,8 +299,6 @@ const BankingSetupForm: React.FC<BankingSetupFormProps> = ({
         }
       }
     } catch (error) {
-      console.error("Banking setup error:", error);
-
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
       if (errorMessage.includes("mock subaccount")) {

@@ -84,8 +84,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     try {
       setCheckoutState((prev) => ({ ...prev, loading: true, error: null }));
 
-      console.log("🚀 Using book table seller data for checkout...");
-
       // Get fresh book data with seller information from books table
       const { data, error: bookError } = await supabase
         .from("books")
@@ -112,7 +110,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         .maybeSingle();
 
       if (sellerError) {
-        console.warn("Could not fetch seller profile:", sellerError);
       }
 
       // Get seller subaccount code if available (but don't require it)
@@ -120,8 +117,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       let sellerSubaccountCode = bookData.seller_subaccount_code;
 
       if (!sellerSubaccountCode) {
-        console.log("ℹ️ Book has no seller_subaccount_code, attempting to fetch from seller profile...");
-
         // Try to fetch subaccount if available, but continue without it if not
         try {
           const { data: subaccount, error: subError } = await supabase
@@ -132,7 +127,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
 
           if (!subError && subaccount?.subaccount_code) {
             sellerSubaccountCode = subaccount.subaccount_code;
-            console.log("✅ Found seller subaccount code");
 
             // Update the book with the subaccount code for future purchases (non-blocking)
             try {
@@ -140,15 +134,11 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
                 .from("books")
                 .update({ seller_subaccount_code: sellerSubaccountCode })
                 .eq("id", bookData.id);
-              console.log("✅ Updated book with seller subaccount code");
             } catch (updateError) {
-              console.warn("⚠️ Failed to update book with subaccount code (non-critical):", updateError);
             }
           } else {
-            console.log("ℹ️ Seller has not set up banking details yet - checkout will proceed without subaccount code");
           }
         } catch (error) {
-          console.warn("⚠️ Error checking for seller subaccount (non-critical):", error);
           // Continue without subaccount code
         }
       }
@@ -163,13 +153,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       }
 
       // Get seller address using the proper service that handles encryption
-      console.log("🔐 Fetching seller pickup address (checking encrypted first)...");
-      console.log("Seller ID:", bookData.seller_id);
-      console.log("Book data:", { id: bookData.id, title: bookData.title, seller_id: bookData.seller_id });
-
       const sellerAddress = await getSellerDeliveryAddress(bookData.seller_id);
-
-      console.log("🔍 Raw seller address result:", sellerAddress);
 
       // Fetch seller's preferred pickup method and locker data
       let sellerLockerData = null;
@@ -186,7 +170,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           // Load preferred pickup method
           if (profile.preferred_pickup_method) {
             sellerPreferredPickupMethod = profile.preferred_pickup_method;
-            console.log("✅ Seller's preferred pickup method:", sellerPreferredPickupMethod);
           }
 
           // Only load locker if preferred method is locker
@@ -194,7 +177,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
             const lockerData = profile.preferred_delivery_locker_data as any;
             if (lockerData.id && lockerData.name && lockerData.provider_slug) {
               sellerLockerData = lockerData;
-              console.log("✅ Found seller's preferred locker:", lockerData.name);
             }
           }
 
@@ -209,7 +191,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           }
         }
       } catch (error) {
-        console.warn("Failed to fetch seller's preferred pickup method:", error);
         // Default to pickup method if we have an address, otherwise locker
         if (sellerAddress) {
           sellerPreferredPickupMethod = "pickup";
@@ -219,17 +200,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       }
 
       if (!sellerAddress && !sellerLockerData) {
-        // Let's check what's in the database directly for debugging
-        console.log("❌ No seller address or locker data found, checking database...");
-
         // First, let's verify the book's seller_id is correct
         const { data: bookCheck, error: bookError } = await supabase
           .from("books")
           .select("id, seller_id, title")
           .eq("id", bookData.id)
           .single();
-
-        console.log("📚 Book verification:", { bookCheck, bookError });
 
         // Check if seller profile exists
         const { data: profiles, error: profileError } = await supabase
@@ -238,67 +214,34 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           .eq("id", bookData.seller_id);
 
         const profile = profiles && profiles.length > 0 ? profiles[0] : null;
-        console.log("📊 Profile query result:", {
-          profiles,
-          profileError,
-          profile_count: profiles?.length || 0,
-          first_profile: profile
-        });
 
         // If no profile found, do some additional debugging
         if (!profile && profileError?.code === 'PGRST116') {
-          console.log("🔍 Profile not found - doing additional checks...");
-
           // Check if there are any profiles at all (to see if DB connection works)
           const { count, error: countError } = await supabase
             .from("profiles")
             .select("id", { count: 'exact', head: true });
-
-          console.log("📊 Total profiles in database:", { count, countError });
 
           // Check if there are any books with this seller_id
           const { count: bookCount, error: bookCountError } = await supabase
             .from("books")
             .select("id", { count: 'exact', head: true })
             .eq("seller_id", bookData.seller_id);
-
-          console.log("📚 Books by this seller:", { bookCount, bookCountError });
         }
 
         // Handle missing profile case specifically
         if (!profile && profiles?.length === 0) {
-          console.error("💥 DATA INTEGRITY ISSUE: Book has seller_id but no profile exists");
-
           // Check if this is a systemic issue or isolated case
           const { count: orphanedBooks } = await supabase
             .from("books")
             .select("id", { count: 'exact', head: true })
             .eq("seller_id", bookData.seller_id);
 
-          console.log(`📊 Total books by this seller: ${orphanedBooks}`);
-
           // This is a data integrity issue - the book exists but seller profile doesn't
           const errorMessage = `This book is currently unavailable due to a profile setup issue. Book ID: ${bookData.id}. ` +
             (user?.id === bookData.seller_id
               ? "Please contact support to restore your seller profile."
               : "Please contact support or try a different book.");
-
-          console.error("Seller profile missing - possible solutions:", {
-            issue: "Book exists but seller profile missing",
-            seller_id: bookData.seller_id,
-            book_id: bookData.id,
-            books_by_seller: orphanedBooks,
-            possible_causes: [
-              "Profile was deleted but books weren't cleaned up",
-              "User registered but never created profile",
-              "Database inconsistency"
-            ],
-            admin_actions_needed: [
-              "Check if seller_id exists in auth.users",
-              "Create missing profile or reassign books",
-              "Clean up orphaned books if seller no longer exists"
-            ]
-          });
 
           throw new Error(errorMessage);
         }
@@ -312,7 +255,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         };
 
         const isMobile = isMobileDevice();
-        console.log(`📱 Device type: ${isMobile ? 'MOBILE' : 'DESKTOP'}`);
 
         // Provide specific guidance based on what's missing
         let errorMessage = "This book is temporarily unavailable for purchase. ";
@@ -339,45 +281,10 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           }
         }
 
-        console.error("Seller address debug info:", JSON.stringify({
-          book_verification: {
-            book_id: bookData.id,
-            book_title: bookData.title,
-            book_seller_id: bookData.seller_id,
-            fresh_book_data: bookCheck,
-            book_error: bookError?.message
-          },
-          seller_validation: {
-            seller_id: bookData.seller_id,
-            seller_id_type: typeof bookData.seller_id,
-            seller_id_length: bookData.seller_id?.length,
-            seller_id_valid: !!(bookData.seller_id && typeof bookData.seller_id === 'string' && bookData.seller_id.length > 10)
-          },
-          profile_check: {
-            has_profile: !!profile,
-            profile_error_code: profileError?.code,
-            profile_error_message: profileError?.message,
-            profile_data: profile ? {
-              id: profile.id,
-              name: profile.name,
-              email: profile.email,
-              encryption_status: profile.encryption_status
-            } : null
-          },
-          current_user: user?.id
-        }, null, 2));
-
         throw new Error(errorMessage);
       }
 
       if (sellerAddress) {
-        console.log("✅ Seller address retrieved:", {
-          streetAddress: sellerAddress.streetAddress || sellerAddress.street,
-          city: sellerAddress.city,
-          province: sellerAddress.province,
-          postalCode: sellerAddress.postalCode || sellerAddress.postal_code
-        });
-
         if (
           !(sellerAddress.streetAddress || sellerAddress.street) ||
           !sellerAddress.city ||
@@ -394,11 +301,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           );
         }
       } else if (sellerLockerData) {
-        console.log("✅ Seller locker data retrieved:", {
-          name: sellerLockerData.name,
-          address: sellerLockerData.address || sellerLockerData.full_address,
-          provider_slug: sellerLockerData.provider_slug
-        });
       }
 
       // Update book with complete seller data
@@ -458,13 +360,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         } catch {}
       }
 
-      console.log("📦 Checkout data loaded:", {
-        seller_address: sellerAddress,
-        buyer_data: buyerData,
-        buyer_address_resolved: buyerAddress,
-        book: updatedBook,
-      });
-
       setCheckoutState((prev) => ({
         ...prev,
         book: updatedBook,
@@ -479,7 +374,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         toast.info("Please add your delivery address to continue with checkout");
       }
     } catch (error) {
-      console.error(" Checkout initialization error:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -585,18 +479,13 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       if (book.seller?.id) {
         removeFromSellerCart(book.seller.id, book.id);
       }
-
-      console.log("✅ Book removed from cart after successful purchase:", book.id);
     } catch (error) {
-      console.warn("Failed to remove book from cart after purchase:", error);
       // Don't block the checkout success flow if cart removal fails
     }
 
     // 📧 GUARANTEED EMAIL FALLBACK SYSTEM
     // Send purchase confirmation emails with multiple fallback layers
     try {
-      console.log("📧 Triggering guaranteed purchase emails...");
-
       const purchaseEmailData = {
         orderId: orderData.orderId || book.id,
         bookId: book.id,
@@ -613,8 +502,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       // Use enhanced email service with guaranteed fallbacks
       const emailResult = await EnhancedPurchaseEmailService.sendPurchaseEmailsWithFallback(purchaseEmailData);
 
-      console.log("📧 Purchase email result:", emailResult);
-
       // Show user feedback about email status
       if (emailResult.sellerEmailSent && emailResult.buyerEmailSent) {
         toast.success("📧 Confirmation emails sent to all parties");
@@ -625,7 +512,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       }
 
     } catch (emailError) {
-      console.error("⚠️ Purchase email system failed:", emailError);
       // Don't block checkout completion if emails fail
       toast.warning("📧 Emails are being processed manually", {
         description: "Your purchase is complete but notifications may be delayed."

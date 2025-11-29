@@ -141,7 +141,6 @@ const SimpleShippingForm: React.FC<SimpleShippingFormProps> = ({
 
   const onSubmit = async (data: ShippingData) => {
     setIsLoading(true);
-    console.log("🚀 Simple shipping form submit:", data);
 
     if (!/^0\d{9}$/.test(data.phone)) {
       const proceed = window.confirm(
@@ -166,14 +165,11 @@ const SimpleShippingForm: React.FC<SimpleShippingFormProps> = ({
       // Generate delivery options based on location
       const deliveryOptions = generateDeliveryOptions(completeData);
 
-      console.log("📦 Generated delivery options:", deliveryOptions);
-
       // Call parent completion handler
       onComplete(completeData, deliveryOptions);
 
       toast.success("Shipping information saved!");
     } catch (error) {
-      console.error("Error submitting shipping form:", error);
       toast.error("Failed to save shipping information");
     } finally {
       setIsLoading(false);
