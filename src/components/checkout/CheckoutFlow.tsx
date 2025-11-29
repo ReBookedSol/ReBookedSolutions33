@@ -186,7 +186,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
             if (lockerData.id && lockerData.name && lockerData.provider_slug) {
               sellerLockerData = lockerData;
               sellerPreferredPickupMethod = "locker";
-              console.log("�� Using locker as default preference");
+              // console removed"�� Using locker as default preference");
             }
           }
         }
