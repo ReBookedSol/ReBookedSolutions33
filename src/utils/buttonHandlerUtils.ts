@@ -182,20 +182,12 @@ export const monitorButtonClicks = () => {
       const isLoading = checkElementLoadingState(button);
 
       if (isLoading) {
-        console.warn("🚨 Button clicked while in loading state:", button);
         event.preventDefault();
         event.stopPropagation();
         return false;
       }
-
-      console.log(
-        "✅ Button click:",
-        button.textContent?.trim() || "Unnamed button",
-      );
     }
   });
-
-  console.log("🔍 Button click monitor activated");
 };
 
 // Auto-start monitoring in development
