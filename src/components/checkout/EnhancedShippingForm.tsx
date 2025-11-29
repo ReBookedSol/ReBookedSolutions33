@@ -289,7 +289,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
         },
       );
 
-      console.log("🚛 Setting delivery options:", fallbackOptions);
       setDeliveryOptions(fallbackOptions);
       if (fallbackOptions.length > 0) {
         setSelectedDeliveryOption(fallbackOptions[0]);
@@ -297,7 +296,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
 
       toast.success(`${fallbackOptions.length} delivery options loaded`);
     } catch (error) {
-      console.error("Error getting delivery quotes:", error);
       toast.error("Failed to load delivery options");
     } finally {
       setIsLoadingQuotes(false);

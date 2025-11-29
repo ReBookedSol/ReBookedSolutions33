@@ -173,9 +173,6 @@ export class ActivityService {
         const { data: activities, error } = await activitiesQuery;
 
         if (!error && activities && activities.length > 0) {
-          console.log(
-            `✅ Found ${activities.length} activities from activity_logs table`,
-          );
           return activities.map((activity) => ({
             id: activity.id,
             user_id: activity.user_id,

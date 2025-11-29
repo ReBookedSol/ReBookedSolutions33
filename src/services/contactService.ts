@@ -49,8 +49,6 @@ export const submitContactMessage = async (
 };
 
 export const getAllContactMessages = async (): Promise<ContactMessage[]> => {
-  console.log("🔍 Fetching contact messages...");
-
   const { data, error } = await supabase
     .from("contact_messages")
     .select("*")
