@@ -36,38 +36,26 @@ const validateEnvironment = () => {
 
     // In development, we're more lenient
     if (import.meta.env.DEV && missing.length > 0) {
-      console.warn(
-        "⚠️ Missing Supabase configuration (DEV MODE):",
-        missing.join(", "),
-      );
-      console.warn("⚠️ App will run with limited functionality");
       return { isValid: true, missing, isDev: true };
     }
 
     if (missing.length > 0) {
-      console.warn("⚠️ Missing Supabase configuration:", missing.join(", "));
       return { isValid: false, missing, isDev: false };
     }
 
-    console.log("✅ Environment validation passed");
     return { isValid: true, missing: [], isDev: false };
   } catch (error) {
-    console.error("Environment validation error:", error);
     return { isValid: false, missing: ["VALIDATION_ERROR"], isDev: false };
   }
 };
 
 // Initialize application
-if (import.meta.env.DEV) {
-  console.log("🚀 ReBooked Solutions - Starting application...");
-}
 
 // Validate environment with graceful handling
 let environmentValidation;
 try {
   environmentValidation = validateEnvironment();
 } catch (error) {
-  console.warn("Environment validation warning:", error);
   environmentValidation = {
     isValid: false,
     missing: ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"],
@@ -173,16 +161,12 @@ const initializeApp = () => {
     </ErrorBoundary>,
   );
 
-  if (import.meta.env.DEV) {
-    console.log("✅ ReBooked Solutions loaded successfully");
-  }
 };
 
 // Main execution with comprehensive error handling
 try {
   initializeApp();
 } catch (error) {
-  console.error("❌ Critical error during app initialization:", error);
 
   // Emergency fallback UI
   const rootElement = document.getElementById("root");
