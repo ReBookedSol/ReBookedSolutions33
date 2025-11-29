@@ -59,7 +59,6 @@ const SavedLockersCard = forwardRef<
         .single();
 
       if (error) {
-        console.warn("Failed to load saved locker:", error);
         setIsLoadingLockers(false);
         return;
       }
@@ -71,7 +70,6 @@ const SavedLockersCard = forwardRef<
       }
       setIsLoadingLockers(false);
     } catch (error) {
-      console.error("Error loading saved locker:", error);
       setIsLoadingLockers(false);
     }
   };
@@ -97,7 +95,6 @@ const SavedLockersCard = forwardRef<
       setSavedLocker(null);
       toast.success("Locker removed from profile");
     } catch (error) {
-      console.error("Error deleting locker:", error);
       toast.error("Failed to remove locker");
     } finally {
       setIsDeleting(false);

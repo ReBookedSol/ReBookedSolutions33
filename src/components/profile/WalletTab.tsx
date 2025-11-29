@@ -41,7 +41,6 @@ const WalletTab: React.FC = () => {
       setBalance(balanceData);
       setTransactions(transactionData);
     } catch (error) {
-      console.error("Error loading wallet data:", error);
       toast.error("Failed to load wallet data");
     } finally {
       setLoading(false);

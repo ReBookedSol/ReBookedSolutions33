@@ -91,7 +91,6 @@ const ModernAddressTab = ({
           setHasSavedLocker(!!profile.preferred_delivery_locker_data);
         }
       } catch (error) {
-        console.error("Error loading preference:", error);
       } finally {
         setIsLoadingPreference(false);
       }
@@ -148,7 +147,6 @@ const ModernAddressTab = ({
 
       if (error) {
         toast.error("Failed to save preference");
-        console.error("Error saving preference:", error);
         return;
       }
 
@@ -160,7 +158,6 @@ const ModernAddressTab = ({
       );
     } catch (error) {
       toast.error("Failed to save preference");
-      console.error("Error:", error);
     } finally {
       setIsSavingPreference(false);
     }
