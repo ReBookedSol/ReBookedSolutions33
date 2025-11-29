@@ -64,26 +64,7 @@ const AuthErrorHandler = () => {
     // Run immediately
     handleAuthErrors();
 
-    // Also listen for auth errors from Supabase
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      const message = args.join(" ");
-
-      // Detect PKCE errors and handle them silently
-      if (
-        message.includes("code verifier") &&
-        message.includes("AuthApiError")
-      ) {
-        return;
-      }
-
-      // Let other errors through
-      originalConsoleError(...args);
-    };
-
-    return () => {
-      console.error = originalConsoleError;
-    };
+    return () => {};
   }, []);
 
   // This component doesn't render anything
