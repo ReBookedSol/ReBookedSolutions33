@@ -31,12 +31,8 @@ export class ActivityService {
   static async logProfileUpdate(userId: string): Promise<void> {
     try {
       if (!userId) {
-        console.warn("❌ No userId provided for profile update logging");
         return;
       }
-
-      // Log to console
-      console.log(`📝 Profile updated for user: ${userId}`);
 
       // Create notification for profile update
       try {

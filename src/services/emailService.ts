@@ -102,7 +102,6 @@ class EmailService {
 
       return result;
     } catch (error) {
-      console.error("Email service error:", error);
       throw error;
     }
   }

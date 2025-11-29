@@ -41,7 +41,6 @@ export const loginUser = async (email: string, password: string) => {
     throw new Error(errorMessage);
   }
 
-  console.log("Login successful for:", email);
   return data;
 };
 
@@ -211,23 +210,13 @@ export const fetchUserProfileQuick = async (
     if (profileError) {
       // Profile not found is normal for new users
       if (profileError.code === "PGRST116") {
-        console.log(
-          "ℹ️ Profile not found in quick fetch, will create in background",
-        );
         return null; // Return null so fallback is used
       }
 
-      // For other errors, log details but don't spam
-      console.warn("⚠️ Quick profile fetch error:", {
-        message: profileError.message || "Unknown error",
-        code: profileError.code || "No code",
-        hint: profileError.hint || "No hint",
-      });
       return null; // Use fallback on any error
     }
 
     if (!profile) {
-      console.log("ℹ️ No profile data returned, using fallback");
       return null; // Use fallback profile
     }
 
