@@ -16,10 +16,7 @@ const VerifyEmail = () => {
   useEffect(() => {
     // Listen for auth state changes (recommended for email verification)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔐 Auth state change:', event, session?.user?.email);
-
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('✅ User signed in via email verification');
         setStatus('success');
         setMessage('Email verified successfully! You are now logged in.');
 
@@ -32,7 +29,6 @@ const VerifyEmail = () => {
       }
 
       if (event === 'TOKEN_REFRESHED' && session?.user) {
-        console.log('✅ Token refreshed via email verification');
         setStatus('success');
         setMessage('Email verified successfully!');
 
@@ -52,22 +48,12 @@ const VerifyEmail = () => {
 
     const handleEmailConfirmation = async () => {
       try {
-        console.log('🔐 Handling email confirmation...');
-
         // Get the full URL for debugging
         const fullUrl = window.location.href;
-        console.log('📧 Full URL:', fullUrl);
-        console.log('📧 URL Hash:', window.location.hash);
-        console.log('📧 URL Search:', window.location.search);
-        console.log('📧 URL Pathname:', window.location.pathname);
 
         // Parse URL parameters from both hash and search
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const urlParams = new URLSearchParams(window.location.search);
-
-        // Log all parameters for debugging
-        console.log('📧 Hash Params:', Object.fromEntries(hashParams.entries()));
-        console.log('📧 URL Params:', Object.fromEntries(urlParams.entries()));
 
         // Try to get tokens from different locations
         let accessToken = hashParams.get('access_token') || urlParams.get('access_token');
@@ -79,18 +65,9 @@ const VerifyEmail = () => {
         const token = hashParams.get('token') || urlParams.get('token');
         const confirmationUrl = hashParams.get('confirmation_url') || urlParams.get('confirmation_url');
 
-        console.log('🔍 Found tokens:', {
-          accessToken: accessToken ? 'present' : 'missing',
-          refreshToken: refreshToken ? 'present' : 'missing',
-          tokenType,
-          type,
-          token: token ? 'present' : 'missing',
-          confirmationUrl: confirmationUrl ? 'present' : 'missing'
-        });
 
         // Method 1: Use access_token and refresh_token (modern Supabase)
         if (accessToken && refreshToken) {
-          console.log('✅ Using access_token and refresh_token method');
 
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -98,14 +75,12 @@ const VerifyEmail = () => {
           });
 
           if (error) {
-            console.error('❌ Error setting session:', error);
             setStatus('error');
             setMessage(`Email verification failed: ${error.message}`);
             return;
           }
 
           if (data.user) {
-            console.log('✅ Email verified successfully for user:', data.user.email);
             setStatus('success');
             setMessage('Email verified successfully! You can now log in.');
 
@@ -124,17 +99,11 @@ const VerifyEmail = () => {
         }
 
         // Method 2: Let Supabase handle the hash parameters automatically
-        console.log('🔄 Trying automatic Supabase session handling...');
-
         // Check if Supabase has automatically processed the auth state
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        if (sessionError) {
-          console.error('❌ Error getting session:', sessionError);
-        }
 
         if (session?.user) {
-          console.log('✅ Found existing session after email verification');
           setStatus('success');
           setMessage('Email verified successfully! You are now logged in.');
 
@@ -148,7 +117,6 @@ const VerifyEmail = () => {
 
         // Method 3: Check if this is a password reset or other type
         if (type === 'recovery') {
-          console.log('🔄 This is a password recovery link');
           setStatus('success');
           setMessage('Password reset link verified! You can now set a new password.');
 
@@ -159,7 +127,6 @@ const VerifyEmail = () => {
         }
 
         // Method 4: Show detailed debug info if nothing worked
-        console.log('ℹ️ No verification tokens found - providing debug info');
         setStatus('error');
         setMessage(
           `No verification tokens found in URL. Please ensure you clicked the correct link from your email. ` +
@@ -167,7 +134,6 @@ const VerifyEmail = () => {
         );
 
       } catch (error) {
-        console.error('❌ Email verification error:', error);
         setStatus('error');
         setMessage(`Email verification failed: ${getSafeErrorMessage(error, 'Unknown error')}`);
       }

@@ -122,7 +122,6 @@ const SellerProfile = () => {
         throw new Error("Seller not found");
       }
     } catch (err) {
-      console.error("Error fetching seller data:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);

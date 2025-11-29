@@ -26,12 +26,10 @@ const ClearNotifications: React.FC = () => {
       ]);
 
       if (notifResult.error) {
-        console.error('Error clearing notifications table:', notifResult.error);
         throw notifResult.error;
       }
 
       if (orderNotifResult.error) {
-        console.error('Error clearing order_notifications table:', orderNotifResult.error);
         throw orderNotifResult.error;
       }
 
@@ -43,7 +41,6 @@ const ClearNotifications: React.FC = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Error clearing notifications:', error);
       toast.error('Failed to clear notifications');
     } finally {
       setIsClearing(false);

@@ -212,8 +212,6 @@ const Checkout: React.FC = () => {
 
         if (!sellerError && seller) {
           sellerData = seller;
-        } else if (sellerError) {
-          console.warn(`Could not fetch seller profile for ${bookData.seller_id}:`, sellerError.message);
         }
       }
 
