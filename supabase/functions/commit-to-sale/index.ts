@@ -46,11 +46,6 @@ serve(async (req) => {
     }
     const { order_id, delivery_method, locker_id, locker_name, locker_address, locker_data } = body || {};
     if (!order_id) throw new Error("Order ID is required");
-    console.log(`[commit-to-sale] Processing commitment for order ${order_id} by user ${user.id}`);
-    console.log(`[commit-to-sale] Seller chosen delivery method: ${delivery_method}`);
-    if (delivery_method === 'locker') {
-      console.log(`[commit-to-sale] Seller selected locker: ${locker_name} (${locker_id})`);
-    }
     // Fetch the order
     const { data: order, error: orderError } = await supabase.from("orders").select("*").eq("id", order_id).single();
     if (orderError || !order) throw new Error("Order not found");
@@ -78,9 +73,7 @@ serve(async (req) => {
     // If seller selected locker delivery method, override pickup_type
     if (delivery_method === 'locker' && locker_id) {
       pickupType = 'locker';
-      console.log(`[commit-to-sale] Seller override: using locker pickup instead of ${order.pickup_type || 'door'}`);
     }
-    console.log(`[commit-to-sale] Shipment type: ${pickupType} → ${deliveryType}`);
     // Get seller pickup information based on type
     let pickupData = null;
     let pickupLockerLocationId = null;
@@ -88,10 +81,7 @@ serve(async (req) => {
     let pickupLockerDataToSave = null;
     if (pickupType === 'locker') {
       // Locker pickup - prioritize seller-selected locker from request body
-      console.log(`[commit-to-sale] Getting seller locker pickup info`);
       if (locker_data) {
-        // Use seller-selected locker from request body
-        console.log(`[commit-to-sale] Using seller-selected locker: ${locker_data.name}`);
         pickupData = {
           type: 'locker',
           location_id: locker_data.id,
@@ -129,7 +119,6 @@ serve(async (req) => {
           pickupLockerDataToSave = pickupLockerData;
         } else {
           // Fallback to seller profile for missing locker info
-          console.log(`[commit-to-sale] Locker info incomplete, checking seller profile`);
           const { data: sellerProfile } = await supabase.from("profiles").select("preferred_delivery_locker_location_id, preferred_delivery_locker_provider_slug, preferred_delivery_locker_data").eq("id", order.seller_id).single();
           if (sellerProfile?.preferred_delivery_locker_location_id) {
             pickupData = {
@@ -148,7 +137,6 @@ serve(async (req) => {
       }
     } else {
       // Door pickup - get physical address
-      console.log(`[commit-to-sale] Getting seller door pickup address from order`);
       let pickupAddress = null;
       try {
         if (order.pickup_address_encrypted) {
@@ -167,12 +155,11 @@ serve(async (req) => {
           }
         }
       } catch (e) {
-        console.warn("[commit-to-sale] pickup address decryption failed:", e);
+        // Handle decryption error silently
       }
       // Fallback to book-level pickup address if not on order
       if (!pickupAddress && order.book_id) {
         try {
-          console.log(`[commit-to-sale] Falling back to book (${order.book_id}) pickup address`);
           const { data: bookRow } = await supabase.from("books").select("pickup_address_encrypted").eq("id", order.book_id).maybeSingle();
           if (bookRow?.pickup_address_encrypted) {
             const bookPickupResp = await supabase.functions.invoke("decrypt-address", {
@@ -190,12 +177,11 @@ serve(async (req) => {
             }
           }
         } catch (e) {
-          console.warn("[commit-to-sale] book-level pickup address fallback failed:", e);
+          // Handle book-level fallback error silently
         }
       }
       // Final fallback to seller profile
       if (!pickupAddress) {
-        console.log(`[commit-to-sale] Using seller profile pickup address`);
         const { data: sellerProfile } = await supabase.from("profiles").select("pickup_address_encrypted").eq("id", order.seller_id).single();
         if (sellerProfile?.pickup_address_encrypted) {
           const profilePickupResp = await supabase.functions.invoke("decrypt-address", {
@@ -223,12 +209,10 @@ serve(async (req) => {
     let deliveryData = null;
     let shippingAddress = null;
     // Resolve buyer's physical delivery/shipping address from the order first, then profile as backup
-    console.log(`[commit-to-sale] Resolving buyer delivery/shipping address from order/profile`);
     try {
       const anyOrder = order;
       // 1) Prefer explicit delivery address stored on the order
       if (anyOrder.delivery_address_encrypted) {
-        console.log("[commit-to-sale] Using order.delivery_address_encrypted");
         const deliveryResp = await supabase.functions.invoke("decrypt-address", {
           body: {
             table: "orders",
@@ -245,7 +229,6 @@ serve(async (req) => {
       }
       // 2) Fallback to shipping address on the order
       if (!shippingAddress && anyOrder.shipping_address_encrypted) {
-        console.log("[commit-to-sale] Falling back to order.shipping_address_encrypted");
         const shippingResp = await supabase.functions.invoke("decrypt-address", {
           body: {
             table: "orders",
@@ -261,11 +244,10 @@ serve(async (req) => {
         }
       }
     } catch (e) {
-      console.warn("[commit-to-sale] order-level address decryption failed:", e);
+      // Handle order-level address decryption error silently
     }
     // Fallback to buyer profile if we still don't have an address
     if (!shippingAddress && order.buyer_id) {
-      console.log(`[commit-to-sale] Using buyer profile shipping address`);
       const { data: buyerProfile } = await supabase.from("profiles").select("shipping_address_encrypted").eq("id", order.buyer_id).maybeSingle();
       if (buyerProfile?.shipping_address_encrypted) {
         const profileShippingResp = await supabase.functions.invoke("decrypt-address", {
@@ -285,7 +267,6 @@ serve(async (req) => {
     }
     // Final fallback for locker deliveries: seller's pickup address
     if (!shippingAddress && deliveryType === 'locker' && order.seller_id) {
-      console.log(`[commit-to-sale] Falling back to seller profile pickup address for locker shipment`);
       const { data: sellerProfile } = await supabase.from("profiles").select("pickup_address_encrypted").eq("id", order.seller_id).maybeSingle();
       if (sellerProfile?.pickup_address_encrypted) {
         try {
@@ -303,13 +284,12 @@ serve(async (req) => {
             shippingAddress = profilePickupResp.data.data;
           }
         } catch (e) {
-          console.warn("[commit-to-sale] seller pickup address fallback failed:", e);
+          // Handle seller pickup address fallback error silently
         }
       }
     }
     if (deliveryType === 'locker') {
       // Locker delivery - get locker details from order
-      console.log(`[commit-to-sale] Getting buyer locker delivery info from order`);
       const deliveryLocationId = order.delivery_locker_location_id;
       const deliveryProviderSlug = order.delivery_locker_provider_slug;
       const deliveryLockerData = order.delivery_locker_data;
@@ -332,7 +312,6 @@ serve(async (req) => {
         };
       } else {
         // Fallback to buyer profile for missing locker info
-        console.log(`[commit-to-sale] Locker info incomplete, checking buyer profile`);
         const { data: buyerProfile } = await supabase.from("profiles").select("preferred_delivery_locker_location_id, preferred_delivery_locker_provider_slug, preferred_delivery_locker_data").eq("id", order.buyer_id).maybeSingle();
         if (buyerProfile?.preferred_delivery_locker_location_id) {
           deliveryData = {
@@ -383,7 +362,6 @@ serve(async (req) => {
     let selectedServiceName = order.selected_service_name;
     let rateQuote = null;
     if (pickupType === 'locker' && deliveryType === 'locker') {
-      console.log(`[commit-to-sale] Locker-to-locker shipment detected. Recalculating rates...`);
       try {
         const getRatesResponse = await supabase.functions.invoke("bobgo-get-rates", {
           body: {
@@ -417,12 +395,9 @@ serve(async (req) => {
           selectedShippingCost = rateQuote.cost;
           selectedCourierName = rateQuote.provider_name || rateQuote.carrier;
           selectedServiceName = rateQuote.service_name;
-          console.log(`[commit-to-sale] Locker-to-locker rate recalculated: ${selectedCourierName} - ${selectedServiceName} @ R${(selectedShippingCost / 100).toFixed(2)}`);
-        } else {
-          console.warn(`[commit-to-sale] Failed to get locker-to-locker rates, using original rates`);
         }
       } catch (e) {
-        console.warn(`[commit-to-sale] Error recalculating locker-to-locker rates:`, e);
+        // Handle rate recalculation error silently
       }
     }
     // Build shipment payload based on pickup and delivery types
@@ -438,7 +413,6 @@ serve(async (req) => {
       shipmentPayload.pickup_locker_location_id = pickupData.location_id;
       shipmentPayload.pickup_locker_provider_slug = pickupData.provider_slug;
       shipmentPayload.pickup_locker_data = pickupData.locker_data;
-      console.log(`[commit-to-sale] Pickup: Locker ${pickupData.location_id} (${pickupData.provider_slug})`);
     } else {
       const pickupAddress = pickupData.address;
       shipmentPayload.pickup_address = {
@@ -450,7 +424,6 @@ serve(async (req) => {
         country: pickupAddress.country || "ZA",
         company: sellerName
       };
-      console.log(`[commit-to-sale] Pickup: Door address ${pickupAddress.city}`);
     }
     // Always include pickup contact details (required by BobGo, even for locker pickups)
     shipmentPayload.pickup_contact_name = sellerName;
@@ -475,7 +448,6 @@ serve(async (req) => {
       shipmentPayload.delivery_contact_name = buyerName;
       shipmentPayload.delivery_contact_phone = buyerPhone;
       shipmentPayload.delivery_contact_email = buyerEmail;
-      console.log(`[commit-to-sale] Delivery: Locker ${deliveryData.location_id} (${deliveryData.provider_slug})`);
     } else {
       const shippingAddress = deliveryData.address;
       shipmentPayload.delivery_address = {
@@ -489,9 +461,7 @@ serve(async (req) => {
       shipmentPayload.delivery_contact_name = buyerName;
       shipmentPayload.delivery_contact_phone = buyerPhone;
       shipmentPayload.delivery_contact_email = buyerEmail;
-      console.log(`[commit-to-sale] Delivery: Door address ${shippingAddress.city}`);
     }
-    console.log(`[commit-to-sale] Creating Bob Go shipment`);
     const shipmentResponse = await supabase.functions.invoke("bobgo-create-shipment", {
       body: shipmentPayload,
       headers: {
@@ -499,11 +469,9 @@ serve(async (req) => {
       }
     });
     if (shipmentResponse.error) {
-      console.error("[commit-to-sale] Failed to create shipment:", shipmentResponse.error);
       throw new Error("Failed to create shipment");
     }
     const shipmentData = shipmentResponse.data || {};
-    console.log(`[commit-to-sale] Shipment created successfully`);
     // Build updated delivery_data with locker-to-locker info if applicable
     const deliveryDataUpdate = {
       ...order.delivery_data || {},
@@ -653,7 +621,6 @@ serve(async (req) => {
 </body>
 </html>`;
     // Send emails
-    console.log(`[commit-to-sale] Sending notifications via email`);
     try {
       await supabase.functions.invoke("send-email", {
         body: {
@@ -663,7 +630,7 @@ serve(async (req) => {
         }
       });
     } catch (e) {
-      console.warn("[commit-to-sale] Failed to send buyer email:", e);
+      // Handle email sending error silently
     }
     try {
       await supabase.functions.invoke("send-email", {
@@ -674,7 +641,7 @@ serve(async (req) => {
         }
       });
     } catch (e) {
-      console.warn("[commit-to-sale] Failed to send seller email:", e);
+      // Handle email sending error silently
     }
     // Create notifications for both parties
     const notifications = [];
@@ -698,7 +665,7 @@ serve(async (req) => {
       try {
         await supabase.from("notifications").insert(notifications);
       } catch (e) {
-        console.warn("[commit-to-sale] Failed to create notifications:", e);
+        // Handle notification creation error silently
       }
     }
     console.log(`[commit-to-sale] Order ${order_id} committed successfully`);
