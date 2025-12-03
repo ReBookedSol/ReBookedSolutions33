@@ -623,37 +623,37 @@ const Policies = () => {
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        4. Fees, VAT, and invoices
+                        4. Fees, VAT, and Invoices
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Seller commission: 10% of the sale price is deducted on successful completion of a sale.</li>
-                        <li>Buyer fee: R20 platform fee applies per order to cover secure transaction processing; shipping charges are shown at checkout, where applicable.</li>
-                        <li>VAT: Unless stated otherwise, fees are VAT inclusive/exclusive as indicated on the Platform; tax invoices are available on request to accounts@rebookedsolutions.co.za.</li>
-                        <li>Fee changes: We may change fees with prior notice on the Platform; changes apply to orders initiated after the effective date of the change.</li>
-                        <li>Taxes: Users are responsible for their tax obligations (including income tax and VAT registration/compliance, if applicable) arising from sales or purchases.</li>
+                        <li><strong>4.1</strong> Seller commission is 10% of the sale price, deducted upon successful sale completion.</li>
+                        <li><strong>4.2</strong> Buyer pays a R20 platform fee per order plus any applicable shipping charges shown at checkout.</li>
+                        <li><strong>4.3</strong> Fees are VAT inclusive or exclusive as specified; tax invoices available upon request to accounts@rebookedsolutions.co.za.</li>
+                        <li><strong>4.4</strong> Fees may be changed with prior notice; changes apply only to transactions initiated after the effective date.</li>
+                        <li><strong>4.5</strong> Users are responsible for their own tax obligations related to sales and purchases.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        5. Transaction security and acceptable use
+                        5. Transaction Security and Acceptable Use
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>All order communications, payments, and shipping must occur through the Platform using approved methods; solicitation to transact off-platform is prohibited and may result in cancellation/suspension.</li>
-                        <li>To reduce disputes, Users should provide accurate descriptions and respond promptly to messages; abusive, harassing, discriminatory, or misleading conduct is prohibited and may lead to removal or suspension.</li>
+                        <li><strong>5.1</strong> All transaction communications, payments, and deliveries must occur on the Platform using approved methods. Off-platform transactions linked to Platform orders are prohibited and may result in sanctions.</li>
+                        <li><strong>5.2</strong> Users must provide accurate descriptions and respond promptly to communications; abusive, harassing, discriminatory, or misleading behavior is prohibited.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        6. Shipping, delivery, and risk
+                        6. Shipping, Delivery, and Risk
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Commit and ship deadlines: Seller must commit within 48 hours of order; after commitment, Seller must ship promptly and within 60 hours / 3 days, unless otherwise stated on the listing.</li>
-                        <li>Integrated couriers and tracking: Where integrated courier options are used, the Platform may auto-update shipping status; Sellers must provide accurate tracking numbers for other carriers.</li>
-                        <li>Packaging standards: Sellers must safely and appropriately package textbooks; Seller is responsible for damage caused by inadequate packaging.</li>
-                        <li>Risk of loss: Risk passes from Seller to Buyer upon confirmed delivery by the carrier, as evidenced by tracking or carrier confirmation, subject to Buyer protections.</li>
-                        <li>Buyer confirmation and auto completion: Buyer should confirm receipt within 48 hours; if no confirmation or claim, the Platform may complete the order based on delivery evidence.</li>
+                        <li><strong>6.1</strong> Sellers must commit within 48 hours and ship within 60 hours (3 days), unless otherwise stated.</li>
+                        <li><strong>6.2</strong> Integrated courier options on the Platform may auto-update shipment status; non-integrated couriers require accurate tracking numbers from Sellers.</li>
+                        <li><strong>6.3</strong> Sellers are responsible for safe packaging to avoid damage; ReBooked Solutions is not liable for damages caused by poor packaging.</li>
+                        <li><strong>6.4</strong> Risk passes to Buyer upon confirmed delivery by the carrier, supported by tracking or carrier confirmation.</li>
+                        <li><strong>6.5</strong> Buyers should confirm receipt within 48 hours; absent confirmation or claims, orders may be auto-completed based on delivery evidence.</li>
                       </ul>
                     </section>
 
