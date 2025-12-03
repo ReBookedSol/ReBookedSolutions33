@@ -970,54 +970,51 @@ const Policies = () => {
                 <CardContent className="px-4 sm:px-6 py-6">
                   <div className="prose max-w-none space-y-4 sm:space-y-6">
                     <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        Introduction
-                      </h3>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        By using www.rebookedsolutions.co.za (the "Platform"), you agree to these Marketplace Rules & Responsibilities. ReBooked Solutions operates solely as a digital intermediary between independent sellers and buyers. We do not own, inspect, or control the inventory sold on the Platform.
+                        By using the Platform (rebookedsolutions.co.za and mobile application), Users agree to these Marketplace Rules, which form part of the Terms and Conditions. ReBooked Solutions acts solely as a digital intermediary facilitating peer-to-peer textbook transactions between independent Sellers and Buyers. The Platform does not own, inspect, endorse, or guarantee inventory.
                       </p>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        1. Account Registration & Eligibility
+                        1. Account Registration &amp; Eligibility
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Users must register with accurate and truthful information.</li>
-                        <li>Only one account per user is permitted. Multiple accounts or attempts to circumvent rules may result in suspension or termination.</li>
-                        <li>Users are responsible for account security. Report suspicious activity immediately to info@rebookedsolutions.co.za.</li>
-                        <li>Buyers and Sellers must have legal capacity to contract under South African law. Users under the age of majority must have parental/guardian consent.</li>
+                        <li><strong>1.1</strong> Users must register with accurate, truthful, current information; false details may result in suspension or termination.</li>
+                        <li><strong>1.2</strong> One account per person; multiple accounts, false identities, or evasion prohibited.</li>
+                        <li><strong>1.3</strong> Users bear full responsibility for account security and all activity; report misuse immediately to info@rebookedsolutions.co.za.</li>
+                        <li><strong>1.4</strong> Users must have legal capacity under South African law; minors require parental/guardian consent and supervision.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        2. Listing & Pricing Rules (Sellers)
+                        2. Listing &amp; Pricing Rules (Sellers)
                       </h3>
                       <div className="space-y-4">
                         <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Listing Requirements</h4>
+                          <h4 className="font-semibold text-gray-900 mb-2">2.1 Listing Requirements</h4>
                           <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Provide accurate book details, including title, author, edition, condition, and defects.</li>
-                            <li>Upload clear photos; stock or AI-generated images are prohibited.</li>
-                            <li>Misleading or false listings are strictly prohibited.</li>
+                            <li>Accurate details: title, author, edition, ISBN, condition, defects, annotations, missing pages.</li>
+                            <li>Original photos only; AI/stock images prohibited.</li>
+                            <li>No misleading, incomplete, or deceptive listings.</li>
                           </ul>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Pricing & Fees</h4>
+                          <h4 className="font-semibold text-gray-900 mb-2">2.2 Pricing &amp; Fees</h4>
                           <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Sellers set their own prices.</li>
-                            <li>ReBooked Solutions charges a 10% service fee on the book's sale price for every successful transaction.</li>
-                            <li>Delivery/shipping fees are added at checkout and paid by the buyer.</li>
+                            <li>Sellers set prices in ZAR.</li>
+                            <li>10% commission deducted from sale price on completion.</li>
+                            <li>Buyer pays R20 platform fee + shipping at checkout.</li>
                           </ul>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Order Process & Payouts</h4>
+                          <h4 className="font-semibold text-gray-900 mb-2">2.3 Order Process &amp; Payouts</h4>
                           <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Once an order is placed, the seller must securely package the book for collection via Bobgo.</li>
-                            <li>Funds are held until delivery confirmation or resolution of disputes.</li>
-                            <li>If a buyer files a valid complaint, funds remain on hold until the case is resolved.</li>
-                            <li>Sellers at fault for misrepresentation forfeit payouts and may incur fines (see Fine System).</li>
+                            <li>Buyer pays via Platform; funds held by ReBooked as limited agent.</li>
+                            <li>Seller commits within 48 hours or auto-cancel/refund.</li>
+                            <li>Ship via approved methods (e.g., integrated couriers); Buyer confirms receipt.</li>
+                            <li>Payouts to Wallet then bank (1-3 business days) post-confirmation.</li>
                           </ul>
                         </div>
                       </div>
@@ -1025,127 +1022,72 @@ const Policies = () => {
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        Fine System (Incorrect or Misleading Books)
+                        2.4 Fine System (Misrepresentation/Non-Compliance)
                       </h3>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-4">
-                        ReBooked Solutions operates a tiered fine system to protect buyers and maintain marketplace integrity. Fines will be deducted from seller wallets or withheld from payouts.
+                        Tiered fines protect Buyers and integrity; deducted from Wallet/payouts:
                       </p>
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-red-700 mb-2">First Offense</h4>
-                          <ul className="list-disc pl-6 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Buyer receives full refund</li>
-                            <li>Seller receives no payout</li>
-                            <li>Seller pays delivery fee</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-red-700 mb-2">Second Offense</h4>
-                          <ul className="list-disc pl-6 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Buyer receives full refund</li>
-                            <li>Seller receives no payout</li>
-                            <li>Seller pays delivery fee plus R100</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-red-700 mb-2">Third Offense</h4>
-                          <ul className="list-disc pl-6 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Buyer receives full refund</li>
-                            <li>Seller receives no payout</li>
-                            <li>Seller pays delivery fee plus R250</li>
-                            <li>Account may be suspended or reviewed</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-red-900 mb-2">Zero-Tolerance Violations</h4>
-                          <p className="text-gray-700 text-sm sm:text-base mb-2">Includes fraudulent or counterfeit books, intentional scams, repeated misrepresentation, or attempts to bypass platform systems.</p>
-                          <ul className="list-disc pl-6 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Buyer receives full refund</li>
-                            <li>Seller receives no payout</li>
-                            <li>Seller pays delivery fee plus R250</li>
-                            <li>Permanently banned</li>
-                          </ul>
-                        </div>
+                      <div className="overflow-x-auto mb-4">
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Offense</th>
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Refund to Buyer</th>
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Seller Penalty</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-gray-700">
+                            <tr>
+                              <td className="border border-gray-300 p-2">First</td>
+                              <td className="border border-gray-300 p-2">Full (incl. fees/shipping)</td>
+                              <td className="border border-gray-300 p-2">No payout + delivery fee</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Second</td>
+                              <td className="border border-gray-300 p-2">Full (incl. fees/shipping)</td>
+                              <td className="border border-gray-300 p-2">No payout + delivery fee + R100</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Third</td>
+                              <td className="border border-gray-300 p-2">Full (incl. fees/shipping)</td>
+                              <td className="border border-gray-300 p-2">No payout + delivery fee + R250 + suspension review</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Zero-Tolerance</td>
+                              <td className="border border-gray-300 p-2">Full (incl. fees/shipping)</td>
+                              <td className="border border-gray-300 p-2">R250+ fee, permanent ban</td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Zero-Tolerance: Fraud, counterfeits, scams, system bypass—full refund, R250+ fee, permanent ban.
+                      </p>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        3. Shipping & Delivery (Bobgo)
+                        3. Shipping, Delivery &amp; Risk
                       </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Seller Responsibility</h4>
-                          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Sellers prepare, package, and make items available for Bobgo collection within 3 business days of payment confirmation.</li>
-                            <li>Packaging must be secure and tamper-resistant.</li>
-                            <li>Sellers respond promptly to Bobgo collection requests.</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Delivery Timeframes</h4>
-                          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Standard delivery: 2–7 business days from collection.</li>
-                            <li>Tracking updates provided via Bobgo; buyers should monitor delivery status.</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Delays & Failed Deliveries</h4>
-                          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Refunds apply if delivery fails due to seller error.</li>
-                            <li>Buyer-caused delays, such as incorrect address or unavailability, transfer redelivery costs to the buyer.</li>
-                            <li>Unclaimed parcels after 7 calendar days may be cancelled without refund.</li>
-                          </ul>
-                        </div>
-                      </div>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
+                        <li><strong>3.1</strong> Sellers: Commit within 48 hours; ship/present for collection within 60 hours/3 days; secure, appropriate packaging. Seller liable for pre-delivery loss/damage.</li>
+                        <li><strong>3.2</strong> Integrated couriers (e.g., Bobgo/The Courier Guy): Auto-tracking; provide accurate numbers for others. Standard: 2-7 business days.</li>
+                        <li><strong>3.3</strong> Risk passes on carrier-confirmed delivery. Buyers confirm within 48 hours or auto-complete.</li>
+                        <li><strong>3.4</strong> Delays/Failures: Seller error → refund; Buyer issues (wrong address/unclaimed &gt;7 days) → no refund, Buyer pays redelivery.</li>
+                      </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        4. Refund & Return Policy
+                        4. Refunds, Cancellations &amp; Returns
                       </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Refund Grounds</h4>
-                          <p className="text-gray-700 text-sm sm:text-base mb-2">Refunds are approved within 3 calendar days of delivery or estimated delivery for:</p>
-                          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Incorrect item (wrong edition, title, author)</li>
-                            <li>Undisclosed major defects (e.g., missing pages, water damage, mold)</li>
-                            <li>Counterfeit or illegal reproduction</li>
-                            <li>Fraudulent or deceptive seller conduct</li>
-                          </ul>
-                          <p className="text-gray-700 text-sm sm:text-base mt-2"><strong>Requirements:</strong></p>
-                          <ul className="list-disc pl-6 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Submit a complaint to legal@rebookedsolutions.co.za</li>
-                            <li>Include photographic evidence, proof of delivery, and a detailed description</li>
-                            <li>Retain original packaging</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Return Responsibilities</h4>
-                          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Buyers pay return shipping via Bobgo, unless the seller is at fault (fraud, counterfeit, undisclosed serious defects)</li>
-                            <li>Items must be returned securely packaged and in original condition</li>
-                            <li>If the buyer does not return the book, ReBooked Solutions may donate it to partner charities</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Return Exclusions</h4>
-                          <p className="text-gray-700 text-sm sm:text-base">Refunds will not be granted for:</p>
-                          <ul className="list-disc pl-6 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Buyer's remorse or dissatisfaction</li>
-                            <li>Normal wear and tear</li>
-                            <li>Courier delays beyond seller control</li>
-                            <li>Damage due to buyer negligence</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Refund Timeframes</h4>
-                          <ul className="list-disc pl-6 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Approved refunds processed within 7–10 business days, subject to banking/payment processor timelines</li>
-                          </ul>
-                        </div>
-                      </div>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
+                        <li><strong>4.1</strong> Grounds (within 48 hours delivery): Wrong item, undisclosed defects (missing pages, damage), counterfeits. Evidence required (photos, tracking).</li>
+                        <li><strong>4.2</strong> Process: Complaint to legal@rebookedsolutions.co.za; approved returns shipped within 72 hours (Buyer pays unless Seller fault); funds held until resolution. Non-return → possible donation.</li>
+                        <li><strong>4.3</strong> Exclusions: Remorse, wear/tear, courier delays.</li>
+                        <li><strong>4.4</strong> Cancellations: Buyer pre-commitment; Seller justified only (notify via Platform/legal@rebookedsolutions.co.za). Frequent → penalties/suspension. Refunds: 1-3 business days to original method.</li>
+                        <li><strong>4.5</strong> Processing: 7-10 business days post-approval.</li>
+                      </ul>
                     </section>
 
                     <section>
@@ -1153,68 +1095,54 @@ const Policies = () => {
                         5. Buyer Responsibilities
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Provide complete and accurate delivery information</li>
-                        <li>Cannot cancel orders after the seller marks them "Dispatched"</li>
-                        <li>Accept deliveries promptly or collect from Bobgo pickup points</li>
-                        <li>Report discrepancies within 3 calendar days</li>
-                        <li>Repeated fraud, abuse, or delivery non-compliance may result in suspension or permanent ban</li>
+                        <li>Accurate delivery info.</li>
+                        <li>No post-dispatch cancellations.</li>
+                        <li>Prompt acceptance/collection; report issues within 48 hours.</li>
+                        <li>Repeated non-compliance/fraud → suspension/ban.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        6. Cancellation Policy
-                      </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Buyer Cancellations</h4>
-                          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Only permitted before seller marks item as "Dispatched"</li>
-                            <li>Refunds issued to the original payment method within 5–10 business days</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Seller Cancellations</h4>
-                          <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                            <li>Allowed only for justifiable reasons (stock errors, listing mistakes, fraud concerns)</li>
-                            <li>Seller must notify buyer via platform messages and legal@rebookedsolutions.co.za</li>
-                            <li>Frequent or unjustified cancellations may result in suspension, penalties, or permanent termination</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        7. Dispute Resolution
+                        6. Seller Obligations
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Users should first attempt direct resolution via platform messages</li>
-                        <li>ReBooked Solutions mediates disputes impartially; its decisions are final within the platform</li>
-                        <li>External escalation may include the Consumer Commission, Ombud, or South African courts if unresolved</li>
+                        <li>Warrant ownership, authenticity, accurate listings.</li>
+                        <li>Respond within 48 hours to Buyers/Platform.</li>
+                        <li>Comply with taxes, IP, consumer laws.</li>
+                        <li>No off-Platform transactions for initiated orders.</li>
+                        <li>Indemnify Platform for breaches.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        8. Prohibited Conduct & Items
+                        7. Prohibited Items &amp; Conduct
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Only textbooks and study materials are allowed</li>
-                        <li>Prohibited items: counterfeit, illegal, adult content, weapons, drugs, digital copies, or any item violating law</li>
-                        <li>Misrepresentation, harassment, fraud, or platform abuse is strictly prohibited</li>
-                        <li>Violations may result in account suspension, permanent ban, or reporting to authorities</li>
+                        <li><strong>7.1</strong> Textbooks/study materials only; prohibited: counterfeits, illegal, digital, adult, medical, weapons, drugs.</li>
+                        <li><strong>7.2</strong> No harassment, abuse, fraud, scraping, off-Platform solicitation. Violations → removal, suspension, ban, authorities.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        9. Liability & Compliance
+                        8. Dispute Resolution
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>ReBooked Solutions is a platform intermediary. We do not own, inspect, or guarantee items</li>
-                        <li>Users are responsible for legal compliance, tax obligations, and accurate information</li>
-                        <li>Statutory rights under the Consumer Protection Act (CPA), ECTA, and POPIA remain protected</li>
+                        <li><strong>8.1</strong> Direct via Platform messages first.</li>
+                        <li><strong>8.2</strong> Platform mediates; non-response → decision favors responder. Final internally.</li>
+                        <li><strong>8.3</strong> External: Consumer Commission/courts; CPA rights preserved.</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        9. Liability Limits &amp; Compliance
+                      </h3>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
+                        <li><strong>9.1</strong> Platform not liable for items, disputes, carriers; "as is" services. Liability capped at fees paid (6 months) or R1,000.</li>
+                        <li><strong>9.2</strong> Users handle taxes/compliance; POPIA/ECTA/CPA rights intact.</li>
                       </ul>
                     </section>
                   </div>
