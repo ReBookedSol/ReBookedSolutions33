@@ -771,51 +771,51 @@ const Policies = () => {
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        16. Platform availability and security
+                        16. Platform Availability and Security
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Availability: May be unavailable due to maintenance, outages, force majeure; concluded transactions not affected.</li>
-                        <li>Security and acceptable use: No scraping, reverse engineering, malware introduction, circumvention; rate limiting and monitoring may apply.</li>
+                        <li><strong>16.1</strong> The Platform may be unavailable due to maintenance or force majeure; ongoing transactions are not affected.</li>
+                        <li><strong>16.2</strong> Scraping, reverse engineering, security circumvention, malware introduction, and unauthorized testing are prohibited; monitoring and rate-limiting apply.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        17. Liability and indemnity
+                        17. Liability and Indemnity
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>No inspection/guarantee: Platform does not inspect/endorse listings; courier responsibility.</li>
-                        <li>Limitation: Liability limited to higher of fees paid in 6 months or R1,000; indirect/consequential/exemplary/special damages excluded.</li>
-                        <li>Indemnity: Users indemnify Platform from claims, losses, expenses from use, breach, IP infringement, law violation.</li>
+                        <li><strong>17.1</strong> The Platform does not inspect or guarantee listings; courier and User obligations apply.</li>
+                        <li><strong>17.2</strong> Liability is limited as described in section 11.</li>
+                        <li><strong>17.3</strong> Users indemnify ReBooked Solutions against claims, losses, and expenses arising from their use or violation of Terms including IP infringements or legal breaches.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        18. Suspension and termination
+                        18. Suspension and Termination
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Grounds: Breach, fraud, prohibited items, repeated disputes, legal compliance.</li>
-                        <li>Effect: Pending orders may be cancelled; Wallet balances may be held pending disputes, chargebacks, AML, legal review; remaining balances paid out after resolution.</li>
-                        <li>Account closure by User: Only when no open orders and Wallet zero; records retained as required by law.</li>
+                        <li><strong>18.1</strong> Accounts may be suspended or terminated for breaches, fraud, prohibited item sales, or repeated disputes.</li>
+                        <li><strong>18.2</strong> Pending orders may cancel, and Wallet funds may be held pending dispute or AML reviews. Remaining balances are paid out post-resolution.</li>
+                        <li><strong>18.3</strong> User-initiated account closure requires no open orders and zero Wallet balance; records are retained per law.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        19. Force majeure
+                        19. Force Majeure
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Neither party liable for delays/failures beyond control (load shedding, power/telecom failures, strikes, acts of God, epidemics, carrier disruptions).</li>
+                        <li>Neither party is liable for delays or failures due to events beyond control including load shedding, strikes, natural disasters, epidemics, or carrier disruptions.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        20. Changes to terms
+                        20. Changes to Terms
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Amendments posted on Platform/email; effective on stated date; continued use constitutes acceptance; version history may be maintained.</li>
+                        <li>Updates to Terms will be posted on the Platform and/or emailed; continued use after changes constitutes acceptance. Historical versions may be maintained.</li>
                       </ul>
                     </section>
 
