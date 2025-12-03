@@ -101,7 +101,7 @@ const Policies = () => {
                   <div className="text-gray-600 text-xs sm:text-sm space-y-1">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                       <span>
-                        <strong>Effective Date:</strong> 15 November 2025
+                        <strong>Effective Date:</strong> 3 December 2025
                       </span>
                       <span className="hidden sm:inline">•</span>
                       <span>
