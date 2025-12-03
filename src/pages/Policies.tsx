@@ -132,396 +132,324 @@ const Policies = () => {
                 <CardContent className="px-4 sm:px-6">
                   <div className="prose max-w-none space-y-4 sm:space-y-6">
                     <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        1. Introduction
-                      </h3>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        ReBooked Solutions (Pty) Ltd ("ReBooked", "we", "our",
-                        or "us") is committed to protecting your privacy. This
-                        Privacy Policy outlines how we collect, use, store,
-                        share, and protect your personal information in
-                        accordance with the Protection of Personal Information
-                        Act (POPIA) and applicable South African law.
+                        <strong>Last updated: 3 December 2025</strong>
+                      </p>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        ReBooked Solutions (Pty) Ltd, registration number 2025/452062/07, principal place of business info@rebookedsolutions.co.za, email legal@rebookedsolutions.co.za, processes personal data of persons using the peer-to-peer textbook marketplace Platform (rebookedsolutions.co.za and mobile application).
+                      </p>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        ReBooked Solutions ensures personal data processing complies with the Protection of Personal Information Act 4 of 2013 (POPIA), any applicable legislation, and good practices. Privacy of individuals and data protection is prioritised with measures to secure the Platform.
                       </p>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        By accessing or using any part of the ReBooked platform,
-                        you consent to the collection
-                        and processing of your personal information as outlined
-                        in this Policy. If you do not agree, please refrain from
-                        using the platform.
+                        Read this Privacy Policy with any supplemental notices provided during data collection. It supplements but does not override other notices. By using the Platform, you accept these provisions.
                       </p>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        2. Scope of the Policy
+                        Definitions
                       </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        This Privacy Policy applies to all visitors, users, and
-                        account holders of ReBooked Solutions. It covers
-                        information collected through our main marketplace,
-                        our communication tools, analytics
-                        systems, and any third-party integrations we use.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        3. What Information We Collect
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        We collect personal information that is necessary to
-                        provide our services and ensure platform security. This
-                        includes, but is not limited to:
-                      </p>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>
-                          Identification and contact information: full name,
-                          email address, phone number, and optionally your
-                          school or university.
-                        </li>
-                        <li>
-                          Account credentials: hashed passwords and login
-                          activity.
-                        </li>
-                        <li>
-                          Listing and transaction data: books or items listed,
-                          viewed, sold, or purchased.
-                        </li>
-                        <li>
-                          Delivery information: shipping address, courier
-                          tracking data, and delivery preferences.
-                        </li>
-                        <li>
-                          Payment-related information: banking details and payment
-                          references, collected and processed securely through
-                          trusted third-party providers like Paystack.
-                        </li>
-                        <li>
-                          Educational data: input used in APS calculators, study
-                          tips submitted and program searches.
-                        </li>
-                        <li>
-                          Technical and usage data: IP address, browser type,
-                          device info, time on page, actions performed, and
-                          referral source.
-                        </li>
-                        <li>
-                          Communication data: messages sent to our support
-                          email, helpdesk forms, or via any integrated chat or
-                          contact system.
-                        </li>
+                        <li><strong>User:</strong> Person creating an account or using Platform services.</li>
+                        <li><strong>Processing:</strong> Any operation on personal data including collection, storage, use, or transmission.</li>
+                        <li><strong>Platform:</strong> Textbook buying/selling environment at rebookedsolutions.co.za and app.</li>
+                        <li><strong>Services:</strong> Account management, transaction facilitation, Wallet, and related features per Terms.</li>
+                        <li><strong>Terms:</strong> User Agreement accepted to join the Platform.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        4. How We Collect Your Information
+                        1. How Personal Data is Collected
                       </h3>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        We collect personal information directly from you when
-                        you create an account, submit forms, list items, browse
-                        educational resources, or communicate with us.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        We also collect certain data automatically through
-                        cookies, server logs, analytics tools, and browser-based
-                        tracking, which help us improve the platform and detect
-                        suspicious activity.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        Where applicable, we may collect information from
-                        third-party services you interact with through our
-                        platform, such as payment providers or delivery
-                        companies.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        5. How We Use Your Information
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        We use your information for the following lawful
-                        purposes:
+                        Personal data is collected via:
                       </p>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>To register and manage your account.</li>
-                        <li>
-                          To facilitate the listing, browsing, and sale of books
-                          and other goods.
-                        </li>
-                        <li>
-                          To enable communication between buyers and sellers.
-                        </li>
-                        <li>
-                          To coordinate with courier services for deliveries.
-                        </li>
-                        <li>
-                          To display and improve our resources,
-                          including university
-                          programs.
-                        </li>
-                        <li>
-                          To send important notifications, alerts, and updates
-                          related to your account, listings, or educational
-                          tools.
-                        </li>
-                        <li>
-                          To respond to user queries and provide customer
-                          support.
-                        </li>
-                        <li>
-                          To analyse user behaviour and improve platform
-                          performance, reliability, and security.
-                        </li>
-                        <li>
-                          To enforce our terms and conditions and protect
-                          against fraud, abuse, or policy violations.
-                        </li>
-                        <li>
-                          To comply with South African legal obligations, such
-                          as tax, consumer protection, or data protection laws.
-                        </li>
+                        <li><strong>Direct interactions:</strong> When registering, listing textbooks, buying/selling, using Wallet, contacting support at info@rebookedsolutions.co.za, or providing feedback.</li>
+                        <li><strong>Automated technologies:</strong> Cookies, server logs, tracking for device info, IP address, browsing patterns, usage data.</li>
+                        <li><strong>Third parties:</strong> Payment processors (e.g., BobPay), couriers, analytics providers, banks.</li>
                       </ul>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3">
-                        We will only use your personal information for the
-                        purpose it was collected, unless we reasonably believe
-                        another purpose is compatible or we obtain your further
-                        consent.
-                      </p>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        6. Sharing of Information
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        We do not sell, lease, or rent your personal information
-                        to any third parties. However, we may share your
-                        personal data under strict conditions with:
-                      </p>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>
-                          Third-party service providers who help operate the
-                          platform, such as our database host (Supabase), web
-                          host (Vercel), or analytics partners.
-                        </li>
-                        <li>
-                          Courier companies for fulfilling delivery instructions
-                          and providing tracking updates.
-                        </li>
-                        <li>
-                          Payment processors like Paystack for secure handling
-                          of funds, subject to their own privacy and security
-                          frameworks.
-                        </li>
-                        <li>
-                          Legal or regulatory authorities if required by law,
-                          court order, subpoena, or in the defence of legal
-                          claims.
-                        </li>
-                        <li>
-                          Technical advisors or consultants strictly for
-                          internal compliance, audits, or security reviews.
-                        </li>
-                      </ul>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3">
-                        All third parties are contractually required to treat
-                        your data with confidentiality and to use it only for
-                        the intended service delivery purpose.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        7. Cookies and Tracking
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        ReBooked Solutions uses cookies and similar technologies
-                        to improve user experience, maintain security, and
-                        analyse platform usage.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        These cookies may track session duration, device
-                        information, login behaviour, and referral sources. You
-                        can disable cookies in your browser settings, but this
-                        may limit some functionality on our website.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        8. Bank Account Details and Payouts
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        To receive payouts from ReBooked Solutions (e.g. for successful textbook sales or reimbursements), users must submit valid and accurate banking details via the platform.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        By providing your banking information, you confirm that you are the rightful owner of the account or are authorized to use it.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        It is your sole responsibility to ensure that all banking details you provide are complete, correct, and up to date. ReBooked Solutions will process payments using the exact information you submit. If a payment is made to the account number you provided, it will be deemed successful and completed.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        If you later claim that you did not receive payment, we will provide you with proof of payment, including transaction receipts, the bank account number the funds were sent to, and the exact details you entered at the time of submission.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        ReBooked Solutions is not liable for any losses or delays resulting from incorrect, incomplete, or fraudulent banking information provided by the user.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        We reserve the right to verify any banking details you submit and to withhold or cancel payouts if suspicious activity is detected.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        9. Data Security
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        We implement industry-standard technical and
-                        organisational measures to protect your personal data.
-                        These include secure password hashing, role-based access
-                        control, encrypted storage, audit logging, and real-time
-                        threat monitoring.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        While we make every effort to safeguard your data, no
-                        method of digital transmission or storage is completely
-                        secure. Use of the platform is at your own risk, and you
-                        acknowledge that absolute security cannot be guaranteed.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        10. Data Retention
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        We retain personal information only as long as necessary
-                        to fulfil the purposes outlined in this Policy or as
-                        required by law. When your information is no longer
-                        required, it is securely deleted or anonymised.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        You may request deletion of your data by contacting
-                        legal@rebookedsolutions.co.za. However, we may retain
-                        certain information if required for legal compliance,
-                        fraud prevention, dispute resolution, or transaction
-                        history.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        11. User Rights Under POPIA
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
-                        Under South African data protection law, you have the
-                        following rights:
-                      </p>
-                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>
-                          The right to be informed about how your personal data
-                          is collected and used.
-                        </li>
-                        <li>
-                          The right to access the personal data we hold about
-                          you.
-                        </li>
-                        <li>
-                          The right to request correction or deletion of your
-                          personal information.
-                        </li>
-                        <li>
-                          The right to object to processing or withdraw consent
-                          where applicable.
-                        </li>
-                        <li>
-                          The right to lodge a complaint with the Information
-                          Regulator.
-                        </li>
-                      </ul>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mt-3">
-                        To exercise any of these rights, please contact
-                        legal@rebookedsolutions.co.za. We may require proof of
-                        identity before processing any request.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        12. Children's Privacy
+                        2. Lawful Basis for Processing
                       </h3>
                       <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        Our platform is not intended for users under the age of
-                        16 without parental or guardian consent. If we learn
-                        that we have collected information from a child without
-                        proper authorisation, we will take steps to delete it
-                        promptly.
+                        Processing occurs for Platform administration, account creation, transaction mediation under POPIA bases: contract performance, pre-contract steps, legitimate interests (not overriding User rights), legal obligations, or consent where required.
                       </p>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        13. Third-Party Links
+                        3. Personal Data Collected and Purposes
                       </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        Our site may contain links to third-party websites,
-                        services, or bursary programs. Once you leave our
-                        domain, we are not responsible for the privacy
-                        practices, content, or accuracy of those third-party
-                        sites. You access them at your own risk.
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        Data enables Platform use, services, transactions, payments, communications. Registration may use Google/Facebook/Apple ID (profile name visible to others); optional profile additions like location. Essential data is mandatory for contracts; some for legal compliance; behavioural data for security/fraud prevention.
                       </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        14. International Transfers
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        Although we are based in South Africa, some of our
-                        service providers (e.g., hosting or email services) may
-                        process data in foreign jurisdictions. We take
-                        reasonable steps to ensure that all data transfers are
-                        compliant with South African data protection laws and
-                        subject to adequate safeguards.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        15. Policy Updates
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                        We reserve the right to update this Privacy Policy at
-                        any time. Material changes will be announced on the
-                        platform. Continued use after such changes implies your
-                        acceptance of the revised terms.
-                      </p>
-                    </section>
-
-                    <section>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        16. Contact Us
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3">
-                        If you have any questions, requests, or concerns
-                        regarding your personal information or this Privacy
-                        Policy, please contact:
-                      </p>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-3">
-                        <p className="text-blue-800 text-sm sm:text-base">
-                          <strong>ReBooked Solutions (Pty) Ltd</strong>
-                          <br />
-                          Email:{" "}
-                          <span className="break-all">
-                            legal@rebookedsolutions.co.za
-                          </span>
-                          <br />
-                          Based in the Republic of South Africa
-                        </p>
+                      <div className="overflow-x-auto mb-4">
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Processing Operation</th>
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Data Category</th>
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Purpose</th>
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Legal Basis</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-gray-700">
+                            <tr>
+                              <td className="border border-gray-300 p-2">Account creation/profile</td>
+                              <td className="border border-gray-300 p-2">Name, email, phone, profile photo, location, Google/Facebook/Apple ID</td>
+                              <td className="border border-gray-300 p-2">Register/manage account</td>
+                              <td className="border border-gray-300 p-2">Contract performance</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Contact details</td>
+                              <td className="border border-gray-300 p-2">Name, phone, email</td>
+                              <td className="border border-gray-300 p-2">Service info, billing notifications</td>
+                              <td className="border border-gray-300 p-2">Contract performance</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Income data</td>
+                              <td className="border border-gray-300 p-2">Name, birthdate, address, VAT number</td>
+                              <td className="border border-gray-300 p-2">Tax reporting to SARS/accountants</td>
+                              <td className="border border-gray-300 p-2">Legal obligation</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Bank details</td>
+                              <td className="border border-gray-300 p-2">Account holder name, number</td>
+                              <td className="border border-gray-300 p-2">Payouts for sales</td>
+                              <td className="border border-gray-300 p-2">Contract performance</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Delivery data</td>
+                              <td className="border border-gray-300 p-2">Name, phone, address, tracking</td>
+                              <td className="border border-gray-300 p-2">Shipping coordination</td>
+                              <td className="border border-gray-300 p-2">Contract; Legitimate interests</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Service providers</td>
+                              <td className="border border-gray-300 p-2">Courier/shipping/payment info</td>
+                              <td className="border border-gray-300 p-2">Integration with providers</td>
+                              <td className="border border-gray-300 p-2">Contract; Legitimate interests</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Transaction notifications</td>
+                              <td className="border border-gray-300 p-2">Email/push</td>
+                              <td className="border border-gray-300 p-2">Order updates, Terms changes</td>
+                              <td className="border border-gray-300 p-2">Contract performance</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">User messaging</td>
+                              <td className="border border-gray-300 p-2">Message content, sender name, device info, timestamps</td>
+                              <td className="border border-gray-300 p-2">Order fulfilment communication</td>
+                              <td className="border border-gray-300 p-2">Contract; Legitimate interests</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Support</td>
+                              <td className="border border-gray-300 p-2">Name, email, usage/transaction data, messages</td>
+                              <td className="border border-gray-300 p-2">Handle requests</td>
+                              <td className="border border-gray-300 p-2">Contract; Legitimate interests</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Disputes</td>
+                              <td className="border border-gray-300 p-2">Transaction/User details</td>
+                              <td className="border border-gray-300 p-2">Resolve complaints, ensure security</td>
+                              <td className="border border-gray-300 p-2">Legitimate interests; Legal obligations</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Platform activity</td>
+                              <td className="border border-gray-300 p-2">Technical usage, feedback</td>
+                              <td className="border border-gray-300 p-2">Improve Services</td>
+                              <td className="border border-gray-300 p-2">Legitimate interests</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Cookies/technical</td>
+                              <td className="border border-gray-300 p-2">Device/browser/IP, preferences</td>
+                              <td className="border border-gray-300 p-2">Functionality, analytics</td>
+                              <td className="border border-gray-300 p-2">Consent</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Admin/maintenance</td>
+                              <td className="border border-gray-300 p-2">Usage/contact data</td>
+                              <td className="border border-gray-300 p-2">Protect Platform, reporting</td>
+                              <td className="border border-gray-300 p-2">Legitimate interests; Legal obligation</td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Aggregated/anonymised data for statistics falls outside POPIA. Users may object to legitimate interest processing. Data used only for original/compatible purposes; unrelated uses notified with basis.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        4. Security Data Collection
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Technical tools detect fraud, prohibited items (e.g., counterfeits). Listing data (descriptions, photos) reviewed; shared anonymised with brands for authenticity. Basis: legitimate interest in Platform/User protection.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        5. Marketing
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Opt-in for newsletters/marketing via email. Consent-based; withdraw anytime in account settings.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        6. Legal Compliance
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Processing for accounting, authority requests, breach supervision. Basis: legal obligation.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        7. Internal Access
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Needs-based for employees fulfilling roles; limited to partners (e.g., IT, accounting, couriers).
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        8. Data Sharing
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        Shared only as necessary:
+                      </p>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
+                        <li><strong>Internal:</strong> ReBooked entities as joint controllers/processors.</li>
+                        <li><strong>External:</strong> Processors (hosting Vercel/Supabase, payments BobPay/Paystack, couriers); authorities (tax); advisors (lawyers/auditors); merger/acquisition parties.Third parties bound by confidentiality, instructed use only.</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        9. International Transfers
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Data may go outside South Africa (e.g., cloud providers). Safeguards: adequate countries or contracts ensuring POPIA-equivalent protection.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        10. Data Security
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        IT/organisational/physical measures: TLS encryption, access controls, monitoring. Platform links to third-party sites (e.g., social media) outside control—review their policies.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        11. Retention Periods
+                      </h3>
+                      <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
+                        <li><strong>Account/activity:</strong> Account lifetime + 7 years post-deletion for legal protection.</li>
+                        <li><strong>Accounting:</strong> 5-10 years per law.</li>
+                        <li><strong>Cookies:</strong> Up to 3 years.Details on request to legal@rebookedsolutions.co.za.</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        12. Data Protection Rights
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base mb-3 sm:mb-4">
+                        Under POPIA (updated regulations):
+                      </p>
+                      <div className="overflow-x-auto mb-4">
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Right</th>
+                              <th className="border border-gray-300 p-2 text-left font-semibold">Description</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-gray-700">
+                            <tr>
+                              <td className="border border-gray-300 p-2">Access/Awareness</td>
+                              <td className="border border-gray-300 p-2">Request confirmation/processing details/copy (Form 2-like, free via email/SMS/WhatsApp).</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Correction</td>
+                              <td className="border border-gray-300 p-2">Fix incomplete/outdated data.</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Erasure</td>
+                              <td className="border border-gray-300 p-2">Delete if unnecessary/withdrawn consent/rights outweigh.</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Restriction</td>
+                              <td className="border border-gray-300 p-2">Limit if accuracy contested/no basis but needed for claims.</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Objection</td>
+                              <td className="border border-gray-300 p-2">To legitimate interests/marketing/automated decisions (Form 1-like, multi-channel).</td>
+                            </tr>
+                            <tr className="bg-gray-50">
+                              <td className="border border-gray-300 p-2">Portability</td>
+                              <td className="border border-gray-300 p-2">Structured format for consent/contract data.</td>
+                            </tr>
+                            <tr>
+                              <td className="border border-gray-300 p-2">Withdraw Consent</td>
+                              <td className="border border-gray-300 p-2">Anytime, no retroactive effect.</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Requests assessed per law/other rights. Proof of identity may be required.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        13. Complaints/Queries
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Contact legal@rebookedsolutions.co.za (response within 1-3 months). Complain to Information Regulator (inforegulator.org.za).
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        14. Children's Privacy
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Not for under-16s without guardian consent; delete if discovered.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        15. Policy Changes
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        Updates posted on Platform/email; continued use = acceptance. Keep info current.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                        16. Contact
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                        ReBooked Solutions (Pty) Ltd, legal@rebookedsolutions.co.za, info@rebookedsolutions.co.za.
+                      </p>
                     </section>
                   </div>
                 </CardContent>
