@@ -603,19 +603,19 @@ const Policies = () => {
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        3. How the Platform works
+                        3. How the Platform Works
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Marketplace role: ReBooked Solutions is not the buyer or seller of textbooks and does not take title to items; the sales contract is between Buyer and Seller.</li>
-                        <li>Functions: Users may list textbooks, browse, buy, save favourites, and share listings; direct off-platform transactions are not permitted for orders initiated on the Platform.</li>
-                        <li>Payment processing: ReBooked Solutions acts as limited payment agent for Sellers to accept payments on their behalf; all transactions are in South African Rands (ZAR) via approved methods (EFT, card, Wallet).</li>
-                        <li>Purchase flow:
+                        <li><strong>3.1</strong> ReBooked Solutions acts as a technology facilitator—not as buyer or seller—and does not take ownership of textbooks sold.</li>
+                        <li><strong>3.2</strong> Users may list, browse, save favorites, and buy textbooks, but all transactions must occur through, and remain on, the Platform. Direct off-platform transactions initiated via the Platform are prohibited.</li>
+                        <li><strong>3.3</strong> ReBooked Solutions acts as a limited payment agent: payments from Buyers are held until transaction completion and then released to Sellers.</li>
+                        <li><strong>3.4</strong> Transactions occur in South African Rands (ZAR) by approved payment methods including EFT, card payment, or Wallet balance.</li>
+                        <li><strong>3.5</strong> Purchase flow:
                           <ol className="list-decimal pl-6 mt-2 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Buyer pays through the Platform; funds are received by ReBooked Solutions as limited payment agent.</li>
-                            <li>Seller must commit to the sale within 48 hours or the order is automatically cancelled and Buyer is refunded.</li>
-                            <li>On Seller commitment, a delivery request is generated, and Seller ships using the selected method.</li>
-                            <li>Buyer confirms receipt.</li>
-                            <li>Upon receipt confirmation (or auto completion), funds are released to Seller and can be paid out to the Seller's bank account within 1–3 business days, subject to accurate bank details.</li>
+                            <li>Buyer pays via Platform; funds held by ReBooked Solutions as agent.</li>
+                            <li>Seller must commit to sale within 48 hours or order auto-cancels and Buyer refunded.</li>
+                            <li>Upon commitment, Seller ships using chosen delivery mode; Buyer confirms receipt.</li>
+                            <li>Funds release to Seller's Wallet, with payout to bank within 1-3 business days after confirmation.</li>
                           </ol>
                         </li>
                       </ul>
