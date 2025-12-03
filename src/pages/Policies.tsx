@@ -940,7 +940,7 @@ const Policies = () => {
                     <div className="text-blue-800 text-xs sm:text-sm space-y-2">
                       <div className="text-center">
                         <span>
-                          <strong>Effective Date:</strong> 15 November 2025
+                          <strong>Effective Date:</strong> 3 December 2025
                         </span>
                         <span className="mx-2">•</span>
                         <span>
