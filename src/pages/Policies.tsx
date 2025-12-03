@@ -470,7 +470,7 @@ const Policies = () => {
                     <div className="text-blue-800 text-xs sm:text-sm space-y-2">
                       <div className="text-center">
                         <span>
-                          <strong>Effective Date:</strong> 15 November 2025
+                          <strong>Effective Date:</strong> 3 December 2025
                         </span>
                         <span className="mx-2">•</span>
                         <span>
@@ -480,16 +480,16 @@ const Policies = () => {
                       </div>
                       <div className="text-center">
                         <span>
-                          <strong>Platform Operator:</strong> ReBooked Solutions (Pty) Ltd
+                          <strong>Operator:</strong> ReBooked Solutions (Pty) Ltd
                         </span>
                         <span className="mx-2">•</span>
                         <span>
-                          <strong>Registration No.:</strong> 2025 / 452062 / 07
+                          <strong>Registration:</strong> 2025 / 452062 / 07
                         </span>
                       </div>
                       <div className="text-center">
                         <span>
-                          <strong>Email:</strong>{" "}
+                          <strong>Legal Email:</strong>{" "}
                           <span className="break-all">
                             legal@rebookedsolutions.co.za
                           </span>
