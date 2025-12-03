@@ -27,7 +27,7 @@ const Policies = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6 mt-6 max-w-5xl mx-auto shadow-sm">
             <div className="text-blue-900 text-xs sm:text-sm leading-snug">
               <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-                <span className="whitespace-nowrap"><strong>Effective Date:</strong> 15 November 2025</span>
+                <span className="whitespace-nowrap"><strong>Effective Date:</strong> 3 December 2025</span>
                 <span className="hidden sm:inline">•</span>
                 <span className="whitespace-nowrap"><strong>Platform:</strong> rebookedsolutions.co.za</span>
               </div>
