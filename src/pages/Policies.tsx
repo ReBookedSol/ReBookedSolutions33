@@ -713,38 +713,37 @@ const Policies = () => {
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        11. Liability limits
+                        11. Liability Limits
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Marketplace role: Platform not party to Buyer-Seller contracts; no inspection/guarantee; courier responsibility.</li>
-                        <li>No warranties: Services "as is", no express/implied warranties; CPA rights preserved.</li>
-                        <li>Limitation of liability: Aggregate liability limited to greater of fees paid in prior 6 months or R1,000; indirect, consequential, exemplary, punitive damages excluded.</li>
-                        <li>User responsibility for third-party issues: Users responsible for actions, listings, packaging, delivery, compliance; Platform not liable for disputes, misdescription, carrier delays, force majeure.</li>
-                        <li>Chargebacks/reversals: Users liable for deficits/fees; Platform may offset Wallet, delay payouts, or seek recovery.</li>
-                        <li>Data and security: Reasonable security measures; Platform not liable for unauthorized access beyond control; POPIA remedies apply.</li>
-                        <li>Statutory rights preserved: Terms subject to non-waivable rights under CPA and SA law.</li>
+                        <li><strong>11.1</strong> The Platform does not inspect goods, guarantee quality, or act as a party to sales contracts; sellers and couriers bear responsibility.</li>
+                        <li><strong>11.2</strong> Services are provided "as is" with no warranties; statutory consumer rights remain intact.</li>
+                        <li><strong>11.3</strong> Liability is limited to the greater of fees paid in the past six months or R1,000. Indirect, consequential, or punitive damages are excluded.</li>
+                        <li><strong>11.4</strong> Users bear responsibility for packaging, listing accuracy, compliance, and resolving disputes; Platform is not liable for third party issues or force majeure.</li>
+                        <li><strong>11.5</strong> Chargebacks or disputes causing deficits are Users' responsibility; the Platform may offset Wallet balances or delay payouts.</li>
+                        <li><strong>11.6</strong> Platform applies reasonable security but is not liable for unauthorized access beyond its control; POPIA protections apply.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        12. Prohibited items and conduct
+                        12. Prohibited Items and Conduct
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Only textbooks and study materials; counterfeit, stolen, illegal, digital, vouchers, medical, adult, weapons, drugs, dangerous items prohibited.</li>
-                        <li>Original listing content: Use actual item photos; AI/third-party images prohibited; accurate descriptions required.</li>
-                        <li>Takedown/enforcement: Violating listings removed; accounts suspended/terminated; cooperation with authorities.</li>
+                        <li><strong>12.1</strong> Only textbooks and related study materials are allowed. Prohibited items include counterfeit goods, stolen items, illegal products, digital vouchers, weapons, drugs, and inappropriate content.</li>
+                        <li><strong>12.2</strong> Listings must use original photos and accurate descriptions; AI or stock images and misleading info are banned.</li>
+                        <li><strong>12.3</strong> Violations lead to removal of listings, account suspension or termination, and potential cooperation with authorities.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        13. Intellectual property
+                        13. Intellectual Property
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Platform IP: All content/software owned/licensed; no copying/distribution without consent.</li>
-                        <li>User content licence: Uploading grants revocable, royalty-free, non-exclusive license to Platform; Users warrant ownership/rights.</li>
-                        <li>IP complaints: Rights holders submit notices to legal@rebookedsolutions.co.za; compliant notices may result in removal/repeat infringer action.</li>
+                        <li><strong>13.1</strong> Platform software, logos, content, and materials are owned/licensed by ReBooked Solutions and protected by IP laws.</li>
+                        <li><strong>13.2</strong> Users grant a revocable, royalty-free license for uploaded content to ReBooked Solutions for service provision and promotion.</li>
+                        <li><strong>13.3</strong> IP infringement notices should be sent to legal@rebookedsolutions.co.za. Repeat infringers may have content removed and accounts terminated.</li>
                       </ul>
                     </section>
 
@@ -753,20 +752,20 @@ const Policies = () => {
                         14. Compliance: CPA, ECTA, POPIA, AML/FICA
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>CPA: Non-waivable consumer rights preserved; certain CPA provisions may not apply to private Seller-Buyer.</li>
-                        <li>ECTA: Supplier info, pricing, payment, delivery, return, complaint processes disclosed; electronic records/orders valid upon payment and Seller commitment.</li>
-                        <li>POPIA/Privacy: Personal info processed per Privacy Policy; requests to info@rebookedsolutions.co.za.</li>
-                        <li>AML/FICA: KYC, transaction monitoring; identity/bank docs may be requested; payments may be withheld/reversed.</li>
+                        <li><strong>14.1</strong> Non-waivable consumer rights are preserved under the Consumer Protection Act (CPA).</li>
+                        <li><strong>14.2</strong> Supplier and transaction info including pricing, payment, delivery, and complaint processes are disclosed per Electronic Communications and Transactions Act (ECTA).</li>
+                        <li><strong>14.3</strong> Personal data is processed compliant with POPIA and Privacy Policy; data access requests to info@rebookedsolutions.co.za.</li>
+                        <li><strong>14.4</strong> AML and FICA compliance require KYC verification; identity and banking documents may be requested with potential withholding of payments for non-compliance.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        15. Withholding, chargebacks, and risk controls
+                        15. Withholding, Chargebacks, and Risk Controls
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Holds, delays, reversals may occur for fraud, chargebacks, policy breaches, AML, legal requests.</li>
-                        <li>Users liable for deficits and fees from chargebacks/fraud; recovery may be pursued.</li>
+                        <li><strong>15.1</strong> Payments may be held, delayed, or reversed for suspected fraud, chargebacks, policy breaches, AML, or legal requests.</li>
+                        <li><strong>15.2</strong> Users are liable for losses and fees arising from fraud or chargebacks; ReBooked Solutions may seek recovery.</li>
                       </ul>
                     </section>
 
