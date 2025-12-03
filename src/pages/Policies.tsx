@@ -659,57 +659,55 @@ const Policies = () => {
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        7. Wallet and payouts
+                        7. Wallet and Payouts
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Nature of wallet: Wallet is a payment functionality, not a bank account or investment; no interest accrues.</li>
-                        <li>Payout timing: After order completion, funds reflect in Seller's Wallet; payouts to South African bank accounts typically take 1–3 business days.</li>
-                        <li>Bank details: Sellers are responsible for accurate bank information; Platform not liable for delays/misdirected payments.</li>
-                        <li>Dormant balances: Inactive Wallets (6 months) may be handled per unclaimed funds requirements and these Terms.</li>
+                        <li><strong>7.1</strong> The Wallet is a virtual payment tool, not a bank account; no interest is accrued.</li>
+                        <li><strong>7.2</strong> After order completion, funds appear in Seller's Wallet; payouts to South African bank accounts take 1-3 business days, conditional on accurate details.</li>
+                        <li><strong>7.3</strong> Sellers bear responsibility for correct bank information; Platform bears no liability for payout delays or misdirection.</li>
+                        <li><strong>7.4</strong> Wallet balances dormant for 6 months or longer may be handled per unclaimed funds policies.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        8. Refunds, cancellations, and returns
+                        8. Refunds, Cancellations, and Returns
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Non commitment: If Seller fails to commit within 48 hours, order is cancelled and Buyer refunded (fees and shipping included).</li>
-                        <li>Delivery issues: If delivery fails or cannot be verified, Buyer may request a refund; Platform may cancel and refund if dispatch/delivery cannot be proven.</li>
-                        <li>Not as described: Claims within 48 hours of delivery if the item differs significantly; evidence required.</li>
-                        <li>Return process: Approved returns shipped back within 72 hours; tracking required; funds on hold until return confirmed; Buyer pays shipping unless otherwise required by law.</li>
-                        <li>Outcomes: Funds released to Seller or refunded to Buyer; failure to respond may result in decision based on records.</li>
+                        <li><strong>8.1</strong> Orders are cancelled and refunded if Seller fails to commit within 48 hours (including fees and shipping).</li>
+                        <li><strong>8.2</strong> If delivery cannot be verified or fails, Buyers may request refunds; the Platform may cancel orders under such circumstances.</li>
+                        <li><strong>8.3</strong> Claims for "not as described" must be made within 48 hours of delivery with supporting evidence.</li>
+                        <li><strong>8.4</strong> Approved returns must be shipped back within 72 hours with tracking; Buyer usually bears return shipping costs unless otherwise required by law.</li>
+                        <li><strong>8.5</strong> Funds remain on hold during disputes until resolution, with final outcomes either releasing funds to Seller or refunding Buyer.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        9. Disputes between users
+                        9. Disputes Between Users
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Internal resolution: Users should attempt to resolve via Platform messages; Platform may assist but is not obligated.</li>
-                        <li>Non response: Lack of response within 48 hours may result in decision favouring responding party.</li>
-                        <li>External remedies: Consumers may approach regulators or courts subject to South African law; non-waivable CPA rights preserved.</li>
+                        <li><strong>9.1</strong> Users should first attempt to resolve disputes via Platform messages; the Platform may assist but is not obliged.</li>
+                        <li><strong>9.2</strong> Non-response within 48 hours may lead to decisions favoring the responding party.</li>
+                        <li><strong>9.3</strong> Buyers may seek external remedies through South African regulators or courts, preserving non-waivable consumer rights under the CPA.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        10. Seller obligations
+                        10. Seller Obligations
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Seller warranties: Lawful ownership, no liens, non-counterfeit, accurate and complete listing, including images, editions/ISBNs, pricing.</li>
-                        <li>Listing standards: Use original photos; disclose defects, annotations, missing materials; avoid AI/stock images.</li>
-                        <li>Pricing and availability: Prompt dispatch, correct charges, no post-purchase price changes.</li>
-                        <li>Order acceptance and shipping: Commit/decline within 48 hours; dispatch within SLA; accurate tracking.</li>
-                        <li>Packaging and risk before delivery: Secure packaging; Seller liable for loss/damage until confirmed delivery.</li>
-                        <li>Prohibited items: Illegal, counterfeit, digital, adult, medical, dangerous items prohibited; violations may result in account action and reporting.</li>
-                        <li>Communication: Respond to Buyer/Platform within 48 hours; non-responsiveness may affect dispute outcomes.</li>
-                        <li>Returns and "not as described": Cooperate with claims, accept returns/refunds if required.</li>
-                        <li>Taxes and compliance: Responsible for income tax, VAT, consumer law, IP, other laws.</li>
-                        <li>Bank/payout details: Keep information accurate; Platform may hold funds pending KYC/AML.</li>
-                        <li>Off-platform circumvention: No payment/shipment outside Platform for initiated transactions.</li>
-                        <li>Indemnity to Platform: Sellers indemnify Platform from claims, losses, penalties, costs arising from listings, sales, misrepresentations, IP infringement, unlawful items, tax non-compliance, packaging failures, or breach of Terms.</li>
+                        <li><strong>10.1</strong> Sellers warrant lawful ownership, accurate and complete listings including real photos, proper disclosures (defects, annotations), and correct pricing.</li>
+                        <li><strong>10.2</strong> AI-generated or stock images are prohibited.</li>
+                        <li><strong>10.3</strong> Sellers must promptly commit to orders and ship within stated SLAs, providing accurate tracking information.</li>
+                        <li><strong>10.4</strong> Packaging must be secure; Sellers are liable for loss or damage before delivery confirmation.</li>
+                        <li><strong>10.5</strong> Prohibited items include illegal, counterfeit, digital-only, adult, medical, dangerous goods, or any items violating laws. Violations may cause suspension, termination, and reporting.</li>
+                        <li><strong>10.6</strong> Sellers must respond to Buyer/Platform communications within 48 hours, aiding dispute resolution.</li>
+                        <li><strong>10.7</strong> Compliance with tax, consumer protection, IP, and other laws is Sellers' responsibility.</li>
+                        <li><strong>10.8</strong> Bank details must be accurate and updated; funds may be held pending KYC/AML verification.</li>
+                        <li><strong>10.9</strong> Off-platform payments or shipments for Platform-initiated orders are prohibited.</li>
+                        <li><strong>10.10</strong> Sellers indemnify ReBooked Solutions for claims, losses, costs from listings, sales, misrepresentations, IP infringement, or regulatory violations.</li>
                       </ul>
                     </section>
 
