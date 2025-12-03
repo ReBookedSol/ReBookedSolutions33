@@ -594,10 +594,10 @@ const Policies = () => {
                         2. Eligibility and User Accounts
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Age and capacity: You represent that you are at least the age of majority in South Africa and have legal capacity to contract; if under the age of majority, you confirm parental/guardian consent and that such guardian accepts responsibility for your actions and charges on the Platform.</li>
-                        <li>Account security: You must keep credentials confidential and are responsible for all activity under your account; suspected misuse must be reported to info@rebookedsolutions.co.za immediately.</li>
-                        <li>One account per person; false identities, multiple accounts, or evasion are prohibited and may result in suspension or termination.</li>
-                        <li>Accurate information: You must provide true, current, and complete information and keep it updated.</li>
+                        <li><strong>2.1</strong> You must be of legal age in South Africa or have parental/guardian consent to use the Platform.</li>
+                        <li><strong>2.2</strong> Only one account per person; false identities or multiple accounts are prohibited.</li>
+                        <li><strong>2.3</strong> Users are responsible for account security and all actions under their accounts; report suspected misuse to info@rebookedsolutions.co.za immediately.</li>
+                        <li><strong>2.4</strong> Users must provide and maintain accurate, current information. The Platform may verify identity if suspicious activity arises.</li>
                       </ul>
                     </section>
 
