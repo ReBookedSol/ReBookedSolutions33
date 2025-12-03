@@ -884,51 +884,37 @@ const Policies = () => {
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        27. User Accounts
+                        27. User Accounts Detailed Provisions
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>27.1 Users must register with accurate and truthful personal information. Providing false or misleading information may result in suspension or termination of the account.</li>
-                        <li>27.2 Each user may maintain only one account. Multiple accounts or attempts to circumvent platform rules are strictly prohibited.</li>
-                        <li>27.3 Users are responsible for safeguarding their login credentials. All activity under a user account is the responsibility of the account holder.</li>
-                        <li>27.4 Users must notify the platform immediately of any unauthorized access or suspicious activity related to their account.</li>
-                        <li>27.5 The platform reserves the right to verify a user's identity if suspicious activity is detected.</li>
+                        <li><strong>27.1</strong> Users must provide truthful information; false info may cause account actions.</li>
+                        <li><strong>27.2</strong> Multiple accounts or attempts to mask identity are forbidden.</li>
+                        <li><strong>27.3</strong> Account holders are responsible for all account activity.</li>
+                        <li><strong>27.4</strong> Users must immediately report unauthorized access or suspicious activity.</li>
+                        <li><strong>27.5</strong> Identity verification may be required if suspicious behavior detected.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        28. Transactions & Payments
+                        28. Transactions &amp; Payments
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>28.1 All transactions must be processed through the platform's payment system to ensure security and compliance.</li>
-                        <li>28.2 Payments will be released to sellers only after the buyer confirms receipt or after delivery confirmation through tracking.</li>
-                        <li>28.3 Sellers are responsible for providing accurate banking details. The platform is not liable for delays caused by incorrect information.</li>
-                        <li>28.4 The platform is not responsible for losses due to chargebacks, fraud, or disputes beyond its control.</li>
-                        <li>28.5 International transactions may require additional verification for compliance with legal obligations, including Anti-Money Laundering (AML) regulations.</li>
+                        <li><strong>28.1</strong> All transactions must use the Platform system.</li>
+                        <li><strong>28.2</strong> Payments release to Sellers only after Buyer receipt confirmation or verified delivery.</li>
+                        <li><strong>28.3</strong> Sellers responsible for providing correct banking details; delays from errors are not Platform liability.</li>
+                        <li><strong>28.4</strong> The Platform is not responsible for losses from chargebacks or fraud beyond its control.</li>
+                        <li><strong>28.5</strong> International transactions may require additional verification for legal compliance.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        29. Seller & Buyer Responsibilities
+                        29. Seller and Buyer Responsibilities
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>29.1 Sellers must:
-                          <ul className="list-disc pl-6 mt-2 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Accurately describe items, including condition, defects, and authenticity.</li>
-                            <li>Upload real photos of items; stock or AI-generated images are prohibited.</li>
-                            <li>Ensure proper packaging and timely delivery.</li>
-                            <li>Cooperate in return requests and dispute resolutions.</li>
-                          </ul>
-                        </li>
-                        <li>29.2 Buyers must:
-                          <ul className="list-disc pl-6 mt-2 space-y-1 text-gray-700 text-sm sm:text-base">
-                            <li>Provide accurate delivery information.</li>
-                            <li>Confirm receipt of items promptly.</li>
-                            <li>Report discrepancies or damages immediately.</li>
-                            <li>Cooperate with the platform during disputes.</li>
-                          </ul>
-                        </li>
+                        <li>Sellers must: accurately describe items, provide real photos, package securely, and cooperate in returns and disputes.</li>
+                        <li>Buyers must: provide accurate delivery info, promptly confirm receipt, report issues quickly, and cooperate with dispute processes.</li>
                       </ul>
                     </section>
 
@@ -937,20 +923,20 @@ const Policies = () => {
                         30. Prohibited Items
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>30.1 The following items are strictly prohibited: counterfeit goods, illegal substances, weapons, adult content, expired consumables, and any items violating applicable laws.</li>
-                        <li>30.2 The platform reserves the right to remove prohibited listings and terminate accounts without liability.</li>
-                        <li>30.3 Users selling prohibited items may be subject to civil or criminal liability.</li>
+                        <li><strong>30.1</strong> Prohibited: counterfeit goods, illegal substances, weapons, adult content, expired goods, etc.</li>
+                        <li><strong>30.2</strong> Violations may lead to removal and account termination without liability.</li>
+                        <li><strong>30.3</strong> Sellers of prohibited items risk civil or criminal penalties.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        31. Liability & Disclaimers
+                        31. Liability &amp; Disclaimers
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>31.1 The platform is not responsible for the quality, authenticity, or legality of any items listed or sold.</li>
-                        <li>31.2 All services are provided "as is" and "as available," without warranty of uninterrupted access, security, or accuracy.</li>
-                        <li>31.3 Users acknowledge that the platform is not liable for disputes, delivery issues, or loss/damage incurred outside its control.</li>
+                        <li><strong>31.1</strong> The Platform is not responsible for item authenticity, condition, or legality.</li>
+                        <li><strong>31.2</strong> Services are provided "as is" without warranties except as required by law.</li>
+                        <li><strong>31.3</strong> Platform is not liable for delivery issues, disputes, or losses beyond control.</li>
                       </ul>
                     </section>
 
@@ -959,21 +945,21 @@ const Policies = () => {
                         32. Intellectual Property
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>32.1 All platform content, including software, logos, graphics, and text, is protected under copyright and trademark laws.</li>
-                        <li>32.2 Users grant the platform a revocable, non-exclusive license to use uploaded content for service provision, marketing, or promotion.</li>
-                        <li>32.3 Users may not copy, modify, distribute, or reuse platform intellectual property without explicit permission.</li>
+                        <li><strong>32.1</strong> All Platform content is copyrighted/trademarked and owned/licensed by ReBooked Solutions.</li>
+                        <li><strong>32.2</strong> Users grant a license for uploaded content for the purpose of service provision and marketing.</li>
+                        <li><strong>32.3</strong> Unauthorized copying or modification is prohibited.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        33. Returns & Claims
+                        33. Returns &amp; Claims
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>33.1 Buyers may request returns if items significantly differ from descriptions or images.</li>
-                        <li>33.2 Returns must be requested within 48 hours of delivery, and items returned within 72 hours, unless otherwise agreed.</li>
-                        <li>33.3 The platform holds funds until the dispute is resolved between buyer and seller.</li>
-                        <li>33.4 Disputes escalate in the following order: direct resolution between buyer and seller → platform mediation → external legal recourse if unresolved.</li>
+                        <li><strong>33.1</strong> Buyers may request returns if items differ significantly from descriptions.</li>
+                        <li><strong>33.2</strong> Returns must be requested within 48 hours and shipped within 72 hours unless agreed otherwise.</li>
+                        <li><strong>33.3</strong> Funds remain held by the Platform during dispute resolution.</li>
+                        <li><strong>33.4</strong> Dispute escalation: direct resolution → Platform mediation → external legal action.</li>
                       </ul>
                     </section>
 
@@ -982,9 +968,8 @@ const Policies = () => {
                         34. Amendments
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>34.1 The platform may update these T&Cs at any time.</li>
-                        <li>34.2 Users will be notified of changes via email or platform notifications.</li>
-                        <li>34.3 Continued use after updates constitutes acceptance of the new terms.</li>
+                        <li><strong>34.1</strong> Terms may be amended by ReBooked Solutions with notification.</li>
+                        <li><strong>34.2</strong> Continued use implies acceptance of changes.</li>
                       </ul>
                     </section>
 
@@ -993,7 +978,7 @@ const Policies = () => {
                         35. Indemnities
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>35.1 Users indemnify the platform against claims, damages, or legal costs arising from their actions, breaches of these T&Cs, or violations of third-party rights.</li>
+                        <li>Users indemnify ReBooked Solutions against claims and damages arising from their actions or breaches.</li>
                       </ul>
                     </section>
 
@@ -1002,10 +987,10 @@ const Policies = () => {
                         36. Dispute Resolution
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>36.1 Parties must attempt to resolve disputes amicably.</li>
-                        <li>36.2 If unresolved, disputes may proceed to mediation via an independent expert.</li>
-                        <li>36.3 Should mediation fail, disputes may escalate to arbitration or the relevant South African courts.</li>
-                        <li>36.4 The platform may intervene to facilitate resolution but is not obligated to act as a legal arbitrator.</li>
+                        <li><strong>36.1</strong> Users and Platform should attempt amicable resolution first.</li>
+                        <li><strong>36.2</strong> Mediation by independent experts if negotiation fails.</li>
+                        <li><strong>36.3</strong> Arbitration or courts in South Africa as a last resort.</li>
+                        <li><strong>36.4</strong> Platform may facilitate but is not obliged to arbitrate legally.</li>
                       </ul>
                     </section>
                   </div>
