@@ -954,12 +954,17 @@ const Policies = () => {
                       </div>
                       <div className="text-center">
                         <span>
+                          <strong>Operator:</strong> ReBooked Solutions (Pty) Ltd
+                        </span>
+                      </div>
+                      <div className="text-center">
+                        <span>
                           <strong>Support:</strong>{" "}
                           <span className="break-all">info@rebookedsolutions.co.za</span>
                         </span>
                         <span className="mx-2">•</span>
                         <span>
-                          <strong>Legal Inquiries:</strong>{" "}
+                          <strong>Legal:</strong>{" "}
                           <span className="break-all">legal@rebookedsolutions.co.za</span>
                         </span>
                       </div>
