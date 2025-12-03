@@ -579,19 +579,19 @@ const Policies = () => {
                   <div className="prose max-w-none space-y-4 sm:space-y-6">
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        1. About the company
+                        1. About the Company
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>ReBooked Solutions (Pty) Ltd ("ReBooked Solutions", "we", "our") operates a peer-to-peer marketplace that enables registered users to buy and sell textbooks on the Platform.</li>
-                        <li>Company details: ReBooked Solutions (Pty) Ltd, Registration No.: 2025 / 452062 / 07, Principal place of business: info@rebookedsolutions.co.za, Email: legal@rebookedsolutions.co.za; Support: info@rebookedsolutions.co.za.</li>
-                        <li>Acceptance: Creating an account, listing an item, purchasing, or continued use of the Platform constitutes acceptance of these Terms and any policies referenced herein.</li>
-                        <li>Definitions: "User" means any person using the Platform; "Seller" means a User listing textbooks; "Buyer" means a User purchasing textbooks; "Wallet" means the virtual balance functionality on the Platform.</li>
+                        <li><strong>1.1</strong> ReBooked Solutions (Pty) Ltd ("ReBooked Solutions", "we", "our") operates a peer-to-peer marketplace Platform enabling registered users ("Users") to buy and sell textbooks.</li>
+                        <li><strong>1.2</strong> Company details: Registration No.: 2025 / 452062 / 07. Principal place of business and contact email: info@rebookedsolutions.co.za. Legal queries to legal@rebookedsolutions.co.za. Support at info@rebookedsolutions.co.za.</li>
+                        <li><strong>1.3</strong> Acceptance of these Terms occurs by creating an account, listing an item, purchasing, or continuing use of the Platform.</li>
+                        <li><strong>1.4</strong> The terms "User", "Seller", and "Buyer" apply as follows: User = anyone using the Platform; Seller = User listing textbooks; Buyer = User purchasing textbooks. "Wallet" refers to the virtual balance/payment functionality on the Platform.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        2. Eligibility and accounts
+                        2. Eligibility and User Accounts
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
                         <li>Age and capacity: You represent that you are at least the age of majority in South Africa and have legal capacity to contract; if under the age of majority, you confirm parental/guardian consent and that such guardian accepts responsibility for your actions and charges on the Platform.</li>
