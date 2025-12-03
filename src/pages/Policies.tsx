@@ -824,10 +824,10 @@ const Policies = () => {
                         21. General
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Governing law/forum: Republic of South Africa; Magistrates' Court jurisdiction without excluding High Court.</li>
-                        <li>Severability: Invalid provisions don't affect remaining Terms; no waiver effective unless in writing; assignment requires consent.</li>
-                        <li>Entire agreement: These Terms plus referenced policies constitute full agreement.</li>
-                        <li>Notices: Legal notices to registered address with copy to legal@rebookedsolutions.co.za; User notices via email or in-app.</li>
+                        <li><strong>21.1</strong> Governing law is the Republic of South Africa; jurisdiction lies with Magistrates' Courts without excluding High Courts.</li>
+                        <li><strong>21.2</strong> Severability applies; invalid provisions do not affect remainder. Waivers must be in writing.</li>
+                        <li><strong>21.3</strong> Notices to Users are sent via registered email or in-app messages.</li>
+                        <li><strong>21.4</strong> These Terms with referenced policies constitute the entire agreement between Users and ReBooked Solutions.</li>
                       </ul>
                     </section>
 
@@ -836,49 +836,49 @@ const Policies = () => {
                         22. Security
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Technical safeguards: TLS encryption, credential hashing, role-based access, monitoring, rate limiting, vulnerability management.</li>
-                        <li>Payment security: Cards processed by PCI DSS-compliant provider; 3D Secure used; ReBooked Solutions stores only truncated tokens.</li>
-                        <li>User responsibilities: Confidential credentials, strong passwords, MFA, updated devices/antivirus, report compromises.</li>
-                        <li>Prohibited security activity: No probing, scanning, bypassing security, scraping, load/penetration testing without consent; violations may result in suspension/action.</li>
+                        <li><strong>22.1</strong> Technical safeguards include TLS encryption, credential hashing, role-based access, monitoring, and vulnerability management.</li>
+                        <li><strong>22.2</strong> Payment card data are processed by PCI DSS-compliant providers with 3D Secure; ReBooked stores only truncated tokens.</li>
+                        <li><strong>22.3</strong> Users must protect credentials, use strong passwords, enable MFA, keep devices secure, and report compromises.</li>
+                        <li><strong>22.4</strong> Unauthorized security probing, bypassing, scraping, or penetration testing is forbidden and punishable.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        23. Data protection, POPIA, and breach notification
+                        23. Data Protection, POPIA, and Breach Notification
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Privacy compliance: Info processed per Privacy Policy; POPIA/PAIA requests to info@rebookedsolutions.co.za.</li>
-                        <li>Breach notification: Lawful notifications to affected Users and Information Regulator; cooperate with Users/authorities.</li>
+                        <li><strong>23.1</strong> Personal information is processed in compliance with POPIA; privacy inquiries to info@rebookedsolutions.co.za.</li>
+                        <li><strong>23.2</strong> Breach notifications are sent to affected Users and the Information Regulator with full cooperation.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        24. Payments, processors, and card data
+                        24. Payments, Processors, and Card Data
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Authorised processors: BobPay and others; Users authorise processing of payments, refunds, chargebacks.</li>
-                        <li>Tokenisation: Sensitive card data handled by processors; Platform stores only truncated references/tokens.</li>
+                        <li><strong>24.1</strong> Authorized payment processors include BobPay and others as disclosed; Users authorize payment processing for purchases, refunds, and chargebacks.</li>
+                        <li><strong>24.2</strong> Sensitive card data are handled exclusively by processors; the Platform retains only non-sensitive tokenized info.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        25. Business continuity and maintenance
+                        25. Business Continuity and Maintenance
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Availability: Platform access not guaranteed; planned/emergency maintenance may occur.</li>
-                        <li>Disaster recovery: Backup/recovery processes exist; timelines vary with incident nature.</li>
+                        <li><strong>25.1</strong> Platform availability is generally maintained; planned and emergency maintenance can cause temporary outages.</li>
+                        <li><strong>25.2</strong> Backup and disaster recovery processes exist with timing dependent on incident specifics.</li>
                       </ul>
                     </section>
 
                     <section>
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                        26. Vulnerability disclosure
+                        26. Vulnerability Disclosure
                       </h3>
                       <ul className="list-disc pl-6 space-y-2 text-gray-700 text-sm sm:text-base">
-                        <li>Coordinated disclosure: Researchers report to info@rebookedsolutions.co.za; Platform acknowledges receipt; public disclosure discouraged until remediation.</li>
+                        <li>Security vulnerabilities should be reported to info@rebookedsolutions.co.za. Public disclosure is discouraged until remediation.</li>
                       </ul>
                     </section>
 
