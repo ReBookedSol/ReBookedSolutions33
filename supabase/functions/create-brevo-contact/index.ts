@@ -9,8 +9,7 @@ interface BrevoContactRequest {
   email: string;
   firstName?: string;
   lastName?: string;
-  listIds?: number[];
-  attributes?: Record<string, unknown>;
+  phone?: string;
   updateIfExists?: boolean;
 }
 
@@ -56,8 +55,7 @@ serve(async (req) => {
       email: "student@example.com",
       firstName: "Sam",
       lastName: "Student",
-      listIds: [12],
-      attributes: { "UNIVERSITY": "UCT" },
+      phone: "+27123456789",
       updateIfExists: true
     };
     return new Response(
@@ -111,25 +109,24 @@ serve(async (req) => {
     const hashedEmail = hashEmail(body.email);
     console.log(`[create-brevo-contact] Processing request for: ${hashedEmail}`);
 
-    // Build Brevo payload
-    const brevoPayload: Record<string, unknown> = {
-      email: body.email,
-      attributes: { ...(body.attributes || {}) },
-      updateEnabled: body.updateIfExists ?? false,
-    };
-
-    // Add firstName/lastName to attributes
+    // Build Brevo payload with only required fields
+    const attributes: Record<string, string> = {};
+    
     if (body.firstName) {
-      (brevoPayload.attributes as Record<string, unknown>).FIRSTNAME = body.firstName;
+      attributes.FIRSTNAME = body.firstName;
     }
     if (body.lastName) {
-      (brevoPayload.attributes as Record<string, unknown>).LASTNAME = body.lastName;
+      attributes.LASTNAME = body.lastName;
+    }
+    if (body.phone) {
+      attributes.SMS = body.phone;
     }
 
-    // Add listIds if provided
-    if (body.listIds && Array.isArray(body.listIds)) {
-      brevoPayload.listIds = body.listIds;
-    }
+    const brevoPayload = {
+      email: body.email,
+      attributes,
+      updateEnabled: body.updateIfExists ?? false,
+    };
 
     console.log(`[create-brevo-contact] Calling Brevo API for: ${hashedEmail}`);
 
@@ -151,13 +148,6 @@ serve(async (req) => {
 
       if (body.updateIfExists) {
         // Update existing contact
-        const updatePayload: Record<string, unknown> = {
-          attributes: brevoPayload.attributes,
-        };
-        if (body.listIds) {
-          updatePayload.listIds = body.listIds;
-        }
-
         const updateResponse = await fetch(
           `https://api.brevo.com/v3/contacts/${encodeURIComponent(body.email)}`,
           {
@@ -166,7 +156,7 @@ serve(async (req) => {
               "Content-Type": "application/json",
               "api-key": apiKey,
             },
-            body: JSON.stringify(updatePayload),
+            body: JSON.stringify({ attributes }),
           }
         );
 
