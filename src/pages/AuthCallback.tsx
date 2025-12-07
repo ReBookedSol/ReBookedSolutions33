@@ -174,10 +174,8 @@ const AuthCallback = () => {
               markEmailConfirmation();
               setMessage("Email verified successfully! Welcome to ReBooked Solutions.");
               toast.success("Email verified! Welcome!");
-              // Redirect to dashboard/profile or home page after a delay
-              setTimeout(() => {
-                navigate("/profile", { replace: true });
-              }, 2000);
+              // Redirect immediately to profile after successful verification
+              navigate("/profile", { replace: true });
             } else if (type === "recovery") {
               setMessage("Password reset link verified! Redirecting to reset your password.");
               toast.success("Reset link verified! Set your new password.");
@@ -186,10 +184,8 @@ const AuthCallback = () => {
             } else {
               setMessage("Authentication successful! You are now logged in.");
               toast.success("Successfully authenticated!");
-              // Redirect to dashboard/profile or home page after a delay
-              setTimeout(() => {
-                navigate("/profile", { replace: true });
-              }, 2000);
+              // Redirect immediately to profile
+              navigate("/profile", { replace: true });
             }
             return;
           }
@@ -219,9 +215,7 @@ const AuthCallback = () => {
 
             if (otpError.message?.includes("already confirmed")) {
               toast.success("Email already verified!");
-              setTimeout(() => {
-                navigate("/login", { replace: true });
-              }, 2000);
+              navigate("/login", { replace: true });
             } else {
               toast.error(friendlyErrorMsg);
             }
@@ -235,9 +229,8 @@ const AuthCallback = () => {
               markEmailConfirmation();
               setMessage("Email verified successfully! Welcome to ReBooked Solutions.");
               toast.success("Email verified! Welcome!");
-              setTimeout(() => {
-                navigate("/profile", { replace: true });
-              }, 2000);
+              // Redirect immediately to profile after successful verification
+              navigate("/profile", { replace: true });
             } else if (type === "recovery") {
               setMessage("Password reset link verified! Redirecting to reset your password.");
               toast.success("Reset link verified! Set your new password.");
@@ -272,10 +265,8 @@ const AuthCallback = () => {
           if (data.session) {
             setStatus("success");
             setMessage("Successfully authenticated!");
-            
-            setTimeout(() => {
-              navigate("/profile", { replace: true });
-            }, 2000);
+            // Redirect immediately
+            navigate("/profile", { replace: true });
             return;
           }
         }
@@ -286,7 +277,7 @@ const AuthCallback = () => {
           setStatus("success");
           setMessage("Authentication successful! You are now logged in.");
           toast.success("Successfully authenticated!");
-          setTimeout(() => navigate("/", { replace: true }), 1500);
+          navigate("/profile", { replace: true });
           return;
         }
 
@@ -306,7 +297,7 @@ const AuthCallback = () => {
               markEmailConfirmation();
               setMessage("Email verified successfully! Welcome to ReBooked Solutions.");
               toast.success("Email verified! Welcome!");
-              setTimeout(() => navigate("/", { replace: true }), 1500);
+              navigate("/profile", { replace: true });
             } else if (type === "recovery") {
               setMessage("Password reset link verified! Redirecting to reset your password.");
               toast.success("Reset link verified! Set your new password.");
@@ -314,7 +305,7 @@ const AuthCallback = () => {
             } else {
               setMessage("Authentication successful! You are now logged in.");
               toast.success("Successfully authenticated!");
-              setTimeout(() => navigate("/", { replace: true }), 1500);
+              navigate("/profile", { replace: true });
             }
             return;
           }
@@ -328,7 +319,7 @@ const AuthCallback = () => {
           setStatus("success");
           setMessage("Authentication successful! You are now logged in.");
           toast.success("Successfully authenticated!");
-          setTimeout(() => navigate("/", { replace: true }), 1500);
+          navigate("/profile", { replace: true });
           return;
         }
 
