@@ -135,8 +135,11 @@ const Register = () => {
               email,
               firstName,
               lastName,
-              phone: normalizedPhone,
-              ...(affiliateCode && { affiliate_code: affiliateCode }),
+              updateIfExists: true,
+              attributes: {
+                PHONE: normalizedPhone,
+                ...(affiliateCode && { AFFILIATE_CODE: affiliateCode }),
+              },
             }
           });
         } catch (brevoError) {
