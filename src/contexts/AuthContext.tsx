@@ -271,6 +271,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           console.log("✅ Supabase signup successful - email confirmation required");
           console.log("📧 Attempting to ensure confirmation email is sent...");
 
+          // Create Brevo contact in background
+          try {
+            console.log("Creating Brevo contact for new user...");
+            await callEdgeFunction('create-contact', {
+              method: 'POST',
+              body: {
+                email,
+                firstName,
+                lastName,
+                phone,
+                updateIfExists: false
+              }
+            });
+            console.log("Brevo contact created successfully");
+          } catch (brevoError) {
+            console.warn("Brevo contact creation failed (non-blocking):", brevoError);
+          }
+
           try {
             // Use the same reliable method as password reset - resend confirmation email
             const { error: resendError } = await supabase.auth.resend({
