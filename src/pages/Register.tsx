@@ -126,6 +126,25 @@ const Register = () => {
       const affiliateCode = getStoredAffiliateCode();
       const result = await register(email, password, firstName, lastName, normalizedPhone, affiliateCode ?? undefined);
 
+      // Call Brevo to create contact after successful signup (non-blocking)
+      if (result?.needsVerification || result?.emailWarning) {
+        try {
+          await callEdgeFunction('create-brevo-contact', {
+            method: 'POST',
+            body: {
+              email,
+              firstName,
+              lastName,
+              phone: normalizedPhone,
+              ...(affiliateCode && { affiliate_code: affiliateCode }),
+            }
+          });
+        } catch (brevoError) {
+          // Log but don't fail signup if Brevo contact creation fails
+          console.warn('Failed to create Brevo contact:', brevoError);
+        }
+      }
+
       // Handle different registration outcomes
       if (result?.needsVerification) {
         if (result?.isExistingUnverified) {
