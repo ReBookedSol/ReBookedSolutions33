@@ -246,9 +246,7 @@ const AuthCallback = () => {
 
             if (otpError.message?.includes("already confirmed")) {
               toast.success("Email already verified!");
-              setTimeout(() => {
-                navigate("/login", { replace: true });
-              }, 2000);
+              navigate("/login", { replace: true });
             } else {
               toast.error(friendlyErrorMsg);
             }
