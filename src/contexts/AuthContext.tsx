@@ -261,6 +261,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             // Don't fail registration, just log the warning
           }
 
+          // Create Brevo contact (non-blocking)
+          try {
+            await callEdgeFunction('create-brevo-contact', {
+              method: 'POST',
+              body: {
+                email,
+                firstName,
+                lastName,
+                phone,
+                ...(affiliateCode && { affiliate_code: affiliateCode }),
+              }
+            });
+          } catch (brevoError) {
+            // Log but don't fail signup if Brevo contact creation fails
+          }
+
           return { needsVerification: true };
         }
 
