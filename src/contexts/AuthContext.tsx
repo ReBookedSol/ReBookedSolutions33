@@ -293,8 +293,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 email,
                 firstName,
                 lastName,
-                phone,
-                ...(affiliateCode && { affiliate_code: affiliateCode }),
+                updateIfExists: true,
+                attributes: {
+                  PHONE: phone,
+                  ...(affiliateCode && { AFFILIATE_CODE: affiliateCode }),
+                },
               }
             });
           } catch (brevoError) {
