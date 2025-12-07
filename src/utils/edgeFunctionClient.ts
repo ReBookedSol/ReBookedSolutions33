@@ -60,8 +60,6 @@ export async function callEdgeFunction<T = any>(
 
   try {
     const url = `${supabase.supabaseUrl}/functions/v1/${functionName}`;
-    console.log(`🚀 Calling Edge Function: ${functionName}`);
-    console.log(`📍 URL: ${url}`);
 
     const response = await fetch(url, {
       method,
@@ -71,8 +69,6 @@ export async function callEdgeFunction<T = any>(
     });
 
     clearTimeout(timeoutId);
-
-    console.log(`📤 Response Status: ${response.status}`);
 
     // Handle different response types
     if (response.status === 404) {
@@ -94,7 +90,6 @@ export async function callEdgeFunction<T = any>(
       responseData = await response.json();
     } else {
       const textData = await response.text();
-      console.log(`📝 Non-JSON Response: ${textData}`);
       responseData = { message: textData };
     }
 
@@ -124,8 +119,6 @@ export async function callEdgeFunction<T = any>(
       };
     }
 
-    console.error(`❌ Edge Function call failed:`, error);
-    
     return {
       success: false,
       error: 'NETWORK_ERROR',
@@ -190,7 +183,6 @@ export async function verifyPaystackPayment(reference: string) {
  * Test Edge Function connectivity
  */
 export async function testEdgeFunctionConnectivity(functionName: string = 'health-test') {
-  console.log(`🔍 Testing connectivity to ${functionName}...`);
   
   const result = await callEdgeFunction(functionName, {
     method: 'POST',
@@ -198,11 +190,6 @@ export async function testEdgeFunctionConnectivity(functionName: string = 'healt
     timeout: 10000 // 10 second timeout for testing
   });
 
-  if (result.success) {
-    console.log(`✅ ${functionName} is accessible`);
-  } else {
-    console.log(`❌ ${functionName} failed:`, result.error);
-  }
 
   return result;
 }

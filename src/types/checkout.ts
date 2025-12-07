@@ -47,11 +47,14 @@ export interface OrderSummary {
   book: CheckoutBook;
   delivery: DeliveryOption;
   buyer_address: CheckoutAddress;
-  seller_address: CheckoutAddress;
+  seller_address: CheckoutAddress | null;
+  seller_locker_data?: BobGoLocker | null;
   book_price: number;
   delivery_price: number;
   platform_fee?: number;
   total_price: number;
+  delivery_method?: "home" | "locker";
+  selected_locker?: BobGoLocker | null;
 }
 
 export interface OrderConfirmation {
@@ -70,17 +73,32 @@ export interface OrderConfirmation {
   status: string;
 }
 
+export interface BobGoLocker {
+  id: string;
+  name: string;
+  address?: string;
+  full_address?: string;
+  latitude?: number;
+  longitude?: number;
+  provider_slug?: string;
+  [key: string]: any;
+}
+
 export interface CheckoutState {
   step: {
-    current: 1 | 2 | 3 | 4;
+    current: 1 | 2 | 3 | 4 | 5;
     completed: number[];
   };
   book: CheckoutBook | null;
   buyer_address: CheckoutAddress | null;
   seller_address: CheckoutAddress | null;
+  seller_locker_data: BobGoLocker | null;
+  seller_preferred_pickup_method: "locker" | "pickup" | null;
   delivery_options: DeliveryOption[];
   selected_delivery: DeliveryOption | null;
   order_summary: OrderSummary | null;
+  delivery_method: "home" | "locker" | null;
+  selected_locker: BobGoLocker | null;
   loading: boolean;
   error: string | null;
 }

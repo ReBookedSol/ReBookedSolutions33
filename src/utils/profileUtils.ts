@@ -1,17 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /** Display name builder with fallbacks.
- * Order: [first_name, last_name] -> legacy name -> email prefix -> "Anonymous"
+ * Order: full_name -> [first_name, last_name] -> legacy name -> "Anonymous"
+ * Never use email prefix for display name.
  */
 export const buildDisplayName = (input: any): string => {
   if (!input) return "Anonymous";
+  const fullName = input.full_name ?? undefined;
+  if (fullName) return fullName;
   const fn = input.first_name ?? input.firstName ?? undefined;
   const ln = input.last_name ?? input.lastName ?? undefined;
   const fromSplit = fn || ln ? [fn, ln].filter(Boolean).join(" ") : undefined;
-  const legacy = input.name ?? input.full_name ?? undefined;
-  const email = input.email ?? input.user?.email ?? undefined;
-  const emailPrefix = typeof email === "string" ? email.split("@")[0] : undefined;
-  return fromSplit || legacy || emailPrefix || "Anonymous";
+  const legacy = input.name ?? undefined;
+  return fromSplit || legacy || "Anonymous";
 };
 
 /**
@@ -31,10 +32,6 @@ export const safeGetProfile = async <T = any>(
 
     return { data, error };
   } catch (error) {
-    console.error(`Error fetching profile for user ${userId}:`, {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
     return { data: null, error };
   }
 };
@@ -57,7 +54,6 @@ export const getUserProfile = async <T = any>(
       throw new Error(errorMessage);
     }
 
-    console.warn(errorMessage);
     return null;
   }
 
@@ -77,10 +73,6 @@ export const profileExists = async (userId: string): Promise<boolean> => {
 
     return !error && data !== null;
   } catch (error) {
-    console.error(
-      `Error checking if profile exists for user ${userId}:`,
-      error,
-    );
     return false;
   }
 };

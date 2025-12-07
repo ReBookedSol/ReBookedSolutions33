@@ -46,8 +46,6 @@ const DeliveryQuoteComparison: React.FC<DeliveryQuoteComparisonProps> = ({
       setLoading(true);
       setError(null);
 
-      console.log("Fetching delivery quotes for:", request);
-
       const quotesData = await getAllDeliveryQuotes(request);
       setQuotes(quotesData);
 
@@ -55,7 +53,6 @@ const DeliveryQuoteComparison: React.FC<DeliveryQuoteComparisonProps> = ({
         setError("No delivery quotes available for this route");
       }
     } catch (err) {
-      console.error("Error fetching quotes:", err);
       setError("Failed to fetch delivery quotes. Please try again.");
       toast.error("Failed to get delivery quotes");
     } finally {

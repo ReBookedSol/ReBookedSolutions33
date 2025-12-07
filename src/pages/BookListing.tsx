@@ -20,7 +20,9 @@ const BookListing = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10)
+  );
   const [totalBooks, setTotalBooks] = useState(0);
   const booksPerPage = 12;
   const pageTopRef = useRef<HTMLDivElement>(null);
@@ -39,19 +41,47 @@ const BookListing = () => {
   const [selectedCondition, setSelectedCondition] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedUniversityYear, setSelectedUniversityYear] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
   const [selectedProvince, setSelectedProvince] = useState(
     searchParams.get("province") || "",
   );
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [bookType, setBookType] = useState<"all" | "school" | "university">(
+  const [bookType, setBookType] = useState<"all" | "school" | "university" | "reader">(
     "all",
   );
 
+  // Helper function to filter books based on book type requirements
+  const filterBooksByType = (booksToFilter: Book[], type: "all" | "school" | "university" | "reader"): Book[] => {
+    if (type === "all") {
+      return booksToFilter;
+    }
+
+    return booksToFilter.filter((book) => {
+      if (type === "school") {
+        // School books: must have a grade OR be a study guide/course book
+        const hasGrade = book.grade && book.grade.trim() !== "";
+        const isSchoolTextType = book.universityBookType === "Study Guide" || book.universityBookType === "Course Book";
+        return hasGrade || isSchoolTextType;
+      }
+
+      if (type === "university") {
+        // University books: must have a university year
+        return book.universityYear && book.universityYear.trim() !== "";
+      }
+
+      if (type === "reader") {
+        // Reader books: must have a genre
+        return book.genre && book.genre.trim() !== "";
+      }
+
+      return true;
+    });
+  };
+
   // Memoize loadBooks function to prevent infinite loops
   const loadBooks = useCallback(async () => {
-    console.log("🔍 BookListing: Starting to load books...");
     setIsLoading(true);
     setError(null);
 
@@ -59,6 +89,7 @@ const BookListing = () => {
       const searchQuery = searchParams.get("search") || "";
       const category = searchParams.get("category") || "";
       const grade = searchParams.get("grade") || "";
+      const genre = searchParams.get("genre") || "";
       const curriculum = searchParams.get("curriculum") || "";
       const universityYear = searchParams.get("universityYear") || "";
       const province = searchParams.get("province") || "";
@@ -68,18 +99,21 @@ const BookListing = () => {
         category?: string;
         condition?: string;
         grade?: string;
+        genre?: string;
         curriculum?: 'CAPS' | 'Cambridge' | 'IEB';
         universityYear?: string;
         university?: string;
         province?: string;
         minPrice?: number;
         maxPrice?: number;
+        itemType?: 'textbook' | 'reader' | 'all';
       } = {};
 
       if (searchQuery) filters.search = searchQuery;
       if (category) filters.category = category;
       if (selectedCondition) filters.condition = selectedCondition;
       if (grade) filters.grade = grade;
+      if (genre || selectedGenre) filters.genre = genre || selectedGenre;
       if (curriculum || selectedCurriculum) filters.curriculum = (curriculum || selectedCurriculum) as any;
       if (universityYear) filters.universityYear = universityYear;
       if (selectedUniversity) filters.university = selectedUniversity;
@@ -88,38 +122,30 @@ const BookListing = () => {
       if (priceRange[0] > 0) filters.minPrice = priceRange[0];
       if (priceRange[1] < 1000) filters.maxPrice = priceRange[1];
 
-      console.log("📋 BookListing: Applying filters:", filters);
 
       const loadedBooks = await getBooks(filters);
-      console.log("📚 BookListing: Received books from service:", loadedBooks?.length || 0);
 
       // Ensure we have an array
-      const booksArray = Array.isArray(loadedBooks) ? loadedBooks : [];
+      let booksArray = Array.isArray(loadedBooks) ? loadedBooks : [];
+
+      // Apply book type specific filtering
+      if (bookType !== "all") {
+        booksArray = filterBooksByType(booksArray, bookType);
+      }
+
       setTotalBooks(booksArray.length);
-      console.log("📊 BookListing: Total books set to:", booksArray.length);
 
       // Calculate pagination
       const startIndex = (currentPage - 1) * booksPerPage;
       const endIndex = startIndex + booksPerPage;
       const paginatedBooks = booksArray.slice(startIndex, endIndex);
-      console.log("📄 BookListing: Paginated books for display:", paginatedBooks.length);
 
       setBooks(paginatedBooks);
-      console.log("✅ BookListing: Books loaded successfully, displaying:", paginatedBooks.length, "books");
 
       if (booksArray.length === 0) {
-        console.log("��️ BookListing: No books found with current filters");
+        //"��️ BookListing: No books found with current filters");
       }
     } catch (error) {
-      const errorDetails = {
-        message: error instanceof Error ? error.message : String(error),
-        name: error instanceof Error ? error.name : "Unknown",
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString(),
-      };
-
-
-
       const userMessage =
         error instanceof Error && error.message.includes("Failed to fetch")
           ? "Unable to connect to the book database. Please check your internet connection and try again."
@@ -128,16 +154,13 @@ const BookListing = () => {
       toast.error(userMessage);
       setBooks([]);
       setError(error instanceof Error ? error.message : String(error));
-      console.error("❌ BookListing: Error loading books:", errorDetails);
     } finally {
       setIsLoading(false);
-      console.log("🏁 BookListing: Loading complete, isLoading set to false");
     }
-  }, [searchParams, selectedCondition, selectedUniversity, selectedProvince, selectedCurriculum, priceRange, currentPage]);
+  }, [searchParams, selectedCondition, selectedUniversity, selectedProvince, selectedCurriculum, selectedGenre, priceRange, currentPage, bookType]);
 
   // Initial load
   useEffect(() => {
-    console.log("🎬 BookListing: Component mounted, starting initial book load...");
     loadBooks();
   }, [loadBooks]);
 
@@ -158,6 +181,9 @@ const BookListing = () => {
     if (selectedGrade) {
       newSearchParams.set("grade", selectedGrade);
     }
+    if (selectedGenre) {
+      newSearchParams.set("genre", selectedGenre);
+    }
     if (selectedUniversityYear) {
       newSearchParams.set("universityYear", selectedUniversityYear);
     }
@@ -168,13 +194,16 @@ const BookListing = () => {
       newSearchParams.set("province", selectedProvince);
     }
 
-    setCurrentPage(1); // Reset to first page when filters change
+    newSearchParams.set("page", "1"); // Reset to first page when filters change
+    setCurrentPage(1);
     setSearchParams(newSearchParams);
   }, [
     searchQuery,
     selectedCategory,
     selectedGrade,
+    selectedGenre,
     selectedUniversityYear,
+    selectedCurriculum,
     selectedProvince,
     setSearchParams,
   ]);
@@ -184,6 +213,7 @@ const BookListing = () => {
     setSelectedCategory("");
     setSelectedCondition("");
     setSelectedGrade("");
+    setSelectedGenre("");
     setSelectedUniversityYear("");
     setSelectedCurriculum("");
     setSelectedUniversity("");
@@ -191,7 +221,9 @@ const BookListing = () => {
     setPriceRange([0, 1000]);
     setBookType("all");
     setCurrentPage(1); // Reset to first page when clearing filters
-    setSearchParams(new URLSearchParams());
+    const newSearchParams = new URLSearchParams();
+    newSearchParams.set("page", "1");
+    setSearchParams(newSearchParams);
   }, [setSearchParams]);
 
   const handleCommitBook = async (bookId: string) => {
@@ -200,16 +232,17 @@ const BookListing = () => {
       // Reload books after commit
       loadBooks();
     } catch (error) {
-      console.error(
-        "Failed to commit book:",
-        error instanceof Error ? error.message : String(error),
-      );
       toast.error("Failed to commit sale. Please try again.");
     }
   };
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
+
+    // Update URL params with new page number
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("page", page.toString());
+    setSearchParams(newSearchParams);
 
     // Quick scroll to top without smooth behavior for better performance
     requestAnimationFrame(() => {
@@ -225,7 +258,7 @@ const BookListing = () => {
         });
       }
     });
-  }, []);
+  }, [searchParams, setSearchParams]);
 
 
 
@@ -256,6 +289,10 @@ const BookListing = () => {
             setSelectedCondition={setSelectedCondition}
             selectedGrade={selectedGrade}
             setSelectedGrade={setSelectedGrade}
+            selectedCurriculum={selectedCurriculum}
+            setSelectedCurriculum={setSelectedCurriculum}
+            selectedGenre={selectedGenre}
+            setSelectedGenre={setSelectedGenre}
             selectedUniversityYear={selectedUniversityYear}
             setSelectedUniversityYear={setSelectedUniversityYear}
             selectedUniversity={selectedUniversity}

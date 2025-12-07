@@ -68,53 +68,46 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
   const [selectedRescheduleTime, setSelectedRescheduleTime] = useState("");
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
-  const canCancelShipment = !["picked_up", "collected", "in_transit", "delivered"].includes(
-    (order.delivery_status || "").toLowerCase(),
-  ) && !["cancelled", "completed", "delivered"].includes(order.status);
+  // Align with server-side blocked statuses: ['collected', 'in transit', 'out for delivery', 'delivered']
+  // Also block committed orders - users must contact support for those
+  const blockedStatuses = ["collected", "in transit", "out for delivery", "delivered", "committed"];
+  const orderStatusLower = (order.status || "").toLowerCase();
+  const deliveryStatusLower = (order.delivery_status || "").toLowerCase();
+  const canCancelShipment = !blockedStatuses.includes(orderStatusLower) && !blockedStatuses.includes(deliveryStatusLower);
 
   const showMissedPickupActions = userRole === "seller" && order.delivery_status === "pickup_failed";
 
   const handleBuyerCancel = async () => {
     setIsLoading(true);
     try {
-      // If order has NOT been committed yet, use BobPayRefund for uncommitted orders
-      if (order.status !== "committed") {
-        const { data: refundData, error: refundError } = await supabase.functions.invoke("bobpay-refund", {
-          body: {
-            order_id: order.id,
-            reason: cancelReason || "Cancelled by Buyer",
-          },
-        });
+      // Use the unified cancel-order-with-refund function for ALL orders (committed or pending)
+      // This ensures both shipment cancellation AND refund are processed
+      const { data, error } = await supabase.functions.invoke("cancel-order-with-refund", {
+        body: {
+          order_id: order.id,
+          reason: cancelReason || "Cancelled by Buyer",
+        },
+      });
 
-        if (refundError || !refundData?.success) {
-          throw new Error(refundError?.message || refundData?.error || "Refund failed");
-        }
-
-        const { error: updateError } = await supabase
-          .from("orders")
-          .update({ status: "cancelled" })
-          .eq("id", order.id);
-
-        if (updateError) throw updateError;
-
-        toast.success("Order cancelled and refunded");
-        setShowCancelDialog(false);
-        onOrderUpdate();
-        return;
+      if (error) {
+        throw new Error(error.message || "Failed to cancel order");
       }
 
-      // For committed orders with tracking, use cancel-order-with-refund to cancel the shipment
-      const result = await OrderCancellationService.cancelDeliveryByBuyer(
-        order.id,
-        cancelReason || "Cancelled by Buyer",
-      );
-      if (result.success) {
-        toast.success(result.message);
-        setShowCancelDialog(false);
-        onOrderUpdate();
-      } else {
-        toast.error(result.message);
+      if (!data) {
+        throw new Error("No response from server");
       }
+
+      if (!data.success) {
+        throw new Error(data.error || "Cancellation failed");
+      }
+
+      toast.success(data.message || "Order cancelled and refund processed");
+      setShowCancelDialog(false);
+
+      // Refresh order data after successful cancellation
+      setTimeout(() => {
+        onOrderUpdate();
+      }, 500);
     } catch (error: any) {
       toast.error(error?.message || "Failed to cancel order. Please try again.");
     } finally {
@@ -132,12 +125,22 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
           reason: cancelReason || "Cancelled by Seller",
         },
       });
-      if (error || !data?.success) {
-        throw new Error(error?.message || data?.error || "Cancellation failed");
+
+      if (error) {
+        throw new Error(error.message || "Failed to cancel order");
       }
-      toast.success("Order cancelled successfully");
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Cancellation failed");
+      }
+
+      toast.success(data.message || "Order cancelled successfully");
       setShowCancelDialog(false);
-      onOrderUpdate();
+
+      // Refresh order data after successful cancellation
+      setTimeout(() => {
+        onOrderUpdate();
+      }, 500);
     } catch (err: any) {
       toast.error(err?.message || "Failed to cancel order");
     } finally {
@@ -270,9 +273,12 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2 flex items-start gap-2">
-          <Info className="w-4 h-4 text-gray-500 mt-0.5" />
-          <span>We also email the waybill to you for records.</span>
+        <div className="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start gap-2">
+          <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-blue-900 mb-1">Need Help?</p>
+            <p className="text-blue-700">If you have any issues with this order, please contact our support team for assistance.</p>
+          </div>
         </div>
 
         {/* Unified Cancel for Buyer and Seller when not collected/in transit */}
@@ -281,12 +287,12 @@ const OrderActionsPanel: React.FC<OrderActionsPanelProps> = ({
             <DialogTrigger asChild>
               <Button variant="destructive" className="w-full">
                 <X className="w-4 h-4 mr-2" />
-                Cancel Shipment
+                Cancel Order
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Cancel Shipment</DialogTitle>
+                <DialogTitle>Cancel Order</DialogTitle>
                 <DialogDescription>
                   Are you sure you want to cancel this shipment? {userRole === "buyer" ? "You will receive a full refund." : "The buyer will be refunded."}
                 </DialogDescription>

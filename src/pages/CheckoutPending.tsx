@@ -39,7 +39,6 @@ const CheckoutPending: React.FC = () => {
         .maybeSingle();
 
       if (txError) {
-        console.error("Payment transaction not found:", txError);
         setMessage("Payment record not found. Please contact support.");
         return;
       }
@@ -48,7 +47,6 @@ const CheckoutPending: React.FC = () => {
         setMessage("Your payment is being processed. This may take a few moments.");
       }
     } catch (err) {
-      console.error("Error checking payment status:", err);
       setMessage(err instanceof Error ? err.message : "Failed to check payment status");
     } finally {
       setLoading(false);

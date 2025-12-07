@@ -263,14 +263,11 @@ T&Cs apply
             try {
               // This would integrate with an SMS service like Twilio
               // For now, we'll just note that SMS needs to be sent
-              console.log(
-                `SMS reminder needed for order ${order.id}`,
-              );
 
               // You could implement SMS sending here:
               // await sendSMSReminder(order.seller.phone, order.id, timeLeft);
             } catch (smsError) {
-              console.error("SMS reminder failed:", smsError);
+              // Handle SMS error silently
             }
           }
         } else {
@@ -280,10 +277,7 @@ T&Cs apply
           });
         }
       } catch (orderError) {
-        console.error(
-          `Failed to process reminder for order ${order.id}:`,
-          orderError,
-        );
+        // Handle order processing error silently
         errors.push({
           order_id: order.id,
           error: orderError.message,
@@ -480,7 +474,6 @@ This is an automated system report from ReBooked Solutions.
           }),
         });
       } catch (adminEmailError) {
-        console.error("Failed to send admin notification:", adminEmailError);
       }
     }
 
@@ -496,7 +489,6 @@ This is an automated system report from ReBooked Solutions.
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
-    console.error("Process order reminders error:", error);
     return new Response(
       JSON.stringify({
         success: false,
@@ -520,7 +512,7 @@ async function sendSMSReminder(
   // For now, it's just a placeholder
   const message = `URGENT: Your ReBooked order ${orderId.substring(0, 8)} expires in ${hoursLeft} hours. Commit now or buyer gets full refund. Visit: rebookedsolutions.co.za/activity`;
 
-  console.log(`SMS to ${phoneNumber}: ${message}`);
+  // SMS message prepared but not sent
 
   // Example Twilio integration:
   /*

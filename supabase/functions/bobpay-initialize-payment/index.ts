@@ -92,7 +92,6 @@ Deno.serve(async (req) => {
 
     if (!bobpayResponse.ok) {
       const errorText = await bobpayResponse.text();
-      console.error('BobPay API error:', errorText);
       throw new Error(`BobPay API error: ${errorText}`);
     }
 
@@ -127,7 +126,6 @@ Deno.serve(async (req) => {
         });
 
       if (txError) {
-        console.error('Error storing transaction:', txError);
         throw new Error(`Failed to store transaction: ${txError.message}`);
       }
     }
@@ -147,7 +145,6 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in bobpay-initialize-payment:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({

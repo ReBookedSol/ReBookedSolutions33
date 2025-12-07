@@ -76,7 +76,6 @@ const GoogleMapsAddressAutocomplete: React.FC<
   // Initialize autocomplete
   const initializeAutocomplete = () => {
     if (!checkGoogleMapsLoaded() || !inputRef.current) {
-      console.log("Google Maps not ready yet");
       return false;
     }
 
@@ -96,11 +95,8 @@ const GoogleMapsAddressAutocomplete: React.FC<
         const place = autocomplete.getPlace();
 
         if (!place.geometry) {
-          console.warn("No details available for input: '" + place.name + "'");
           return;
         }
-
-        console.log("Full address:", place.formatted_address);
 
         // Extract address components (like the example)
         let street = "";
@@ -111,7 +107,6 @@ const GoogleMapsAddressAutocomplete: React.FC<
         const addressComponents = place.address_components;
         for (let component of addressComponents) {
           const type = component.types[0];
-          console.log(type + ": " + component.long_name);
 
           if (component.types.includes("street_number")) {
             street = component.long_name + " ";
@@ -139,8 +134,6 @@ const GoogleMapsAddressAutocomplete: React.FC<
 
         // Optional: Store lat/lng (like the example)
         const location = place.geometry.location;
-        console.log("Latitude:", location.lat());
-        console.log("Longitude:", location.lng());
 
         const addressData: AddressData = {
           formattedAddress: place.formatted_address || "",
@@ -163,7 +156,6 @@ const GoogleMapsAddressAutocomplete: React.FC<
       setLoadError(null);
       return true;
     } catch (err: any) {
-      console.error("Failed to initialize autocomplete:", err);
       setLoadError(`Failed to initialize: ${err.message}`);
       setIsLoading(false);
       return false;
@@ -173,9 +165,6 @@ const GoogleMapsAddressAutocomplete: React.FC<
   // Initialize autocomplete when Google Maps is ready
   const initializeGoogleMaps = () => {
     if (mapsLoaded && checkGoogleMapsLoaded()) {
-      console.log(
-        "Google Maps loaded via context, initializing autocomplete...",
-      );
       initializeAutocomplete();
     }
   };

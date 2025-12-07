@@ -176,6 +176,44 @@ export type Database = {
           },
         ]
       }
+      affiliate_orders: {
+        Row: {
+          affiliate_id: string
+          created_at: string
+          id: string
+          order_id: string
+          referral_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          referral_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          referral_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliates_referrals: {
         Row: {
           affiliate_id: string
@@ -348,6 +386,33 @@ export type Database = {
         }
         Relationships: []
       }
+      bobbox_webhooks: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          received_at: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+          received_at?: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           additional_images: string[]
@@ -363,13 +428,14 @@ export type Database = {
           curriculum: string | null
           description: string
           front_cover: string | null
+          genre: string | null
           grade: string | null
           id: string
           image_url: string
           initial_quantity: number
           inside_pages: string | null
           isbn: string | null
-          pickup_address: Json | null
+          item_type: string | null
           pickup_address_encrypted: string | null
           price: number
           province: string | null
@@ -399,13 +465,14 @@ export type Database = {
           curriculum?: string | null
           description: string
           front_cover?: string | null
+          genre?: string | null
           grade?: string | null
           id?: string
           image_url: string
           initial_quantity?: number
           inside_pages?: string | null
           isbn?: string | null
-          pickup_address?: Json | null
+          item_type?: string | null
           pickup_address_encrypted?: string | null
           price: number
           province?: string | null
@@ -435,13 +502,14 @@ export type Database = {
           curriculum?: string | null
           description?: string
           front_cover?: string | null
+          genre?: string | null
           grade?: string | null
           id?: string
           image_url?: string
           initial_quantity?: number
           inside_pages?: string | null
           isbn?: string | null
-          pickup_address?: Json | null
+          item_type?: string | null
           pickup_address_encrypted?: string | null
           price?: number
           province?: string | null
@@ -613,7 +681,7 @@ export type Database = {
           {
             foreignKeyName: "buyer_feedback_orders_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -634,6 +702,115 @@ export type Database = {
           {
             foreignKeyName: "buyer_feedback_orders_seller_id_fkey"
             columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cashout_request: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          contact_email: string | null
+          created_at: string
+          encrypted_account_number: string | null
+          encrypted_bank_code: string | null
+          encrypted_bank_name: string | null
+          encrypted_business_name: string | null
+          encrypted_email: string | null
+          encrypted_first_name: string | null
+          encrypted_last_name: string | null
+          encrypted_phone_number: string | null
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          referral_data: Json
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          contact_email?: string | null
+          created_at?: string
+          encrypted_account_number?: string | null
+          encrypted_bank_code?: string | null
+          encrypted_bank_name?: string | null
+          encrypted_business_name?: string | null
+          encrypted_email?: string | null
+          encrypted_first_name?: string | null
+          encrypted_last_name?: string | null
+          encrypted_phone_number?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          referral_data?: Json
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          contact_email?: string | null
+          created_at?: string
+          encrypted_account_number?: string | null
+          encrypted_bank_code?: string | null
+          encrypted_bank_name?: string | null
+          encrypted_business_name?: string | null
+          encrypted_email?: string | null
+          encrypted_first_name?: string | null
+          encrypted_last_name?: string | null
+          encrypted_phone_number?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          referral_data?: Json
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashout_request_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashout_request_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "cashout_request_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashout_request_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashout_request_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "cashout_request_processed_by_fkey"
+            columns: ["processed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1020,8 +1197,12 @@ export type Database = {
           decline_reason: string | null
           declined_at: string | null
           delivery_data: Json | null
+          delivery_locker_data: Json | null
+          delivery_locker_location_id: number | null
+          delivery_locker_provider_slug: string | null
           delivery_option: string | null
           delivery_status: string | null
+          delivery_type: string | null
           id: string
           items: Json
           metadata: Json | null
@@ -1032,6 +1213,10 @@ export type Database = {
           payment_status: string | null
           paystack_reference: string | null
           pickup_address_encrypted: string | null
+          pickup_locker_data: Json | null
+          pickup_locker_location_id: number | null
+          pickup_locker_provider_slug: string | null
+          pickup_type: string | null
           refund_reference: string | null
           refund_status: string | null
           refunded_at: string | null
@@ -1069,8 +1254,12 @@ export type Database = {
           decline_reason?: string | null
           declined_at?: string | null
           delivery_data?: Json | null
+          delivery_locker_data?: Json | null
+          delivery_locker_location_id?: number | null
+          delivery_locker_provider_slug?: string | null
           delivery_option?: string | null
           delivery_status?: string | null
+          delivery_type?: string | null
           id?: string
           items?: Json
           metadata?: Json | null
@@ -1081,6 +1270,10 @@ export type Database = {
           payment_status?: string | null
           paystack_reference?: string | null
           pickup_address_encrypted?: string | null
+          pickup_locker_data?: Json | null
+          pickup_locker_location_id?: number | null
+          pickup_locker_provider_slug?: string | null
+          pickup_type?: string | null
           refund_reference?: string | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -1118,8 +1311,12 @@ export type Database = {
           decline_reason?: string | null
           declined_at?: string | null
           delivery_data?: Json | null
+          delivery_locker_data?: Json | null
+          delivery_locker_location_id?: number | null
+          delivery_locker_provider_slug?: string | null
           delivery_option?: string | null
           delivery_status?: string | null
+          delivery_type?: string | null
           id?: string
           items?: Json
           metadata?: Json | null
@@ -1130,6 +1327,10 @@ export type Database = {
           payment_status?: string | null
           paystack_reference?: string | null
           pickup_address_encrypted?: string | null
+          pickup_locker_data?: Json | null
+          pickup_locker_location_id?: number | null
+          pickup_locker_provider_slug?: string | null
+          pickup_type?: string | null
           refund_reference?: string | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -1202,11 +1403,13 @@ export type Database = {
           bobpay_response: Json | null
           created_at: string
           currency: string | null
+          custom_payment_id: string | null
           id: string
           items: Json | null
           metadata: Json | null
           order_id: string
           payment_method: string
+          paystack_response: Json | null
           reference: string
           shipping_address: Json | null
           status: string
@@ -1219,11 +1422,13 @@ export type Database = {
           bobpay_response?: Json | null
           created_at?: string
           currency?: string | null
+          custom_payment_id?: string | null
           id?: string
           items?: Json | null
           metadata?: Json | null
           order_id: string
           payment_method?: string
+          paystack_response?: Json | null
           reference: string
           shipping_address?: Json | null
           status?: string
@@ -1236,11 +1441,13 @@ export type Database = {
           bobpay_response?: Json | null
           created_at?: string
           currency?: string | null
+          custom_payment_id?: string | null
           id?: string
           items?: Json | null
           metadata?: Json | null
           order_id?: string
           payment_method?: string
+          paystack_response?: Json | null
           reference?: string
           shipping_address?: Json | null
           status?: string
@@ -1338,6 +1545,51 @@ export type Database = {
           },
         ]
       }
+      payout_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          approved_at: string | null
+          bank_account_id: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          requested_at: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          approved_at?: string | null
+          bank_account_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          requested_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          bank_account_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          requested_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address_encryption_version: number | null
@@ -1363,11 +1615,16 @@ export type Database = {
           phone_verified: boolean | null
           pickup_address_encrypted: string | null
           preferences: Json | null
+          preferred_delivery_locker_data: Json | null
+          preferred_delivery_locker_location_id: number | null
+          preferred_delivery_locker_provider_slug: string | null
+          preferred_delivery_locker_saved_at: string | null
+          preferred_pickup_locker_saved_at: string | null
+          preferred_pickup_method: string | null
           profile_picture_url: string | null
           role: string | null
           shipping_address_encrypted: string | null
           status: string | null
-          subaccount_code: string | null
           suspended_at: string | null
           suspension_reason: string | null
           total_affiliate_earnings: number
@@ -1399,11 +1656,16 @@ export type Database = {
           phone_verified?: boolean | null
           pickup_address_encrypted?: string | null
           preferences?: Json | null
+          preferred_delivery_locker_data?: Json | null
+          preferred_delivery_locker_location_id?: number | null
+          preferred_delivery_locker_provider_slug?: string | null
+          preferred_delivery_locker_saved_at?: string | null
+          preferred_pickup_locker_saved_at?: string | null
+          preferred_pickup_method?: string | null
           profile_picture_url?: string | null
           role?: string | null
           shipping_address_encrypted?: string | null
           status?: string | null
-          subaccount_code?: string | null
           suspended_at?: string | null
           suspension_reason?: string | null
           total_affiliate_earnings?: number
@@ -1435,11 +1697,16 @@ export type Database = {
           phone_verified?: boolean | null
           pickup_address_encrypted?: string | null
           preferences?: Json | null
+          preferred_delivery_locker_data?: Json | null
+          preferred_delivery_locker_location_id?: number | null
+          preferred_delivery_locker_provider_slug?: string | null
+          preferred_delivery_locker_saved_at?: string | null
+          preferred_pickup_locker_saved_at?: string | null
+          preferred_pickup_method?: string | null
           profile_picture_url?: string | null
           role?: string | null
           shipping_address_encrypted?: string | null
           status?: string | null
-          subaccount_code?: string | null
           suspended_at?: string | null
           suspension_reason?: string | null
           total_affiliate_earnings?: number
@@ -1496,6 +1763,8 @@ export type Database = {
       refund_transactions: {
         Row: {
           amount: number
+          bobpay_refund_reference: string | null
+          bobpay_response: Json | null
           completed_at: string | null
           created_at: string
           error_message: string | null
@@ -1512,6 +1781,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          bobpay_refund_reference?: string | null
+          bobpay_response?: Json | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
@@ -1528,6 +1799,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          bobpay_refund_reference?: string | null
+          bobpay_response?: Json | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
@@ -1723,6 +1996,78 @@ export type Database = {
           },
         ]
       }
+      user_wallets: {
+        Row: {
+          available_balance: number | null
+          created_at: string | null
+          id: string
+          pending_balance: number | null
+          total_earned: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          available_balance?: number | null
+          created_at?: string | null
+          id?: string
+          pending_balance?: number | null
+          total_earned?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          available_balance?: number | null
+          created_at?: string | null
+          id?: string
+          pending_balance?: number | null
+          total_earned?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          reason: string | null
+          reference_order_id: string | null
+          reference_payout_id: string | null
+          status: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          reference_order_id?: string | null
+          reference_payout_id?: string | null
+          status?: string | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          reference_order_id?: string | null
+          reference_payout_id?: string | null
+          status?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       account_details: {
@@ -1824,6 +2169,15 @@ export type Database = {
     Functions: {
       _assert_self_or_admin: { Args: { p_user_id: string }; Returns: undefined }
       activate_affiliate: { Args: { user_id: string }; Returns: string }
+      add_funds_to_wallet: {
+        Args: {
+          p_amount: number
+          p_order_id: string
+          p_reason?: string
+          p_seller_id: string
+        }
+        Returns: boolean
+      }
       admin_delete_user: {
         Args: { user_id_to_delete: string }
         Returns: boolean
@@ -1904,6 +2258,23 @@ export type Database = {
         }
         Returns: string
       }
+      create_payout_request: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: string
+      }
+      credit_wallet_on_collection: {
+        Args: { p_book_price: number; p_order_id: string; p_seller_id: string }
+        Returns: {
+          credit_amount: number
+          error_message: string
+          new_balance: number
+          success: boolean
+        }[]
+      }
+      delete_user_address: {
+        Args: { address_type: string; target_user_id: string }
+        Returns: Json
+      }
       delete_user_profile: { Args: { user_id: string }; Returns: undefined }
       deny_seller_payout: {
         Args: { p_payout_id: string; p_reason: string; p_reviewer_id: string }
@@ -1922,6 +2293,7 @@ export type Database = {
           seller_id: string
         }[]
       }
+      fix_book_quantities: { Args: { p_book_id: string }; Returns: boolean }
       generate_affiliate_code: { Args: never; Returns: string }
       generate_api_key: { Args: { user_id: string }; Returns: string }
       generate_encryption_key_hash: {
@@ -1936,6 +2308,17 @@ export type Database = {
           total_book_sales: number
           total_earnings: number
           total_referrals: number
+        }[]
+      }
+      get_bobbox_webhooks: {
+        Args: never
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean
+          received_at: string
         }[]
       }
       get_complete_schema: { Args: never; Returns: Json }
@@ -2071,6 +2454,15 @@ export type Database = {
           name: string
         }[]
       }
+      get_wallet_summary: {
+        Args: { p_user_id: string }
+        Returns: {
+          available_balance: number
+          pending_balance: number
+          total_earned: number
+          total_withdrawn: number
+        }[]
+      }
       has_role:
       | { Args: { role_name: string; user_id: number }; Returns: boolean }
       | { Args: { role_name: string; user_id: string }; Returns: boolean }
@@ -2089,6 +2481,10 @@ export type Database = {
           id: string
           username: string
         }[]
+      }
+      manually_release_order_stock: {
+        Args: { p_order_id: string }
+        Returns: Json
       }
       meetup_mark_read: { Args: { p_message_ids: string[] }; Returns: number }
       redact_json_addresses: { Args: { input: Json }; Returns: Json }

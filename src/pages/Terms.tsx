@@ -35,9 +35,8 @@ const Terms = () => {
               <p className="mb-3 sm:mb-4 text-red-800 text-sm sm:text-base">
                 <strong>This page has been moved!</strong> Our complete legal
                 documentation is now consolidated into a comprehensive policies
-                page that includes all Terms & Conditions, Privacy Policy,
-                Refund Policy, Cancellation Policy, Shipping & Delivery Policy,
-                and Returns & Disputes Policy.
+                page that includes Terms & Conditions, Privacy Policy, and our
+                unified Marketplace Rules & Responsibilities.
               </p>
               <p className="mb-3 sm:mb-4 text-red-700 text-sm sm:text-base">
                 All policies comply with South African consumer protection laws
@@ -69,27 +68,13 @@ const Terms = () => {
               </p>
               <ul className="list-disc list-inside mb-3 sm:mb-4 ml-2 sm:ml-4 text-blue-700 space-y-1 text-sm sm:text-base">
                 <li>
-                  <strong>Complete Terms & Conditions</strong> - 16
-                  comprehensive sections
+                  <strong>Complete Terms & Conditions</strong> - Comprehensive legal framework
                 </li>
                 <li>
-                  <strong>Privacy Policy</strong> - POPIA compliant
+                  <strong>Privacy Policy</strong> - POPIA compliant data protection
                 </li>
                 <li>
-                  <strong>Refund Policy</strong> - Consumer Protection Act
-                  compliant
-                </li>
-                <li>
-                  <strong>Cancellation Policy</strong> - Buyer and seller
-                  guidelines
-                </li>
-                <li>
-                  <strong>Shipping & Delivery Policy</strong> - Courier
-                  responsibilities
-                </li>
-                <li>
-                  <strong>Returns & Disputes Policy</strong> - Resolution
-                  procedures
+                  <strong>Marketplace Rules & Responsibilities</strong> - Unified policy combining account registration, listing rules, shipping, refunds, buyer/seller responsibilities, dispute resolution, and compliance
                 </li>
               </ul>
             </div>

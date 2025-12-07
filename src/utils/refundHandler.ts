@@ -28,7 +28,6 @@ export const detectPaymentProvider = async (
       .single();
 
     if (error || !transaction) {
-      console.warn('Could not detect payment provider:', error);
       return 'unknown';
     }
 
@@ -49,7 +48,6 @@ export const detectPaymentProvider = async (
 
     return 'unknown';
   } catch (err) {
-    console.error('Error detecting payment provider:', err);
     return 'unknown';
   }
 };
@@ -80,7 +78,7 @@ export const handleIntelligentRefund = async (
     }
 
     // For committed orders, use the cancel-order-with-refund function
-    if (orderData.status === 'committed') {
+    if ((orderData.status || '').toLowerCase() === 'committed') {
       const { data, error } = await supabase.functions.invoke('cancel-order-with-refund', {
         body: {
           order_id,
@@ -100,7 +98,6 @@ export const handleIntelligentRefund = async (
 
     // For uncommitted orders, detect payment provider and use appropriate refund function
     const provider = await detectPaymentProvider(order_id);
-    console.log('Detected payment provider:', provider);
 
     if (provider === 'bobpay') {
       // Use BobPay refund for uncommitted BobPay orders
@@ -148,7 +145,6 @@ export const handleIntelligentRefund = async (
       throw new Error('Unable to determine payment provider for refund');
     }
   } catch (err) {
-    console.error('Refund handling error:', err);
     const errorMessage = err instanceof Error ? err.message : 'Refund failed';
     return {
       success: false,

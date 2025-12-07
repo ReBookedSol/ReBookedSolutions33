@@ -25,7 +25,9 @@ import {
   getBuyerCheckoutData,
 } from "@/services/checkoutValidationService";
 import { supabase } from "@/integrations/supabase/client";
+import { getProvinceFromLocker } from "@/utils/provinceExtractorUtils";
 import Step1OrderSummary from "./Step1OrderSummary";
+import Step1point5DeliveryMethod from "./Step1point5DeliveryMethod";
 import Step2DeliveryOptions from "./Step2DeliveryOptions";
 import Step3Payment from "./Step3Payment";
 import Step4Confirmation from "./Step4Confirmation";
@@ -47,9 +49,13 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     book,
     buyer_address: null,
     seller_address: null,
+    seller_locker_data: null,
+    seller_preferred_pickup_method: null,
     delivery_options: [],
     selected_delivery: null,
     order_summary: null,
+    delivery_method: null,
+    selected_locker: null,
     loading: true,
     error: null,
   });
@@ -78,8 +84,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     try {
       setCheckoutState((prev) => ({ ...prev, loading: true, error: null }));
 
-      console.log("🚀 Using book table seller data for checkout...");
-
       // Get fresh book data with seller information from books table
       const { data, error: bookError } = await supabase
         .from("books")
@@ -106,7 +110,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         .maybeSingle();
 
       if (sellerError) {
-        console.warn("Could not fetch seller profile:", sellerError);
       }
 
       // Get seller subaccount code if available (but don't require it)
@@ -114,8 +117,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       let sellerSubaccountCode = bookData.seller_subaccount_code;
 
       if (!sellerSubaccountCode) {
-        console.log("ℹ️ Book has no seller_subaccount_code, attempting to fetch from seller profile...");
-
         // Try to fetch subaccount if available, but continue without it if not
         try {
           const { data: subaccount, error: subError } = await supabase
@@ -126,7 +127,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
 
           if (!subError && subaccount?.subaccount_code) {
             sellerSubaccountCode = subaccount.subaccount_code;
-            console.log("✅ Found seller subaccount code");
 
             // Update the book with the subaccount code for future purchases (non-blocking)
             try {
@@ -134,15 +134,11 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
                 .from("books")
                 .update({ seller_subaccount_code: sellerSubaccountCode })
                 .eq("id", bookData.id);
-              console.log("✅ Updated book with seller subaccount code");
             } catch (updateError) {
-              console.warn("⚠️ Failed to update book with subaccount code (non-critical):", updateError);
             }
           } else {
-            console.log("ℹ️ Seller has not set up banking details yet - checkout will proceed without subaccount code");
           }
         } catch (error) {
-          console.warn("⚠️ Error checking for seller subaccount (non-critical):", error);
           // Continue without subaccount code
         }
       }
@@ -157,18 +153,52 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       }
 
       // Get seller address using the proper service that handles encryption
-      console.log("🔐 Fetching seller pickup address (checking encrypted first)...");
-      console.log("Seller ID:", bookData.seller_id);
-      console.log("Book data:", { id: bookData.id, title: bookData.title, seller_id: bookData.seller_id });
-
       const sellerAddress = await getSellerDeliveryAddress(bookData.seller_id);
 
-      console.log("🔍 Raw seller address result:", sellerAddress);
+      // Fetch seller's preferred pickup method and locker data
+      let sellerLockerData = null;
+      let sellerPreferredPickupMethod: "locker" | "pickup" | null = null;
 
-      if (!sellerAddress) {
-        // Let's check what's in the database directly for debugging
-        console.log("❌ getSellerDeliveryAddress returned null, checking database directly...");
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("preferred_delivery_locker_data, preferred_pickup_method")
+          .eq("id", bookData.seller_id)
+          .maybeSingle();
 
+        if (!profileError && profile) {
+          // Load preferred pickup method
+          if (profile.preferred_pickup_method) {
+            sellerPreferredPickupMethod = profile.preferred_pickup_method;
+          }
+
+          // Only load locker if preferred method is locker
+          if (profile.preferred_pickup_method === "locker" && profile.preferred_delivery_locker_data) {
+            const lockerData = profile.preferred_delivery_locker_data as any;
+            if (lockerData.id && lockerData.name && lockerData.provider_slug) {
+              sellerLockerData = lockerData;
+            }
+          }
+
+          // Fallback: if no preferred method set but has locker, use locker as preference
+          if (!sellerPreferredPickupMethod && profile.preferred_delivery_locker_data) {
+            const lockerData = profile.preferred_delivery_locker_data as any;
+            if (lockerData.id && lockerData.name && lockerData.provider_slug) {
+              sellerLockerData = lockerData;
+              sellerPreferredPickupMethod = "locker";
+            }
+          }
+        }
+      } catch (error) {
+        // Default to pickup method if we have an address, otherwise locker
+        if (sellerAddress) {
+          sellerPreferredPickupMethod = "pickup";
+        } else {
+          sellerPreferredPickupMethod = "locker";
+        }
+      }
+
+      if (!sellerAddress && !sellerLockerData) {
         // First, let's verify the book's seller_id is correct
         const { data: bookCheck, error: bookError } = await supabase
           .from("books")
@@ -176,78 +206,41 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           .eq("id", bookData.id)
           .single();
 
-        console.log("📚 Book verification:", { bookCheck, bookError });
-
-        // Check if seller has encrypted address setup
+        // Check if seller profile exists
         const { data: profiles, error: profileError } = await supabase
           .from("profiles")
           .select("id, first_name, last_name, email, encryption_status")
           .eq("id", bookData.seller_id);
 
         const profile = profiles && profiles.length > 0 ? profiles[0] : null;
-        console.log("📊 Profile query result:", {
-          profiles,
-          profileError,
-          profile_count: profiles?.length || 0,
-          first_profile: profile
-        });
-
-        console.log("📊 Direct database check:", { profile, profileError });
 
         // If no profile found, do some additional debugging
         if (!profile && profileError?.code === 'PGRST116') {
-          console.log("🔍 Profile not found - doing additional checks...");
-
           // Check if there are any profiles at all (to see if DB connection works)
           const { count, error: countError } = await supabase
             .from("profiles")
             .select("id", { count: 'exact', head: true });
-
-          console.log("📊 Total profiles in database:", { count, countError });
 
           // Check if there are any books with this seller_id
           const { count: bookCount, error: bookCountError } = await supabase
             .from("books")
             .select("id", { count: 'exact', head: true })
             .eq("seller_id", bookData.seller_id);
-
-          console.log("📚 Books by this seller:", { bookCount, bookCountError });
         }
 
         // Handle missing profile case specifically
         if (!profile && profiles?.length === 0) {
-          console.error("💥 DATA INTEGRITY ISSUE: Book has seller_id but no profile exists");
-
           // Check if this is a systemic issue or isolated case
           const { count: orphanedBooks } = await supabase
             .from("books")
             .select("id", { count: 'exact', head: true })
             .eq("seller_id", bookData.seller_id);
 
-          console.log(`📊 Total books by this seller: ${orphanedBooks}`);
-
           // This is a data integrity issue - the book exists but seller profile doesn't
           const errorMessage = `This book is currently unavailable due to a profile setup issue. Book ID: ${bookData.id}. ` +
             (user?.id === bookData.seller_id
               ? "Please contact support to restore your seller profile."
               : "Please contact support or try a different book.");
-
-          console.error("Seller profile missing - possible solutions:", {
-            issue: "Book exists but seller profile missing",
-            seller_id: bookData.seller_id,
-            book_id: bookData.id,
-            books_by_seller: orphanedBooks,
-            possible_causes: [
-              "Profile was deleted but books weren't cleaned up",
-              "User registered but never created profile",
-              "Database inconsistency"
-            ],
-            admin_actions_needed: [
-              "Check if seller_id exists in auth.users",
-              "Create missing profile or reassign books",
-              "Clean up orphaned books if seller no longer exists"
-            ]
-          });
 
           throw new Error(errorMessage);
         }
@@ -261,7 +254,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         };
 
         const isMobile = isMobileDevice();
-        console.log(`📱 Device type: ${isMobile ? 'MOBILE' : 'DESKTOP'}`);
 
         // Provide specific guidance based on what's missing
         let errorMessage = "This book is temporarily unavailable for purchase. ";
@@ -269,19 +261,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         if (!profile) {
           errorMessage += "The seller's profile setup is incomplete.";
         } else {
-          // Try to get encrypted address to validate it exists
-          try {
-            const sellerAddress = await import("@/services/addressService").then(module =>
-              module.getSellerPickupAddress(bookData.seller_id)
-            );
-            if (!sellerAddress) {
-              errorMessage += "The seller hasn't set up their pickup address yet.";
-            } else {
-              errorMessage += "There was an issue retrieving the seller's address.";
-            }
-          } catch {
-            errorMessage += "The seller hasn't set up their pickup address yet.";
-          }
+          errorMessage += "The seller hasn't set up their pickup address or preferred locker location yet.";
         }
 
         // Mobile-specific guidance
@@ -291,7 +271,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
 
         // If this is the current user's book, give them guidance
         if (user?.id === bookData.seller_id) {
-          errorMessage += " You can fix this by updating your pickup address in your profile settings.";
+          errorMessage += " You can fix this by updating your pickup address or setting a preferred locker in your profile settings.";
         } else {
           if (isMobile) {
             errorMessage += " Mobile users can also try switching to a WiFi connection.";
@@ -300,58 +280,26 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           }
         }
 
-        console.error("Seller address debug info:", JSON.stringify({
-          book_verification: {
-            book_id: bookData.id,
-            book_title: bookData.title,
-            book_seller_id: bookData.seller_id,
-            fresh_book_data: bookCheck,
-            book_error: bookError?.message
-          },
-          seller_validation: {
-            seller_id: bookData.seller_id,
-            seller_id_type: typeof bookData.seller_id,
-            seller_id_length: bookData.seller_id?.length,
-            seller_id_valid: !!(bookData.seller_id && typeof bookData.seller_id === 'string' && bookData.seller_id.length > 10)
-          },
-          profile_check: {
-            has_profile: !!profile,
-            profile_error_code: profileError?.code,
-            profile_error_message: profileError?.message,
-            profile_data: profile ? {
-              id: profile.id,
-              name: profile.name,
-              email: profile.email,
-              encryption_status: profile.encryption_status
-            } : null
-          },
-          current_user: user?.id
-        }, null, 2));
-
         throw new Error(errorMessage);
       }
 
-      console.log("✅ Seller address retrieved:", {
-        streetAddress: sellerAddress.streetAddress || sellerAddress.street,
-        city: sellerAddress.city,
-        province: sellerAddress.province,
-        postalCode: sellerAddress.postalCode || sellerAddress.postal_code
-      });
-
-      if (
-        !(sellerAddress.streetAddress || sellerAddress.street) ||
-        !sellerAddress.city ||
-        !sellerAddress.province ||
-        !(sellerAddress.postalCode || sellerAddress.postal_code)
-      ) {
-        throw new Error(
-          `Seller address is incomplete. Missing fields: ${[
-            !(sellerAddress.streetAddress || sellerAddress.street) && 'streetAddress',
-            !sellerAddress.city && 'city',
-            !sellerAddress.province && 'province',
-            !(sellerAddress.postalCode || sellerAddress.postal_code) && 'postalCode'
-          ].filter(Boolean).join(', ')}. Raw address: ${JSON.stringify(sellerAddress)}`,
-        );
+      if (sellerAddress) {
+        if (
+          !(sellerAddress.streetAddress || sellerAddress.street) ||
+          !sellerAddress.city ||
+          !sellerAddress.province ||
+          !(sellerAddress.postalCode || sellerAddress.postal_code)
+        ) {
+          throw new Error(
+            `Seller address is incomplete. Missing fields: ${[
+              !(sellerAddress.streetAddress || sellerAddress.street) && 'streetAddress',
+              !sellerAddress.city && 'city',
+              !sellerAddress.province && 'province',
+              !(sellerAddress.postalCode || sellerAddress.postal_code) && 'postalCode'
+            ].filter(Boolean).join(', ')}. Raw address: ${JSON.stringify(sellerAddress)}`,
+          );
+        }
+      } else if (sellerLockerData) {
       }
 
       // Update book with complete seller data
@@ -381,7 +329,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           const { getSimpleUserAddresses } = await import("@/services/simplifiedAddressService");
           const addrData = await getSimpleUserAddresses(user.id);
           const sa: any = addrData?.shipping_address || addrData?.pickup_address;
-          if (sa?.streetAddress && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
+          if ((sa?.streetAddress || sa?.street) && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
             buyerAddress = {
               street: sa.streetAddress || sa.street,
               city: sa.city,
@@ -399,7 +347,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           const { getUserAddresses } = await import("@/services/addressService");
           const full = await getUserAddresses(user.id);
           const sa: any = full?.shipping_address || full?.pickup_address;
-          if (sa?.street && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
+          if ((sa?.street || sa?.streetAddress) && sa?.city && sa?.province && (sa?.postalCode || sa?.postal_code)) {
             buyerAddress = {
               street: sa.street || sa.streetAddress,
               city: sa.city,
@@ -411,17 +359,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         } catch {}
       }
 
-      console.log("📦 Checkout data loaded:", {
-        seller_address: sellerAddress,
-        buyer_data: buyerData,
-        buyer_address_resolved: buyerAddress,
-        book: updatedBook,
-      });
-
       setCheckoutState((prev) => ({
         ...prev,
         book: updatedBook,
         seller_address: sellerAddress,
+        seller_locker_data: sellerLockerData,
+        seller_preferred_pickup_method: sellerPreferredPickupMethod,
         buyer_address: buyerAddress,
         loading: false,
       }));
@@ -430,7 +373,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         toast.info("Please add your delivery address to continue with checkout");
       }
     } catch (error) {
-      console.error("�� Checkout initialization error:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -456,7 +398,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     }
   };
 
-  const goToStep = (step: 1 | 2 | 3 | 4) => {
+  const goToStep = (step: 1 | 2 | 3 | 4 | 5) => {
     setCheckoutState((prev) => ({
       ...prev,
       step: {
@@ -469,21 +411,49 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
   };
 
   const handleDeliverySelection = (delivery: DeliveryOption) => {
-    if (!checkoutState.buyer_address) {
+    // For locker delivery, we need the locker; for home delivery, we need the buyer address
+    const isLockerDelivery = checkoutState.delivery_method === "locker" && checkoutState.selected_locker;
+
+    if (!isLockerDelivery && !checkoutState.buyer_address) {
       toast.error("Please set your delivery address first");
       return;
     }
 
     const PLATFORM_FEE = 20; // R20 platform fee
+
+    // For locker delivery, show locker location as delivery address
+    let deliveryAddress = checkoutState.buyer_address || {
+      street: "",
+      city: "",
+      province: "",
+      postal_code: "",
+      country: "South Africa",
+    };
+    if (checkoutState.delivery_method === "locker" && checkoutState.selected_locker) {
+      const locker = checkoutState.selected_locker;
+      const lockerProvince = (locker as any).province || getProvinceFromLocker(locker);
+      deliveryAddress = {
+        street: (locker as any).full_address || (locker as any).address || "",
+        city: (locker as any).city || (locker as any).suburb || "Locker Location",
+        province: lockerProvince || "",
+        postal_code: (locker as any).postal_code || (locker as any).postalCode || "",
+        country: "South Africa",
+        additional_info: `Pickup at: ${locker.name}`,
+      };
+    }
+
     const orderSummary: OrderSummary = {
       book: checkoutState.book!,
       delivery,
-      buyer_address: checkoutState.buyer_address,
-      seller_address: checkoutState.seller_address!,
+      buyer_address: deliveryAddress,
+      seller_address: checkoutState.seller_address,
+      seller_locker_data: checkoutState.seller_locker_data,
       book_price: checkoutState.book!.price,
       delivery_price: delivery.price,
       platform_fee: PLATFORM_FEE,
       total_price: checkoutState.book!.price + delivery.price + PLATFORM_FEE,
+      delivery_method: checkoutState.delivery_method,
+      selected_locker: checkoutState.selected_locker,
     };
 
     setCheckoutState((prev) => ({
@@ -492,7 +462,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       order_summary: orderSummary,
     }));
 
-    goToStep(3);
+    goToStep(4);
   };
 
   const handlePaymentSuccess = async (orderData: OrderConfirmation) => {
@@ -508,18 +478,13 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       if (book.seller?.id) {
         removeFromSellerCart(book.seller.id, book.id);
       }
-
-      console.log("✅ Book removed from cart after successful purchase:", book.id);
     } catch (error) {
-      console.warn("Failed to remove book from cart after purchase:", error);
       // Don't block the checkout success flow if cart removal fails
     }
 
-    // 📧 GUARANTEED EMAIL FALLBACK SYSTEM
+    // Email fallback system
     // Send purchase confirmation emails with multiple fallback layers
     try {
-      console.log("📧 Triggering guaranteed purchase emails...");
-
       const purchaseEmailData = {
         orderId: orderData.orderId || book.id,
         bookId: book.id,
@@ -536,29 +501,26 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       // Use enhanced email service with guaranteed fallbacks
       const emailResult = await EnhancedPurchaseEmailService.sendPurchaseEmailsWithFallback(purchaseEmailData);
 
-      console.log("📧 Purchase email result:", emailResult);
-
       // Show user feedback about email status
       if (emailResult.sellerEmailSent && emailResult.buyerEmailSent) {
-        toast.success("📧 Confirmation emails sent to all parties");
+        toast.success("Confirmation emails sent to all parties");
       } else {
-        toast.info("📧 Confirmation emails are being processed", {
+        toast.info("Confirmation emails are being processed", {
           description: "You'll receive your receipt shortly via our backup system."
         });
       }
 
     } catch (emailError) {
-      console.error("⚠️ Purchase email system failed:", emailError);
       // Don't block checkout completion if emails fail
-      toast.warning("📧 Emails are being processed manually", {
+      toast.warning("Emails are being processed manually", {
         description: "Your purchase is complete but notifications may be delayed."
       });
     }
 
-    goToStep(4);
+    goToStep(5);
   };
 
-    const handlePaymentError = (error: string) => {
+  const handlePaymentError = (error: string) => {
     const errorMessage = typeof error === 'string' ? error : String(error || 'Unknown error');
     const safeMessage = errorMessage === '[object Object]' ? 'Payment processing failed' : errorMessage;
     toast.error(`Payment failed: ${safeMessage}`);
@@ -605,16 +567,26 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
         additional_info: address.additional_info,
       };
 
+      // Get existing addresses to preserve pickup address if it exists
+      const { getSimpleUserAddresses } = await import(
+        "@/services/simplifiedAddressService"
+      );
+
+      const existingAddresses = await getSimpleUserAddresses(user.id);
+
+      // Save the entered address as shipping, preserve existing pickup address
+      const pickupToSave = existingAddresses?.pickup_address || simpleAddress;
+      const shippingToSave = simpleAddress;
+
       await saveSimpleUserAddresses(
         user.id,
-        simpleAddress, // Use as pickup address
-        simpleAddress, // Use as shipping address
-        true, // Addresses are the same
+        pickupToSave,
+        shippingToSave,
+        false, // Addresses are different
       );
 
       toast.success("Address saved to your profile!");
     } catch (error) {
-      console.error("Failed to save address to profile:", error);
       toast.error(
         "Failed to save address to profile, but proceeding with order",
       );
@@ -638,12 +610,14 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
   const getProgressValue = () => {
     switch (checkoutState.step.current) {
       case 1:
-        return 25;
+        return 20;
       case 2:
-        return 50;
+        return 40;
       case 3:
-        return 75;
+        return 60;
       case 4:
+        return 80;
+      case 5:
         return 100;
       default:
         return 0;
@@ -655,10 +629,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       case 1:
         return "Order Summary";
       case 2:
-        return "Delivery Options";
+        return "Delivery Method";
       case 3:
-        return "Payment";
+        return "Delivery Options";
       case 4:
+        return "Payment";
+      case 5:
         return "Confirmation";
       default:
         return "Checkout";
@@ -714,7 +690,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           <Progress value={getProgressValue()} className="h-2 mx-2 sm:mx-0" />
           <div className="flex justify-between mt-2 text-xs sm:text-sm text-gray-500 px-2 sm:px-0">
             <span className="text-center flex-1">Summary</span>
-            <span className="text-center flex-1">Delivery</span>
+            <span className="text-center flex-1">Method</span>
+            <span className="text-center flex-1">Options</span>
             <span className="text-center flex-1">Payment</span>
             <span className="text-center flex-1">Complete</span>
           </div>
@@ -731,31 +708,65 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 2 &&
-          checkoutState.buyer_address &&
-          checkoutState.seller_address &&
-          !isEditingAddress && (
-            <Step2DeliveryOptions
-              buyerAddress={checkoutState.buyer_address}
-              sellerAddress={checkoutState.seller_address}
-              onSelectDelivery={handleDeliverySelection}
-              onBack={() => goToStep(1)}
-              onCancel={handleCancelCheckout}
-              onEditAddress={handleEditAddress}
-              selectedDelivery={checkoutState.selected_delivery}
-            />
-          )}
-
-        {checkoutState.step.current === 2 && !checkoutState.buyer_address && (
-          <AddressInput
-            title="Enter Your Delivery Address"
-            onAddressSubmit={handleAddressSubmit}
-            onSaveToProfile={handleSaveAddressToProfile}
+        {checkoutState.step.current === 2 && (
+          <Step1point5DeliveryMethod
+            bookTitle={checkoutState.book?.title || "your book"}
+            onSelectDeliveryMethod={(method, locker) => {
+              setCheckoutState((prev) => ({
+                ...prev,
+                delivery_method: method,
+                selected_locker: locker || null,
+              }));
+              goToStep(3);
+            }}
+            onBack={() => goToStep(1)}
+            onCancel={handleCancelCheckout}
             loading={checkoutState.loading}
           />
         )}
 
-        {checkoutState.step.current === 2 &&
+        {checkoutState.step.current === 3 &&
+          (checkoutState.seller_address || checkoutState.seller_locker_data) &&
+          !isEditingAddress && (
+            <>
+              {checkoutState.delivery_method === "locker" && checkoutState.selected_locker ? (
+                <Step2DeliveryOptions
+                  buyerAddress={checkoutState.buyer_address || { street: "", city: "", province: "", postal_code: "", country: "" }}
+                  sellerAddress={checkoutState.seller_address}
+                  sellerLockerData={checkoutState.seller_locker_data}
+                  sellerPreferredPickupMethod={checkoutState.seller_preferred_pickup_method}
+                  onSelectDelivery={handleDeliverySelection}
+                  onBack={() => goToStep(2)}
+                  onCancel={handleCancelCheckout}
+                  onEditAddress={handleEditAddress}
+                  selectedDelivery={checkoutState.selected_delivery}
+                  preSelectedLocker={checkoutState.selected_locker}
+                />
+              ) : checkoutState.buyer_address ? (
+                <Step2DeliveryOptions
+                  buyerAddress={checkoutState.buyer_address}
+                  sellerAddress={checkoutState.seller_address}
+                  sellerLockerData={checkoutState.seller_locker_data}
+                  sellerPreferredPickupMethod={checkoutState.seller_preferred_pickup_method}
+                  onSelectDelivery={handleDeliverySelection}
+                  onBack={() => goToStep(2)}
+                  onCancel={handleCancelCheckout}
+                  onEditAddress={handleEditAddress}
+                  selectedDelivery={checkoutState.selected_delivery}
+                  preSelectedLocker={null}
+                />
+              ) : (
+                <AddressInput
+                  title="Enter Your Delivery Address"
+                  onAddressSubmit={handleAddressSubmit}
+                  onSaveToProfile={handleSaveAddressToProfile}
+                  loading={checkoutState.loading}
+                />
+              )}
+            </>
+          )}
+
+        {checkoutState.step.current === 3 &&
           checkoutState.buyer_address &&
           isEditingAddress && (
           <AddressInput
@@ -768,17 +779,17 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
           />
         )}
 
-        {checkoutState.step.current === 3 && checkoutState.order_summary && (
+        {checkoutState.step.current === 4 && checkoutState.order_summary && (
           <Step3Payment
             orderSummary={checkoutState.order_summary}
-            onBack={() => goToStep(2)}
+            onBack={() => goToStep(3)}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
             userId={user.id}
           />
         )}
 
-        {checkoutState.step.current === 4 && orderConfirmation && (
+        {checkoutState.step.current === 5 && orderConfirmation && (
           <Step4Confirmation
             orderData={orderConfirmation}
             onViewOrders={handleViewOrders}

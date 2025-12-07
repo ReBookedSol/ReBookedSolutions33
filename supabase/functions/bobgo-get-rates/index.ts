@@ -3,43 +3,86 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { parseRequestBody } from "../_shared/safe-body-parser.ts";
 
 interface Address {
-  suburb: string;
-  province: string; // pass short code (e.g., GP)
-  postalCode: string;
-  streetAddress?: string;
-  city?: string;
+  street_address?: string;
+  company?: string;
+  local_area: string;
+  city: string;
+  zone: string; // Province code like "GP"
+  country: string; // "ZA"
+  code: string; // Postal code
+}
+
+interface PickupPointLocation {
+  locationId: number;
+  providerSlug: string;
+}
+
+interface Parcel {
+  weight: number;
+  length?: number;
+  width?: number;
+  height?: number;
+  value?: number;
+  description?: string;
 }
 
 interface RateRequest {
   fromAddress?: Address;
   toAddress?: Address;
-  parcels?: Array<{
-    weight: number;
-    length?: number;
-    width?: number;
-    height?: number;
-    value?: number;
-  }>;
+  parcels: Parcel[];
   serviceType?: string;
   preferences?: { carriers?: string[]; service_levels?: string[] };
+  collectionPickupPoint?: PickupPointLocation;
+  deliveryPickupPoint?: PickupPointLocation;
+  declaredValue?: number;
+  timeout?: number;
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  
   try {
     const bodyResult = await parseRequestBody<RateRequest>(req, corsHeaders);
     if (!bodyResult.success) return bodyResult.errorResponse!;
 
-    const { fromAddress, toAddress, parcels, serviceType, preferences } = bodyResult.data!;
+    const { 
+      fromAddress, 
+      toAddress, 
+      parcels, 
+      preferences, 
+      collectionPickupPoint, 
+      deliveryPickupPoint,
+      declaredValue,
+      timeout 
+    } = bodyResult.data!;
 
+    // Validation
     const validationErrors = [] as string[];
-    if (!fromAddress) validationErrors.push("fromAddress required");
-    if (!toAddress) validationErrors.push("toAddress required");
-    if (!parcels || !Array.isArray(parcels) || parcels.length === 0) {
-      validationErrors.push("parcels required");
+    
+    const hasCollectionAddress = fromAddress && fromAddress.local_area && fromAddress.zone;
+    const hasCollectionPickupPoint = collectionPickupPoint && collectionPickupPoint.locationId;
+    const hasDeliveryAddress = toAddress && toAddress.local_area && toAddress.zone;
+    const hasDeliveryPickupPoint = deliveryPickupPoint && deliveryPickupPoint.locationId;
+
+    if (!hasCollectionAddress && !hasCollectionPickupPoint) {
+      validationErrors.push("Either fromAddress or collectionPickupPoint is required");
     }
+    if (!hasDeliveryAddress && !hasDeliveryPickupPoint) {
+      validationErrors.push("Either toAddress or deliveryPickupPoint is required");
+    }
+    if (!parcels || !Array.isArray(parcels) || parcels.length === 0) {
+      validationErrors.push("parcels array is required and must not be empty");
+    }
+    
+    // Validate locker-to-locker must use same provider
+    if (hasCollectionPickupPoint && hasDeliveryPickupPoint) {
+      if (collectionPickupPoint!.providerSlug !== deliveryPickupPoint!.providerSlug) {
+        validationErrors.push("For locker-to-locker shipments, both pickup points must use the same provider");
+      }
+    }
+    
     if (validationErrors.length > 0) {
       return new Response(
         JSON.stringify({ success: false, error: "VALIDATION_FAILED", details: validationErrors }),
@@ -48,7 +91,7 @@ serve(async (req) => {
     }
 
     const BOBGO_API_KEY = Deno.env.get("BOBGO_API_KEY");
-
+    
     function resolveBaseUrl() {
       const env = (Deno.env.get("BOBGO_BASE_URL") || "").trim().replace(/\/+$/, "");
       if (!env) return "https://api.bobgo.co.za/v2";
@@ -63,17 +106,78 @@ serve(async (req) => {
 
     const BOBGO_BASE_URL = resolveBaseUrl();
 
-    if (!fromAddress || !toAddress || !parcels) throw new Error("Validation should have caught missing data");
+    // Build the payload according to BobGo API specs
+    const payload: any = {
+      parcels: parcels.map((p) => ({
+        description: p.description || "Book",
+        submitted_length_cm: p.length || 10,
+        submitted_width_cm: p.width || 10,
+        submitted_height_cm: p.height || 10,
+        submitted_weight_kg: p.weight || 1,
+        custom_parcel_reference: "",
+      })),
+      declared_value: declaredValue || parcels.reduce((sum, p) => sum + (p.value || 100), 0),
+      timeout: timeout || 10000,
+    };
 
+    // Handle collection (either address or pickup point)
+    if (collectionPickupPoint) {
+      // Locker collection - use pickup point
+      payload.collection_pickup_point_location_id = collectionPickupPoint.locationId;
+      payload.pickup_point_provider_slug = collectionPickupPoint.providerSlug;
+    } else if (fromAddress) {
+      // Door collection - use address
+      payload.collection_address = {
+        street_address: fromAddress.street_address || "",
+        company: fromAddress.company || "",
+        local_area: fromAddress.local_area,
+        city: fromAddress.city,
+        zone: fromAddress.zone,
+        country: fromAddress.country,
+        code: fromAddress.code,
+      };
+      payload.collection_contact_name = "Seller";
+      payload.collection_contact_mobile_number = "+27000000000";
+      payload.collection_contact_email = "seller@example.com";
+    }
+
+    // Handle delivery (either address or pickup point)
+    if (deliveryPickupPoint) {
+      // Locker delivery - use pickup point
+      payload.delivery_pickup_point_location_id = deliveryPickupPoint.locationId;
+      // Only set provider_slug if not already set from collection
+      if (!payload.pickup_point_provider_slug) {
+        payload.pickup_point_provider_slug = deliveryPickupPoint.providerSlug;
+      }
+    } else if (toAddress) {
+      // Door delivery - use address
+      payload.delivery_address = {
+        street_address: toAddress.street_address || "",
+        company: toAddress.company || "",
+        local_area: toAddress.local_area,
+        city: toAddress.city,
+        zone: toAddress.zone,
+        country: toAddress.country,
+        code: toAddress.code,
+      };
+      payload.delivery_contact_name = "Buyer";
+      payload.delivery_contact_mobile_number = "+27000000000";
+      payload.delivery_contact_email = "buyer@example.com";
+    }
+
+    // Optional filters
+    if (preferences?.carriers?.length) payload.providers = preferences.carriers;
+    if (preferences?.service_levels?.length) payload.service_levels = preferences.service_levels;
+
+    // Make API call if key is available
     if (!BOBGO_API_KEY || BOBGO_API_KEY.trim() === "") {
-      console.warn("BOBGO_API_KEY not set - returning simulated quotes");
       return new Response(
         JSON.stringify({
           success: true,
           quotes: parcels.map((p, i) => ({
             provider: "bobgo",
             carrier: "simulated",
-            service_name: serviceType || "Standard",
+            service_name: "Standard (Simulated)",
             service_code: "STANDARD",
             cost: Math.round(Math.max(50, (p.weight || 1) * 40)),
             transit_days: 2,
@@ -85,46 +189,6 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const payload: any = {
-      collection_address: {
-        street_address: fromAddress.streetAddress || "",
-        company: "Seller",
-        local_area: fromAddress.suburb,
-        city: fromAddress.city || fromAddress.suburb,
-        zone: fromAddress.province,
-        country: "ZA",
-        code: fromAddress.postalCode,
-      },
-      collection_contact_name: "Seller",
-      collection_contact_mobile_number: "0000000000",
-      collection_contact_email: "seller@example.com",
-      delivery_address: {
-        street_address: toAddress.streetAddress || "",
-        company: "",
-        local_area: toAddress.suburb,
-        city: toAddress.city || toAddress.suburb,
-        zone: toAddress.province,
-        country: "ZA",
-        code: toAddress.postalCode,
-      },
-      delivery_contact_name: "Buyer",
-      delivery_contact_mobile_number: "0000000000",
-      delivery_contact_email: "buyer@example.com",
-      parcels: parcels.map((p) => ({
-        description: "Book",
-        submitted_length_cm: p.length || 10,
-        submitted_width_cm: p.width || 10,
-        submitted_height_cm: p.height || 10,
-        submitted_weight_kg: p.weight || 1,
-        custom_parcel_reference: "",
-      })),
-      declared_value: parcels.reduce((sum, p) => sum + (p.value || 100), 0),
-      timeout: 10000,
-    };
-
-    if (preferences?.carriers?.length) payload.providers = preferences.carriers;
-    if (preferences?.service_levels?.length) payload.service_levels = preferences.service_levels;
 
     try {
       const resp = await fetch(`${BOBGO_BASE_URL}/rates`, {
@@ -139,41 +203,68 @@ serve(async (req) => {
 
       if (!resp.ok) {
         const text = await resp.text().catch(() => "");
-        console.error("Bobgo rates HTTP error:", resp.status, text);
-        throw new Error(`Bobgo rates HTTP ${resp.status}: ${text}`);
+        throw new Error(`BobGo API HTTP ${resp.status}: ${text}`);
       }
 
       const data = await resp.json();
-      const rates = data.rates || [];
-
-      const quotes = rates.map((r: any) => ({
-        provider: "bobgo",
-        provider_slug: r.provider_slug,
-        service_level_code: r.service_level_code,
-        carrier: r.provider_name || r.courier_name || "Unknown",
-        service_name: r.service_level_name || r.service_name || "Unknown Service",
-        cost: r.total_charge || r.charge || 0,
-        currency: r.currency || "ZAR",
-        transit_days: r.delivery_days || 3,
-        collection_date: r.collection_date,
-        delivery_date: r.delivery_date,
-        rate_id: r.id,
-        meta: r,
-      }));
+      
+      // Extract rates from nested provider_rate_requests structure
+      const quotes: any[] = [];
+      const providerRequests = data.provider_rate_requests || [];
+      
+      for (const providerReq of providerRequests) {
+        const responses = providerReq.responses || [];
+        for (const rate of responses) {
+          quotes.push({
+            provider: "bobgo",
+            provider_slug: providerReq.provider_slug,
+            provider_name: providerReq.provider_name,
+            service_level_code: rate.service_level_code,
+            carrier: providerReq.provider_name || "Unknown",
+            service_name: rate.service_level?.name || "Unknown Service",
+            service_description: rate.service_level?.description || "",
+            cost: rate.rate_amount || 0,
+            cost_excl_vat: rate.rate_amount_excl_vat || 0,
+            currency: "ZAR",
+            charged_weight_kg: rate.charged_weight_kg,
+            transit_days: rate.service_level?.service_level_days || null,
+            collection_date: data.collection_date,
+            delivery_date: data.delivery_date,
+            rate_id: data.id,
+            pickup_point_location_id: rate.pickup_point_location_id || rate.collection_pickup_point_location_id,
+            delivery_type: rate.service_level?.delivery_type,
+            type: rate.service_level?.type,
+            parcel_size_name: rate.service_level?.parcel_size_name,
+            meta: rate,
+          });
+        }
+      }
 
       return new Response(
         JSON.stringify({ success: true, quotes, provider: "bobgo", raw: data }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (err: any) {
-      console.error("Bobgo rates failed:", err?.message || err);
       return new Response(
-        JSON.stringify({ success: true, quotes: [{ provider: "bobgo", carrier: "simulated", service_name: "Standard (Estimated)", service_code: "STANDARD", cost: 95, transit_days: 3, offer_id: `SIM_OFFER_${Date.now()}`, fallback: true, api_error: err.message }], simulated: true }),
+        JSON.stringify({ 
+          success: true, 
+          quotes: [{ 
+            provider: "bobgo", 
+            carrier: "simulated", 
+            service_name: "Standard (Estimated)", 
+            service_code: "STANDARD", 
+            cost: 95, 
+            transit_days: 3, 
+            offer_id: `SIM_OFFER_${Date.now()}`, 
+            fallback: true, 
+            api_error: err.message 
+          }], 
+          simulated: true 
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error: any) {
-    console.error("bobgo-get-rates error:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message || "Failed to get rates" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

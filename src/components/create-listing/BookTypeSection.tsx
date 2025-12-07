@@ -3,20 +3,23 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { School, GraduationCap } from "lucide-react";
+import { School, GraduationCap, BookOpen } from "lucide-react";
 import { UNIVERSITY_YEARS, SOUTH_AFRICAN_UNIVERSITIES_SIMPLE } from "@/constants/universities";
-import { CREATE_LISTING_CATEGORIES } from "@/constants/createListingCategories";
+import { getCategoriesByBookType } from "@/constants/bookTypeCategories";
+import { ALL_READER_GENRES, GENRE_CATEGORIES } from "@/constants/readerGenres";
 import { BookFormData } from "@/types/book";
 
 interface BookTypeSectionProps {
-  bookType: "school" | "university";
+  bookType: "school" | "university" | "reader";
   formData: BookFormData;
   errors: Record<string, string>;
-  onBookTypeChange: (type: "school" | "university") => void;
+  onBookTypeChange: (type: "school" | "university" | "reader") => void;
   onSelectChange: (name: string, value: string) => void;
 }
 
@@ -27,11 +30,8 @@ export const BookTypeSection = ({
   onBookTypeChange,
   onSelectChange,
 }: BookTypeSectionProps) => {
-  // Use shared category list across app
-  // Imported from constants to keep Create Listing and Books filters in sync
-
-
-  const categories = CREATE_LISTING_CATEGORIES.slice().sort((a, b) => a.localeCompare(b));
+  // Get categories based on selected book type
+  const categories = getCategoriesByBookType(bookType);
 
   const conditions = ["New", "Good", "Better", "Average", "Below Average"];
 
@@ -49,11 +49,6 @@ export const BookTypeSection = ({
     "Grade 10",
     "Grade 11",
     "Grade 12",
-    "Study Guide",
-    "Course Book",
-  ];
-
-  const universityBookTypes = [
     "Study Guide",
     "Course Book",
   ];
@@ -91,6 +86,19 @@ export const BookTypeSection = ({
             <GraduationCap className="h-4 w-4" />
             University
           </button>
+          <button
+            type="button"
+            onClick={() => onBookTypeChange("reader")}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border-l ${
+              bookType === "reader"
+                ? "bg-book-600 text-white shadow-inner"
+                : "bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+            aria-pressed={bookType === "reader"}
+          >
+            <BookOpen className="h-4 w-4" />
+            Reader
+          </button>
         </div>
       </div>
 
@@ -116,27 +124,6 @@ export const BookTypeSection = ({
         {errors.category && (
           <p className="text-sm text-red-500 mt-1">{errors.category}</p>
         )}
-      </div>
-
-      <div>
-        <Label htmlFor="curriculum" className="text-base font-medium">
-          Curriculum <span className="text-gray-400">(Optional)</span>
-        </Label>
-        <Select
-          value={(formData as any).curriculum || ""}
-          onValueChange={(value) => onSelectChange("curriculum", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select curriculum (optional)" />
-          </SelectTrigger>
-          <SelectContent>
-            {['CAPS', 'Cambridge', 'IEB'].map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <div>
@@ -187,7 +174,7 @@ export const BookTypeSection = ({
             <p className="text-sm text-red-500 mt-1">{errors.grade}</p>
           )}
         </div>
-      ) : (
+      ) : bookType === "university" ? (
         <>
           {/* University Year Selection - Required */}
           <div>
@@ -235,30 +222,37 @@ export const BookTypeSection = ({
               </SelectContent>
             </Select>
           </div>
-
-          {/* University Book Type - Optional */}
-          <div>
-            <Label htmlFor="universityBookType" className="text-base font-medium">
-              Book Type <span className="text-gray-400">(Optional)</span>
-            </Label>
-            <Select
-              value={(formData as any).universityBookType || ""}
-              onValueChange={(value) => onSelectChange("universityBookType", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select book type (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                {universityBookTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </>
-      )}
+      ) : bookType === "reader" ? (
+        <div>
+          <Label htmlFor="genre" className="text-base font-medium">
+            Genre <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={(formData as any).genre || ""}
+            onValueChange={(value) => onSelectChange("genre", value)}
+          >
+            <SelectTrigger className={errors.genre ? "border-red-500" : ""}>
+              <SelectValue placeholder="Select a genre" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(GENRE_CATEGORIES).map(([category, genres]) => (
+                <SelectGroup key={category}>
+                  <SelectLabel>{category}</SelectLabel>
+                  {genres.map((genre) => (
+                    <SelectItem key={genre} value={genre}>
+                      {genre}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.genre && (
+            <p className="text-sm text-red-500 mt-1">{errors.genre}</p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 };

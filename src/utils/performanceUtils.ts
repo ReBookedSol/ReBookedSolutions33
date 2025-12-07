@@ -21,7 +21,6 @@ export class PerformanceMonitor {
         performance.mark(`${name}-end`);
         performance.measure(name, `${name}-start`, `${name}-end`);
 
-        console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`);
         this.measurements.delete(name);
 
         return duration;
@@ -51,8 +50,6 @@ export const initCoreWebVitals = () => {
       const entries = list.getEntries();
       const lastEntry = entries[entries.length - 1];
 
-      console.log("LCP:", lastEntry.startTime);
-
       // You can send this to your analytics service
       // analytics.track('core_web_vital', {
       //   metric: 'LCP',
@@ -65,8 +62,6 @@ export const initCoreWebVitals = () => {
     // First Input Delay (FID)
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        console.log("FID:", entry.processingStart - entry.startTime);
-
         // analytics.track('core_web_vital', {
         //   metric: 'FID',
         //   value: entry.processingStart - entry.startTime
@@ -96,8 +91,6 @@ export const initCoreWebVitals = () => {
     // Report CLS when the page visibility changes
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
-        console.log("CLS:", clsValue);
-
         // analytics.track('core_web_vital', {
         //   metric: 'CLS',
         //   value: clsValue
@@ -156,18 +149,9 @@ export const analyzeBundleSize = () => {
   const scripts = document.querySelectorAll("script[src]");
   const styles = document.querySelectorAll('link[rel="stylesheet"]');
 
-  console.group("📦 Bundle Analysis");
-  console.log(`Scripts: ${scripts.length}`);
-  console.log(`Stylesheets: ${styles.length}`);
-
   // Estimate bundle sizes (approximate)
   let totalEstimatedSize = 0;
   scripts.forEach((script) => {
     const src = (script as HTMLScriptElement).src;
-    if (src.includes("index-")) {
-      console.log("Main bundle:", src);
-    }
   });
-
-  console.groupEnd();
 };

@@ -27,21 +27,16 @@ export const createSafeButtonHandler = <T extends any[]>(
 
     // Prevent execution if disabled
     if (disabled) {
-      console.log("Button handler disabled, ignoring click");
       return;
     }
 
     // Prevent double-clicks/rapid firing
     if (isExecuting) {
-      console.log("Button handler already executing, ignoring click");
       return;
     }
 
     // Debounce rapid clicks
     if (now - lastExecution < debounceMs) {
-      console.log(
-        `Button handler debounced (${now - lastExecution}ms < ${debounceMs}ms)`,
-      );
       return;
     }
 
@@ -58,15 +53,8 @@ export const createSafeButtonHandler = <T extends any[]>(
         await result;
       }
     } catch (error) {
-      console.error("Button handler error:", error);
-
       if (onError) {
         onError(error);
-      } else {
-        // Default error handling
-        const errorMessage =
-          error instanceof Error ? error.message : "An error occurred";
-        console.error("Button handler failed:", errorMessage);
       }
     } finally {
       loadingSetter?.(false);
@@ -107,7 +95,6 @@ export const createSafeFormHandler = (
     e.stopPropagation();
 
     if (isSubmitting) {
-      console.log("Form already submitting, ignoring submission");
       return;
     }
 
@@ -121,8 +108,6 @@ export const createSafeFormHandler = (
         await result;
       }
     } catch (error) {
-      console.error("Form submission error:", error);
-
       if (onError) {
         onError(error);
       }
@@ -160,7 +145,6 @@ export const createSafeNavigationHandler = (
         loadingSetter?.(false);
       }
     } catch (error) {
-      console.error("Navigation error:", error);
       loadingSetter?.(false);
     }
   };
@@ -194,20 +178,12 @@ export const monitorButtonClicks = () => {
       const isLoading = checkElementLoadingState(button);
 
       if (isLoading) {
-        console.warn("🚨 Button clicked while in loading state:", button);
         event.preventDefault();
         event.stopPropagation();
         return false;
       }
-
-      console.log(
-        "✅ Button click:",
-        button.textContent?.trim() || "Unnamed button",
-      );
     }
   });
-
-  console.log("🔍 Button click monitor activated");
 };
 
 // Auto-start monitoring in development

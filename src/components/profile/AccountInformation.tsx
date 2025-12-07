@@ -80,7 +80,6 @@ const AccountInformation = ({
         .is("phone_number", null);
 
       if (error) {
-        console.error("Failed to save phone:", error);
         toast.error("Could not save phone number. Try again.");
         return;
       }
@@ -125,10 +124,12 @@ const AccountInformation = ({
                 </div>
                 <p className="text-lg font-semibold text-gray-900">
                   {(() => {
+                    const fullName = (profile as any)?.full_name;
+                    if (fullName) return fullName;
                     const fn = (profile as any)?.first_name;
                     const ln = (profile as any)?.last_name;
                     const combined = [fn, ln].filter(Boolean).join(" ");
-                    return combined || profile?.name || profile?.email?.split("@")[0] || "Not provided";
+                    return combined || profile?.name || "Not provided";
                   })()}
                 </p>
               </div>
