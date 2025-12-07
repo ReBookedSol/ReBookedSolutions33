@@ -1,12 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
-import { getErrorMessage } from "../_shared/error-utils.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 interface BrevoContactRequest {
   email: string;
   firstName?: string;
   lastName?: string;
-  [key: string]: any;
+  listIds?: number[];
+  attributes?: Record<string, unknown>;
+  updateIfExists?: boolean;
 }
 
 interface BrevoContactResponse {
@@ -16,122 +21,171 @@ interface BrevoContactResponse {
   error?: string;
 }
 
-/**
- * Creates or updates a contact in Brevo (Sendinblue)
- */
+// Simple email validation
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Hash email for logging (minimal PII)
+function hashEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  return `${local.substring(0, 2)}***@${domain}`;
+}
+
+// Map Brevo errors to clean messages
+function mapBrevoError(error: unknown): string {
+  if (typeof error === 'object' && error !== null) {
+    const err = error as Record<string, unknown>;
+    if (err.message) return String(err.message);
+    if (err.code === 'duplicate_parameter') return 'Contact already exists';
+    if (err.code === 'invalid_parameter') return 'Invalid parameter provided';
+  }
+  return 'An error occurred while processing your request';
+}
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  // Handle GET for sample payload
+  if (req.method === 'GET') {
+    const samplePayload = {
+      email: "student@example.com",
+      firstName: "Sam",
+      lastName: "Student",
+      listIds: [12],
+      attributes: { "UNIVERSITY": "UCT" },
+      updateIfExists: true
+    };
+    return new Response(
+      JSON.stringify({ samplePayload }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+    );
+  }
+
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Method not allowed' }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 405 }
+    );
   }
 
   try {
     const apiKey = Deno.env.get("BREVO_API_KEY");
     if (!apiKey) {
+      console.error("[create-brevo-contact] BREVO_API_KEY not configured");
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: "BREVO_API_KEY not configured",
-        } as BrevoContactResponse),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        }
+        JSON.stringify({ ok: false, error: "Server configuration error" } as BrevoContactResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
 
-    const body: BrevoContactRequest = await req.json();
-
-    if (!body.email) {
+    let body: BrevoContactRequest;
+    try {
+      body = await req.json();
+    } catch {
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: "Email is required",
-        } as BrevoContactResponse),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        }
+        JSON.stringify({ ok: false, error: "Invalid JSON body" } as BrevoContactResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
 
-    // Prepare contact data for Brevo
-    const contactData: any = {
+    // Validate email
+    if (!body.email || typeof body.email !== 'string') {
+      return new Response(
+        JSON.stringify({ ok: false, error: "Email is required" } as BrevoContactResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    if (!isValidEmail(body.email)) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "Invalid email format" } as BrevoContactResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    const hashedEmail = hashEmail(body.email);
+    console.log(`[create-brevo-contact] Processing request for: ${hashedEmail}`);
+
+    // Build Brevo payload
+    const brevoPayload: Record<string, unknown> = {
       email: body.email,
-      attributes: {},
+      attributes: { ...(body.attributes || {}) },
+      updateEnabled: body.updateIfExists ?? false,
     };
 
-    // Add first name if provided
+    // Add firstName/lastName to attributes
     if (body.firstName) {
-      contactData.attributes.FIRSTNAME = body.firstName;
+      (brevoPayload.attributes as Record<string, unknown>).FIRSTNAME = body.firstName;
     }
-
-    // Add last name if provided
     if (body.lastName) {
-      contactData.attributes.LASTNAME = body.lastName;
+      (brevoPayload.attributes as Record<string, unknown>).LASTNAME = body.lastName;
     }
 
-    // Add any additional attributes (phone, affiliate_code, etc.)
-    const excludedFields = ["email", "firstName", "lastName"];
-    for (const [key, value] of Object.entries(body)) {
-      if (!excludedFields.includes(key) && value !== undefined && value !== null) {
-        // Convert snake_case to UPPERCASE for Brevo attributes
-        const attributeKey = key.toUpperCase().replace(/_/g, "");
-        contactData.attributes[attributeKey] = value;
-      }
+    // Add listIds if provided
+    if (body.listIds && Array.isArray(body.listIds)) {
+      brevoPayload.listIds = body.listIds;
     }
+
+    console.log(`[create-brevo-contact] Calling Brevo API for: ${hashedEmail}`);
 
     // Call Brevo API
-    const brevoResponse = await fetch(
-      "https://api.brevo.com/v3/contacts",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": apiKey,
-        },
-        body: JSON.stringify(contactData),
-      }
-    );
+    const brevoResponse = await fetch("https://api.brevo.com/v3/contacts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+      body: JSON.stringify(brevoPayload),
+    });
 
     const responseData = await brevoResponse.json();
 
-    // Brevo returns 200 for success and 409 if contact already exists
+    // Handle duplicate contact (409)
     if (brevoResponse.status === 409) {
-      // Contact already exists - update it
-      const updateResponse = await fetch(
-        `https://api.brevo.com/v3/contacts/${body.email}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "api-key": apiKey,
-          },
-          body: JSON.stringify(contactData),
-        }
-      );
+      console.log(`[create-brevo-contact] Contact exists: ${hashedEmail}`);
 
-      if (!updateResponse.ok) {
-        const updateError = await updateResponse.json();
-        return new Response(
-          JSON.stringify({
-            ok: false,
-            error: getErrorMessage(updateError),
-          } as BrevoContactResponse),
+      if (body.updateIfExists) {
+        // Update existing contact
+        const updatePayload: Record<string, unknown> = {
+          attributes: brevoPayload.attributes,
+        };
+        if (body.listIds) {
+          updatePayload.listIds = body.listIds;
+        }
+
+        const updateResponse = await fetch(
+          `https://api.brevo.com/v3/contacts/${encodeURIComponent(body.email)}`,
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: updateResponse.status,
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "api-key": apiKey,
+            },
+            body: JSON.stringify(updatePayload),
           }
         );
+
+        if (!updateResponse.ok) {
+          const updateError = await updateResponse.json();
+          console.error(`[create-brevo-contact] Update failed: ${hashedEmail}`, updateError);
+          return new Response(
+            JSON.stringify({ ok: false, error: mapBrevoError(updateError) } as BrevoContactResponse),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: updateResponse.status >= 500 ? 502 : 400 }
+          );
+        }
       }
 
-      // Get the contact ID from Brevo
+      // Get contact ID
       const contactResponse = await fetch(
-        `https://api.brevo.com/v3/contacts/${body.email}`,
+        `https://api.brevo.com/v3/contacts/${encodeURIComponent(body.email)}`,
         {
           method: "GET",
-          headers: {
-            "api-key": apiKey,
-          },
+          headers: { "api-key": apiKey },
         }
       );
 
@@ -141,57 +195,36 @@ serve(async (req) => {
         contactId = String(contactInfo.id);
       }
 
+      console.log(`[create-brevo-contact] Success (existing): ${hashedEmail}, id: ${contactId}`);
       return new Response(
-        JSON.stringify({
-          ok: true,
-          contactId,
-          created: false,
-        } as BrevoContactResponse),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
+        JSON.stringify({ ok: true, contactId, created: false } as BrevoContactResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
+    // Handle other errors
     if (!brevoResponse.ok) {
+      console.error(`[create-brevo-contact] Brevo error: ${hashedEmail}`, responseData);
+      const statusCode = brevoResponse.status >= 500 ? 502 : brevoResponse.status;
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: getErrorMessage(responseData),
-        } as BrevoContactResponse),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: brevoResponse.status,
-        }
+        JSON.stringify({ ok: false, error: mapBrevoError(responseData) } as BrevoContactResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: statusCode }
       );
     }
 
-    // Successfully created contact
+    // Successfully created
     const contactId = String(responseData.id);
+    console.log(`[create-brevo-contact] Success (created): ${hashedEmail}, id: ${contactId}`);
 
     return new Response(
-      JSON.stringify({
-        ok: true,
-        contactId,
-        created: true,
-      } as BrevoContactResponse),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
+      JSON.stringify({ ok: true, contactId, created: true } as BrevoContactResponse),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
-    const errorMessage = getErrorMessage(error);
+    console.error("[create-brevo-contact] Unexpected error:", error);
     return new Response(
-      JSON.stringify({
-        ok: false,
-        error: errorMessage,
-      } as BrevoContactResponse),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
+      JSON.stringify({ ok: false, error: "Internal server error" } as BrevoContactResponse),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
