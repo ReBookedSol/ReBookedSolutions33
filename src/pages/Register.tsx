@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, BookOpen, Book } from "lucide-react";
 import { BackupEmailService } from "@/utils/backupEmailService";
+import { callEdgeFunction } from "@/utils/edgeFunctionClient";
 
 // Affiliate tracking storage key
 const AFFILIATE_STORAGE_KEY = 'affiliate_code';
@@ -124,6 +125,25 @@ const Register = () => {
 
       const affiliateCode = getStoredAffiliateCode();
       const result = await register(email, password, firstName, lastName, normalizedPhone, affiliateCode ?? undefined);
+
+      // Call Brevo to create contact after successful signup (non-blocking)
+      if (result?.needsVerification || result?.emailWarning) {
+        try {
+          await callEdgeFunction('create-brevo-contact', {
+            method: 'POST',
+            body: {
+              email,
+              firstName,
+              lastName,
+              phone: normalizedPhone,
+              updateIfExists: true,
+            }
+          });
+        } catch (brevoError) {
+          // Log but don't fail signup if Brevo contact creation fails
+          console.warn('Failed to create Brevo contact:', brevoError);
+        }
+      }
 
       // Handle different registration outcomes
       if (result?.needsVerification) {

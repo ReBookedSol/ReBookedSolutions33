@@ -261,11 +261,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             // Don't fail registration, just log the warning
           }
 
+          // Create Brevo contact (non-blocking)
+          try {
+            await callEdgeFunction('create-brevo-contact', {
+              method: 'POST',
+              body: {
+                email,
+                firstName,
+                lastName,
+                phone,
+                updateIfExists: true,
+              }
+            });
+          } catch (brevoError) {
+            // Log but don't fail signup if Brevo contact creation fails
+          }
+
           return { needsVerification: true };
         }
 
         if (data.user && data.session) {
           // User is immediately logged in - no email verification needed
+          // Create Brevo contact (non-blocking)
+          try {
+            await callEdgeFunction('create-brevo-contact', {
+              method: 'POST',
+              body: {
+                email,
+                firstName,
+                lastName,
+                phone,
+                updateIfExists: true,
+              }
+            });
+          } catch (brevoError) {
+            // Log but don't fail signup if Brevo contact creation fails
+          }
           return { needsVerification: false };
         }
 
