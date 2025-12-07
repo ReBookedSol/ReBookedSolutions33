@@ -274,7 +274,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           // Create Brevo contact in background
           try {
             console.log("Creating Brevo contact for new user...");
-            await callEdgeFunction('create-contact', {
+            await callEdgeFunction('create-contact-test', {
               method: 'POST',
               body: {
                 email,
