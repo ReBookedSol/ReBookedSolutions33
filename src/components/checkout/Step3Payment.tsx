@@ -21,6 +21,7 @@ import PaymentErrorHandler, {
   PaymentError,
 } from "@/components/payments/PaymentErrorHandler";
 import { logError, getUserFriendlyErrorMessage } from "@/utils/errorLogging";
+import { sendPurchaseWebhook } from "@/utils/webhookUtils";
 
 interface Step3PaymentProps {
   orderSummary: OrderSummary;
