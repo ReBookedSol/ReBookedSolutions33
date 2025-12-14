@@ -33,41 +33,27 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const payload = await req.json();
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    console.log(`Forwarding webhook to Relay:`, payload.eventType);
+
+    const success = await sendWebhook(payload);
+
+    if (success) {
       return new Response(
-        JSON.stringify({ error: "Missing environment variables" }),
+        JSON.stringify({ success: true, message: "Webhook sent to Relay" }),
+        { status: 200, headers: corsHeaders }
+      );
+    } else {
+      return new Response(
+        JSON.stringify({ success: false, message: "Failed to send webhook to Relay" }),
         { status: 500, headers: corsHeaders }
       );
     }
-
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
-
-    const payload = await req.json();
-    const table = payload.table;
-
-    console.log(`Processing webhook for table: ${table}`);
-
-    if (table === "contact_messages") {
-      await handleContactMessage(supabaseClient, payload);
-    } else if (table === "reports") {
-      await handleReport(supabaseClient, payload);
-    } else if (table === "orders") {
-      await handleOrderPurchase(supabaseClient, payload);
-    } else {
-      console.log(`Unknown table: ${table}`);
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, table }),
-      { status: 200, headers: corsHeaders }
-    );
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("Webhook proxy error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Failed to process webhook" }),
       { status: 500, headers: corsHeaders }
     );
   }
