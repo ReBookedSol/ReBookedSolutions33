@@ -24,7 +24,7 @@ export interface GeneralReportData {
 
 const sendWebhook = async (eventType: string, data: any) => {
   try {
-    const { error } = await supabase.functions.invoke("send-webhook", {
+    const { error } = await supabase.functions.invoke("relay-webhook", {
       body: {
         eventType,
         timestamp: new Date().toISOString(),
