@@ -24,16 +24,14 @@ export interface GeneralReportData {
 
 const sendWebhook = async (eventType: string, data: any) => {
   try {
-    await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    // Use Supabase Edge Function as proxy to avoid CORS issues
+    const { supabase: sb } = await import("@/integrations/supabase/client");
+    await sb.functions.invoke("send-webhook", {
+      body: {
         eventType,
         timestamp: new Date().toISOString(),
         data,
-      }),
+      },
     });
   } catch (error) {
     console.error(`Error sending webhook for ${eventType}:`, error);
