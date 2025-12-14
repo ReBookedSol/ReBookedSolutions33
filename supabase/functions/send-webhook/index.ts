@@ -44,10 +44,18 @@ serve(async (req) => {
 
   try {
     const payload = await req.json();
+    const eventType = payload.eventType;
 
-    console.log(`Forwarding webhook to Relay:`, payload.eventType);
+    if (!eventType) {
+      return new Response(
+        JSON.stringify({ success: false, message: "eventType is required" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
 
-    const success = await sendWebhook(payload);
+    console.log(`Forwarding webhook to Relay:`, eventType);
+
+    const success = await sendWebhook(eventType, payload);
 
     if (success) {
       return new Response(
