@@ -39,10 +39,13 @@ export const sendPurchaseWebhook = async (orderData: any) => {
       },
     };
 
-    // Use Supabase Edge Function as proxy to avoid CORS issues
-    await supabase.functions.invoke("send-webhook", {
+    const { error } = await supabase.functions.invoke("send-webhook", {
       body: webhookPayload,
     });
+
+    if (error) {
+      console.error("Error invoking webhook function:", error);
+    }
   } catch (error) {
     console.error("Error sending purchase webhook:", error);
   }
