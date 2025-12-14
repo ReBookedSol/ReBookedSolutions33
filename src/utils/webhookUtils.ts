@@ -39,7 +39,7 @@ export const sendPurchaseWebhook = async (orderData: any) => {
       },
     };
 
-    const { error } = await supabase.functions.invoke("relay-webhook", {
+    const { error } = await supabase.functions.invoke("send-webhook", {
       body: webhookPayload,
     });
 
