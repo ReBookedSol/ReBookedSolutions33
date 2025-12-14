@@ -24,15 +24,16 @@ export interface GeneralReportData {
 
 const sendWebhook = async (eventType: string, data: any) => {
   try {
-    // Use Supabase Edge Function as proxy to avoid CORS issues
-    const { supabase: sb } = await import("@/integrations/supabase/client");
-    await sb.functions.invoke("send-webhook", {
+    const { error } = await supabase.functions.invoke("send-webhook", {
       body: {
         eventType,
         timestamp: new Date().toISOString(),
         data,
       },
     });
+    if (error) {
+      console.error(`Webhook error for ${eventType}:`, error);
+    }
   } catch (error) {
     console.error(`Error sending webhook for ${eventType}:`, error);
   }
