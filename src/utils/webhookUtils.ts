@@ -1,4 +1,4 @@
-const WEBHOOK_URL = "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ";
+import { supabase } from "@/integrations/supabase/client";
 
 export const sendPurchaseWebhook = async (orderData: any) => {
   try {
@@ -39,12 +39,9 @@ export const sendPurchaseWebhook = async (orderData: any) => {
       },
     };
 
-    await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(webhookPayload),
+    // Use Supabase Edge Function as proxy to avoid CORS issues
+    await supabase.functions.invoke("send-webhook", {
+      body: webhookPayload,
     });
   } catch (error) {
     console.error("Error sending purchase webhook:", error);
