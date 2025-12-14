@@ -312,8 +312,8 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         throw new Error(createErr?.message || 'Failed to create order');
       }
 
-      // Send webhook notification for purchase
-      sendPurchaseWebhook(createData.order);
+      // Send webhook notification for purchase (non-blocking)
+      sendPurchaseWebhook(createData.order).catch(err => console.error("Webhook send failed:", err));
 
       // Invoke process-affiliate-earning immediately after order creation (in parallel/background)
       supabase.functions.invoke('process-affiliate-earning', {
