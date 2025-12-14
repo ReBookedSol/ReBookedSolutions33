@@ -22,15 +22,16 @@ export interface ContactMessage {
 
 const sendWebhook = async (eventType: string, data: any) => {
   try {
-    // Use Supabase Edge Function as proxy to avoid CORS issues
-    const { supabase: sb } = await import("@/integrations/supabase/client");
-    await sb.functions.invoke("send-webhook", {
+    const { error } = await supabase.functions.invoke("send-webhook", {
       body: {
         eventType,
         timestamp: new Date().toISOString(),
         data,
       },
     });
+    if (error) {
+      console.error(`Webhook error for ${eventType}:`, error);
+    }
   } catch (error) {
     console.error(`Error sending webhook for ${eventType}:`, error);
   }
@@ -60,7 +61,7 @@ export const submitContactMessage = async (
       throw new Error((error as any)?.message || "Failed to submit contact message");
     }
 
-    // Send webhook notification
+    // Send webhook notification (non-blocking)
     sendWebhook("contact_message", {
       id,
       name: messageData.name,
@@ -69,7 +70,7 @@ export const submitContactMessage = async (
       message: messageData.message,
       status: "unread",
       createdAt,
-    });
+    }).catch(err => console.error("Webhook send failed:", err));
 
     return { id };
   } catch (error) {
