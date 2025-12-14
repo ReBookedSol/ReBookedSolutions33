@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const WEBHOOK_URL = "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ";
+
 export interface ReportData {
   reportedUserId: string;
   reporterUserId: string;
@@ -20,6 +22,24 @@ export interface GeneralReportData {
   status: string;
 }
 
+const sendWebhook = async (eventType: string, data: any) => {
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventType,
+        timestamp: new Date().toISOString(),
+        data,
+      }),
+    });
+  } catch (error) {
+    console.error(`Error sending webhook for ${eventType}:`, error);
+  }
+};
+
 export const submitReport = async (
   reportData: GeneralReportData,
 ): Promise<{ id: string }> => {
@@ -28,27 +48,42 @@ export const submitReport = async (
       throw new Error("You must be logged in to submit a report");
     }
 
-
     const id = (globalThis.crypto && 'randomUUID' in globalThis.crypto)
       ? globalThis.crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const createdAt = new Date().toISOString();
+    const reason = `${reportData.category.toUpperCase()}: ${reportData.description}`;
 
     // Map general report into reports schema
     const { error } = await supabase.from("reports").insert({
       id,
       reporter_user_id: reportData.userId,
-      reported_user_id: reportData.userId, // general issue (no target user)
+      reported_user_id: reportData.userId,
       book_id: null,
       book_title: reportData.subject || "General Issue",
       seller_name: reportData.name || "Unknown",
-      reason: `${reportData.category.toUpperCase()}: ${reportData.description}`,
+      reason,
       status: "pending",
-      updated_at: new Date().toISOString(),
+      updated_at: createdAt,
     });
 
     if (error) {
       throw new Error((error as any)?.message || "Failed to submit report");
     }
+
+    // Send webhook notification
+    sendWebhook("report", {
+      id,
+      reporterUserId: reportData.userId,
+      reportedUserId: reportData.userId,
+      bookId: null,
+      bookTitle: reportData.subject || "General Issue",
+      sellerName: reportData.name || "Unknown",
+      reason,
+      status: "pending",
+      createdAt,
+    });
 
     return { id };
   } catch (error) {
