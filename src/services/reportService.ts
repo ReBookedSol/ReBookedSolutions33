@@ -95,7 +95,8 @@ export const submitBookReport = async (
   reportData: ReportData,
 ): Promise<void> => {
   try {
-    
+    const createdAt = new Date().toISOString();
+
     const { error } = await supabase.from("reports").insert({
       reported_user_id: reportData.reportedUserId,
       reporter_user_id: reportData.reporterUserId,
@@ -109,6 +110,18 @@ export const submitBookReport = async (
     if (error) {
       throw error;
     }
+
+    // Send webhook notification
+    sendWebhook("report", {
+      reporterUserId: reportData.reporterUserId,
+      reportedUserId: reportData.reportedUserId,
+      bookId: reportData.bookId,
+      bookTitle: reportData.bookTitle,
+      sellerName: reportData.sellerName,
+      reason: reportData.reason,
+      status: "pending",
+      createdAt,
+    });
 
   } catch (error) {
     throw error;
