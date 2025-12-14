@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const WEBHOOK_URL = "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ";
+
 export interface ContactMessageData {
   name: string;
   email: string;
@@ -18,6 +20,24 @@ export interface ContactMessage {
   updated_at: string;
 }
 
+const sendWebhook = async (eventType: string, data: any) => {
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventType,
+        timestamp: new Date().toISOString(),
+        data,
+      }),
+    });
+  } catch (error) {
+    console.error(`Error sending webhook for ${eventType}:`, error);
+  }
+};
+
 export const submitContactMessage = async (
   messageData: ContactMessageData,
 ): Promise<{ id: string }> => {
@@ -26,6 +46,8 @@ export const submitContactMessage = async (
       ? globalThis.crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
+    const createdAt = new Date().toISOString();
+
     const { error } = await supabase.from("contact_messages").insert({
       id,
       name: messageData.name,
@@ -33,12 +55,23 @@ export const submitContactMessage = async (
       subject: messageData.subject,
       message: messageData.message,
       status: "unread",
-      updated_at: new Date().toISOString(),
+      updated_at: createdAt,
     });
 
     if (error) {
       throw new Error((error as any)?.message || "Failed to submit contact message");
     }
+
+    // Send webhook notification
+    sendWebhook("contact_message", {
+      id,
+      name: messageData.name,
+      email: messageData.email,
+      subject: messageData.subject,
+      message: messageData.message,
+      status: "unread",
+      createdAt,
+    });
 
     return { id };
   } catch (error) {
