@@ -110,7 +110,7 @@ export const submitBookReport = async (
       throw error;
     }
 
-    // Send webhook notification
+    // Send webhook notification (non-blocking)
     sendWebhook("report", {
       reporterUserId: reportData.reporterUserId,
       reportedUserId: reportData.reportedUserId,
@@ -120,7 +120,7 @@ export const submitBookReport = async (
       reason: reportData.reason,
       status: "pending",
       createdAt,
-    });
+    }).catch(err => console.error("Webhook send failed:", err));
 
   } catch (error) {
     throw error;
