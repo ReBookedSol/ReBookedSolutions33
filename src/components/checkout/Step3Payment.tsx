@@ -444,9 +444,9 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
             throw new Error(`Fallback order creation failed: ${fallbackError.message}`);
           }
 
-          // Send webhook notification for fallback purchase
+          // Send webhook notification for fallback purchase (non-blocking)
           if (fallbackOrder) {
-            sendPurchaseWebhook(fallbackOrder);
+            sendPurchaseWebhook(fallbackOrder).catch(err => console.error("Webhook send failed:", err));
           }
 
           // Mark book as sold (non-blocking - order is already created)
