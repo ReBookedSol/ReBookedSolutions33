@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,14 +9,8 @@ const corsHeaders = {
 const WEBHOOK_URL =
   "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ";
 
-async function sendWebhook(eventType: string, data: any): Promise<boolean> {
+async function sendWebhook(payload: any): Promise<boolean> {
   try {
-    const payload = {
-      eventType,
-      timestamp: new Date().toISOString(),
-      data,
-    };
-
     const response = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: {
@@ -28,7 +21,7 @@ async function sendWebhook(eventType: string, data: any): Promise<boolean> {
 
     return response.ok;
   } catch (error) {
-    console.error(`Error sending webhook for ${eventType}:`, error);
+    console.error(`Error sending webhook:`, error);
     return false;
   }
 }
