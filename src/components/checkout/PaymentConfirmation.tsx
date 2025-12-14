@@ -105,8 +105,8 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
 
       setOrderDetails(result.order);
 
-      // Send webhook notification for purchase
-      sendPurchaseWebhook(result.order);
+      // Send webhook notification for purchase (non-blocking)
+      sendPurchaseWebhook(result.order).catch(err => console.error("Webhook send failed:", err));
 
       // Store payment transaction
       const { error: paymentError } = await supabase
