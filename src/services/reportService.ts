@@ -71,7 +71,7 @@ export const submitReport = async (
       throw new Error((error as any)?.message || "Failed to submit report");
     }
 
-    // Send webhook notification
+    // Send webhook notification (non-blocking)
     sendWebhook("report", {
       id,
       reporterUserId: reportData.userId,
@@ -82,7 +82,7 @@ export const submitReport = async (
       reason,
       status: "pending",
       createdAt,
-    });
+    }).catch(err => console.error("Webhook send failed:", err));
 
     return { id };
   } catch (error) {
