@@ -6,12 +6,22 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const WEBHOOK_URL =
-  "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ";
+const WEBHOOK_URLS: Record<string, string> = {
+  order_purchase: "https://hook.relay.app/api/v1/playbook/cmj5u9bzr46790nm68squ0101/trigger/eCLqFOqSeT2yMUZc-1yTTA",
+  contact_message: "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ",
+  report: "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ",
+};
 
-async function sendWebhook(payload: any): Promise<boolean> {
+async function sendWebhook(eventType: string, payload: any): Promise<boolean> {
   try {
-    const response = await fetch(WEBHOOK_URL, {
+    const webhookUrl = WEBHOOK_URLS[eventType];
+
+    if (!webhookUrl) {
+      console.warn(`No webhook URL configured for event type: ${eventType}`);
+      return false;
+    }
+
+    const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
