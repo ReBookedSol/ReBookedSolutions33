@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { sendPurchaseWebhook } from "@/utils/webhookUtils";
 
 interface PaymentData {
   order_id: string;
@@ -103,6 +104,9 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
       }
 
       setOrderDetails(result.order);
+
+      // Send webhook notification for purchase (non-blocking)
+      sendPurchaseWebhook(result.order).catch(err => console.error("Webhook send failed:", err));
 
       // Store payment transaction
       const { error: paymentError } = await supabase

@@ -21,6 +21,7 @@ import PaymentErrorHandler, {
   PaymentError,
 } from "@/components/payments/PaymentErrorHandler";
 import { logError, getUserFriendlyErrorMessage } from "@/utils/errorLogging";
+import { sendPurchaseWebhook } from "@/utils/webhookUtils";
 
 interface Step3PaymentProps {
   orderSummary: OrderSummary;
@@ -311,6 +312,9 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
         throw new Error(createErr?.message || 'Failed to create order');
       }
 
+      // Send webhook notification for purchase (non-blocking)
+      sendPurchaseWebhook(createData.order).catch(err => console.error("Webhook send failed:", err));
+
       // Invoke process-affiliate-earning immediately after order creation (in parallel/background)
       supabase.functions.invoke('process-affiliate-earning', {
         body: {
@@ -438,6 +442,11 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
 
           if (fallbackError) {
             throw new Error(`Fallback order creation failed: ${fallbackError.message}`);
+          }
+
+          // Send webhook notification for fallback purchase (non-blocking)
+          if (fallbackOrder) {
+            sendPurchaseWebhook(fallbackOrder).catch(err => console.error("Webhook send failed:", err));
           }
 
           // Mark book as sold (non-blocking - order is already created)
