@@ -184,8 +184,9 @@ const AuthCallback = () => {
             } else if (type === "recovery") {
               setMessage("Password reset link verified! Redirecting to reset your password.");
               toast.success("Reset link verified! Set your new password.");
-              // Redirect to reset password page immediately for better UX
-              navigate("/reset-password", { replace: true });
+              // Redirect to reset password page with tokens for better UX
+              const resetUrl = `/reset-password?access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}&type=recovery`;
+              navigate(resetUrl, { replace: true });
             } else {
               setMessage("Authentication successful! You are now logged in.");
               toast.success("Successfully authenticated!");
@@ -239,8 +240,9 @@ const AuthCallback = () => {
             } else if (type === "recovery") {
               setMessage("Password reset link verified! Redirecting to reset your password.");
               toast.success("Reset link verified! Set your new password.");
-              // Redirect to reset password page immediately for better UX
-              navigate("/reset-password", { replace: true });
+              // Redirect to reset password page with tokens for OTP flow
+              const resetUrl = `/reset-password?token_hash=${encodeURIComponent(token_hash || "")}&type=recovery`;
+              navigate(resetUrl, { replace: true });
             } else {
               setMessage("Email verification successful! You are now logged in.");
               toast.success("Email verified successfully!");
