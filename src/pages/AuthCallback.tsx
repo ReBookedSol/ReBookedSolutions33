@@ -43,9 +43,14 @@ const AuthCallback = () => {
       const type = getParam("type");
       const token_hash = getParam("token_hash");
       const access_token = getParam("access_token");
+      const refresh_token = getParam("refresh_token");
 
       if (type === "recovery" || isRecoveryHint()) {
-        navigate("/reset-password", { replace: true });
+        // Pass tokens as URL params for the reset password page
+        const resetUrl = access_token && refresh_token
+          ? `/reset-password?access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}&type=recovery`
+          : "/reset-password";
+        navigate(resetUrl, { replace: true });
         return;
       }
 
