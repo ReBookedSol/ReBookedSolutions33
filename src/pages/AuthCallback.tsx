@@ -308,7 +308,12 @@ const AuthCallback = () => {
             } else if (type === "recovery") {
               setMessage("Password reset link verified! Redirecting to reset your password.");
               toast.success("Reset link verified! Set your new password.");
-              navigate("/reset-password", { replace: true });
+              const resetUrl = access_token && refresh_token
+                ? `/reset-password?access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}&type=recovery`
+                : token_hash
+                ? `/reset-password?token_hash=${encodeURIComponent(token_hash)}&type=recovery`
+                : "/reset-password";
+              navigate(resetUrl, { replace: true });
             } else {
               setMessage("Authentication successful! You are now logged in.");
               toast.success("Successfully authenticated!");
