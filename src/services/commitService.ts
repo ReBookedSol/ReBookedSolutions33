@@ -46,14 +46,8 @@ const logCommitError = (
       errorInfo.type = typeof error;
       errorInfo.message = String(error);
     }
-
-    console.error(`[CommitService] ${message}:`, errorInfo);
   } catch (loggingError) {
     // Fallback if our error logging itself fails
-    console.error(`[CommitService] ${message}: Error logging failed`, {
-      originalError: error,
-      loggingError: loggingError,
-    });
   }
 };
 
@@ -63,8 +57,6 @@ const logCommitError = (
  */
 export const commitBookSale = async (bookId: string): Promise<void> => {
   try {
-    console.log("[CommitService] Starting commit process for book:", bookId);
-
     // Validate input
     if (!bookId || typeof bookId !== "string") {
       throw new Error("Invalid book ID provided");
@@ -78,8 +70,6 @@ export const commitBookSale = async (bookId: string): Promise<void> => {
     if (userError || !user) {
       if (userError) {
         logCommitError("Authentication error", userError);
-      } else {
-        console.log("[CommitService] No authenticated user found");
       }
       throw new Error("User not authenticated");
     }
@@ -103,23 +93,13 @@ export const commitBookSale = async (bookId: string): Promise<void> => {
     }
 
     if (!book) {
-      console.warn(
-        "[CommitService] Book not found - ID:",
-        bookId,
-        "User:",
-        user.id,
-      );
       throw new Error(
         "Book not found or you don't have permission to commit this sale",
       );
     }
 
-    // For now, just log the commit action since the commit system is in development
-    console.log("[CommitService] Processing commit for book:", book.title);
-
     // Check if book is already sold
     if (book.sold) {
-      console.log("[CommitService] Book is already marked as sold");
       // In a real system, we'd check if commit is already processed
     }
 
@@ -142,22 +122,11 @@ export const commitBookSale = async (bookId: string): Promise<void> => {
       );
     }
 
-    // Log the commit action (console logging for now)
-    console.log("[CommitService] Commit action completed:", {
-      userId: user.id,
-      action: "commit_sale",
-      bookId: bookId,
-      bookTitle: book.title,
-      timestamp: new Date().toISOString(),
-    });
-
     // TODO: Trigger delivery process initiation
     // This would typically involve:
     // 1. Notifying the buyer
     // 2. Creating shipping labels
     // 3. Starting the delivery tracking process
-
-    console.log("[CommitService] Book sale committed successfully:", bookId);
   } catch (error) {
     logCommitError("Error committing book sale", error);
     throw error;
@@ -181,8 +150,6 @@ export const checkCommitDeadline = (orderCreatedAt: string): boolean => {
  */
 export const getCommitPendingBooks = async (): Promise<any[]> => {
   try {
-    console.log("[CommitService] Starting getCommitPendingBooks...");
-
     // Use retry logic for getting user with better error handling
     let user;
     try {
@@ -197,20 +164,13 @@ export const getCommitPendingBooks = async (): Promise<any[]> => {
       user = userResult.data.user;
     } catch (userError) {
       const errorMessage = extractErrorMessage(userError);
-      console.error("[CommitService] Authentication error:", errorMessage);
       handleSupabaseError(userError, "Getting user for commit pending books");
       return [];
     }
 
     if (!user) {
-      console.log("[CommitService] No authenticated user found");
       return [];
     }
-
-    console.log(
-      "[CommitService] Checking for pending commits for user:",
-      user.id,
-    );
 
     // Safety net: trigger server-side expiry check (non-blocking)
     try {
@@ -243,10 +203,8 @@ export const getCommitPendingBooks = async (): Promise<any[]> => {
       }, { maxRetries: 2, retryDelay: 1500 });
 
       orders = ordersResult.data;
-      console.log("[CommitService] Query successful, found orders:", orders?.length || 0);
     } catch (error) {
       const errorMessage = extractErrorMessage(error);
-      console.error("[CommitService] Error fetching pending orders:", errorMessage);
       handleSupabaseError(error, "Fetching pending orders");
       // Return empty array instead of throwing to prevent UI crashes
       return [];
@@ -273,7 +231,6 @@ export const getCommitPendingBooks = async (): Promise<any[]> => {
             .single();
           bookData = book;
         } catch (error) {
-          console.warn("Could not fetch book details for", firstItem.book_id);
         }
       }
 
@@ -302,11 +259,6 @@ export const getCommitPendingBooks = async (): Promise<any[]> => {
       };
     }));
 
-    console.log(
-      "[CommitService] Found pending commits:",
-      pendingCommits.length,
-    );
-    console.log("[CommitService] Returning commits data:", pendingCommits);
     return pendingCommits;
   } catch (error) {
     logCommitError("Exception in getCommitPendingBooks", error);
@@ -317,12 +269,18 @@ export const getCommitPendingBooks = async (): Promise<any[]> => {
 
 /**
  * Declines an order within the 48-hour window
- * Updates the order status and triggers refund process
+ * Calls the decline-commit edge function which handles:
+ * - Order status update to "declined"
+ * - Automatic stock release via database trigger
+ * - Refund processing
+ * - Email notifications
+ *
+ * IMPORTANT: The frontend should NOT manually restore stock.
+ * The database trigger handle_order_decline_stock_release automatically
+ * handles stock release when order status changes to 'declined'.
  */
 export const declineBookSale = async (orderIdOrBookId: string): Promise<void> => {
   try {
-    console.log("[CommitService] Starting decline process for order/book:", orderIdOrBookId);
-
     // Validate input
     if (!orderIdOrBookId || typeof orderIdOrBookId !== "string") {
       throw new Error("Invalid order/book ID provided");
@@ -335,140 +293,50 @@ export const declineBookSale = async (orderIdOrBookId: string): Promise<void> =>
     } = await supabase.auth.getUser();
     if (userError || !user) {
       if (userError) {
-        console.error("[CommitService] Authentication error:", {
-          message: userError.message || 'Unknown auth error',
-          code: userError.code,
-          details: userError.details
-        });
-      } else {
-        console.log("[CommitService] No authenticated user found");
       }
       throw new Error("User not authenticated");
     }
 
     // Try to find the order first (since we're now passing order IDs)
     let order = null;
-    let book = null;
 
-    // First, try to get the order
+    // First, try to get the order (check both pending_commit and pending statuses)
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
-      .select("*")
+      .select("id, seller_id, status")
       .eq("id", orderIdOrBookId)
       .eq("seller_id", user.id)
-      .eq("status", "pending_commit")
+      .in("status", ["pending_commit", "pending"])
       .single();
 
     if (!orderError && orderData) {
       order = orderData;
-      console.log("[CommitService] Found order:", order.id);
-
-      // Get book info from items
-      const items = Array.isArray(order.items) ? order.items : [];
-      const firstItem = items[0] || {};
-
-      if (firstItem.book_id) {
-        // Try to get book details
-        const { data: bookData } = await supabase
-          .from("books")
-          .select("id, title, author, price")
-          .eq("id", firstItem.book_id)
-          .single();
-        book = bookData;
-      }
     } else {
-      // Fallback: try as book ID
-      const { data: bookData, error: bookError } = await supabase
-        .from("books")
-        .select("*")
-        .eq("id", orderIdOrBookId)
-        .eq("seller_id", user.id)
-        .single();
-
-      if (!bookError && bookData) {
-        book = bookData;
-        console.log("[CommitService] Found book:", book.title);
-      } else {
-        console.error("[CommitService] Could not find order or book:", {
-          orderError: orderError?.message,
-          bookError: bookError?.message,
-          id: orderIdOrBookId,
-          userId: user.id
-        });
-        throw new Error("Order or book not found, or you don't have permission to decline this sale");
-      }
+      throw new Error("Order not found or not in pending status");
     }
 
-    const targetName = order ? `order ${order.id}` : `book ${book?.title || orderIdOrBookId}`;
-    console.log("[CommitService] Processing decline for", targetName);
-
-    // If we have an order, update the order status to declined
-    if (order) {
-      const { error: updateOrderError } = await supabase
-        .from("orders")
-        .update({
-          status: "declined",
-          declined_at: new Date().toISOString(),
-          decline_reason: "Declined by seller"
-        })
-        .eq("id", order.id)
-        .eq("seller_id", user.id);
-
-      if (updateOrderError) {
-        console.error("[CommitService] Error updating order status:", {
-          message: updateOrderError.message || 'Unknown error',
-          code: updateOrderError.code,
-          details: updateOrderError.details,
-          orderId: order.id
-        });
-        throw new Error(
-          `Failed to decline order: ${updateOrderError.message || "Database update failed"}`,
-        );
+    // Call the decline-commit edge function to handle the decline process
+    // This function will:
+    // 1. Update order status to "declined"
+    // 2. Trigger database trigger to automatically release stock
+    // 3. Process refund
+    // 4. Send notifications
+    const { data, error } = await supabase.functions.invoke("decline-commit", {
+      body: {
+        order_id: order.id,
+        seller_id: user.id,
+        reason: "Declined by seller"
       }
-    }
-
-    // If we have book info, update book to mark as available again
-    if (book) {
-      const { error: updateBookError } = await supabase
-        .from("books")
-        .update({
-          sold: false,
-        })
-        .eq("id", book.id)
-        .eq("seller_id", user.id);
-
-      if (updateBookError) {
-        console.error("[CommitService] Error updating book status:", {
-          message: updateBookError.message || 'Unknown error',
-          code: updateBookError.code,
-          details: updateBookError.details,
-          bookId: book.id
-        });
-        // Don't throw here as the order decline is more important
-        console.warn("Book status update failed, but order was declined successfully");
-      }
-    }
-
-    // Log the decline action
-    console.log("[CommitService] Decline action completed:", {
-      userId: user.id,
-      action: "decline_sale",
-      orderId: order?.id,
-      bookId: book?.id,
-      bookTitle: book?.title,
-      timestamp: new Date().toISOString(),
     });
 
-    // For now, skip refund process as it needs to be implemented properly
-    // await processRefund(order?.id || book?.id, "declined_by_seller");
+    if (error) {
+      throw new Error(error.message || "Failed to call decline-commit function");
+    }
 
-    console.log("[CommitService] Sale declined successfully:", targetName);
+    if (!data?.success) {
+      throw new Error(data?.error || "Failed to decline order");
+    }
   } catch (error) {
-    console.error("[CommitService] Error declining book sale:", {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      error: error,
-      timestamp: new Date().toISOString()
-    });
     throw error;
   }
 };
@@ -481,10 +349,6 @@ export const processRefund = async (
   reason: "declined_by_seller" | "overdue_commit",
 ): Promise<void> => {
   try {
-    console.log(
-      `[CommitService] Processing refund for book ${bookId}, reason: ${reason}`,
-    );
-
     // In a real system, this would:
     // 1. Call payment processor (Paystack) to issue refund
     // 2. Update order status to "refunded"
@@ -492,34 +356,21 @@ export const processRefund = async (
     // 4. Update seller reputation metrics
     // 5. Log the refund activity
 
-    // For now, we'll log the refund action
+    // For now, we'll process the refund action
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.warn("[CommitService] No user found for refund processing");
       return;
     }
-
-    // Log the refund action
-    console.log("[CommitService] Refund processed:", {
-      bookId,
-      reason,
-      timestamp: new Date().toISOString(),
-      processingTime: "immediate", // In production, this would be actual processing time
-      refundAmount: "full_purchase_amount", // Would be actual amount from order
-      status: "completed",
-    });
 
     // In production, you would:
     // 1. Call Paystack refund API
     // 2. Send email notifications
     // 3. Update database records
     // 4. Log to activity service
-
-    console.log(`[CommitService] Refund completed for book ${bookId}`);
   } catch (error) {
     logCommitError("Error processing refund", error, { bookId, reason });
     // Don't throw error to prevent blocking other operations
@@ -551,14 +402,7 @@ export const handleOverdueCommits = async (): Promise<void> => {
           })
           .eq("id", book.bookId);
 
-        if (cancelError) {
-          console.error(
-            `Failed to cancel overdue commit for book ${book.bookId}:`,
-            cancelError,
-          );
-        } else {
-          console.log(`Cancelled overdue commit for book ${book.bookId}`);
-
+        if (!cancelError) {
           // Trigger refund process for overdue commitment
           await processRefund(book.bookId, "overdue_commit");
         }
@@ -579,8 +423,6 @@ export const enforceCommitDeadlines = async (): Promise<{
   refunded: number;
   errors: number;
 }> => {
-  console.log("[CommitService] Starting automated commit deadline enforcement");
-
   let processed = 0;
   let refunded = 0;
   let errors = 0;
@@ -599,13 +441,8 @@ export const enforceCommitDeadlines = async (): Promise<{
       );
 
     if (error) {
-      console.error("[CommitService] Error fetching overdue books:", error);
       return { processed: 0, refunded: 0, errors: 1 };
     }
-
-    console.log(
-      `[CommitService] Found ${overdueBooks?.length || 0} potentially overdue books`,
-    );
 
     for (const book of overdueBooks || []) {
       try {
@@ -620,10 +457,6 @@ export const enforceCommitDeadlines = async (): Promise<{
             .eq("id", book.id);
 
           if (updateError) {
-            console.error(
-              `[CommitService] Failed to update book ${book.id}:`,
-              updateError,
-            );
             errors++;
             continue;
           }
@@ -631,23 +464,11 @@ export const enforceCommitDeadlines = async (): Promise<{
           // Process refund
           await processRefund(book.id, "overdue_commit");
           refunded++;
-
-          console.log(
-            `[CommitService] Processed overdue commit for book: ${book.title} (ID: ${book.id})`,
-          );
         }
       } catch (bookError) {
-        console.error(
-          `[CommitService] Error processing book ${book.id}:`,
-          bookError,
-        );
         errors++;
       }
     }
-
-    console.log(
-      `[CommitService] Deadline enforcement completed: ${processed} processed, ${refunded} refunded, ${errors} errors`,
-    );
 
     return { processed, refunded, errors };
   } catch (error) {

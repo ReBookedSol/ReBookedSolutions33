@@ -24,26 +24,44 @@ export const validateAddress = (address: Address): boolean => {
 export const canUserListBooks = async (userId: string): Promise<boolean> => {
   try {
     let hasValidAddress = false;
+    let hasSavedLocker = false;
 
-    // 1) Try the preferred encrypted path (profiles/books decryption via edge function)
+    // 1) Check for saved locker first (simpler check)
+    try {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("preferred_delivery_locker_data")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!error && profile?.preferred_delivery_locker_data) {
+        const lockerData = profile.preferred_delivery_locker_data as any;
+        if (lockerData.id && lockerData.name) {
+          hasSavedLocker = true;
+          return true; // Can list if they have a locker
+        }
+      }
+    } catch (error) {
+      // Failed to check saved locker
+    }
+
+    // 2) Try the preferred encrypted path (profiles/books decryption via edge function)
     try {
       const { getSellerDeliveryAddress } = await import("@/services/simplifiedAddressService");
       const decrypted = await getSellerDeliveryAddress(userId);
 
       if (decrypted && (decrypted.street || decrypted.streetAddress) && decrypted.city && decrypted.province && (decrypted.postal_code || decrypted.postalCode)) {
         hasValidAddress = true;
-        console.log("🔐 Using decrypted pickup address for listing validation");
       }
     } catch (error) {
-      console.warn("Failed to check decrypted pickup address:", error);
+      // Failed to check decrypted pickup address
     }
 
     if (hasValidAddress) {
-      console.log(`✅ User ${userId} can list books - valid pickup address (decrypted)`);
       return true;
     }
 
-    // 2) Fallback: check simplified stored addresses (unencrypted user_addresses table / fallback service)
+    // 3) Fallback: check simplified stored addresses (unencrypted user_addresses table / fallback service)
     try {
       const fallbackModule = await import("@/services/fallbackAddressService");
       const fallbackSvc = fallbackModule?.default || fallbackModule?.fallbackAddressService;
@@ -53,17 +71,16 @@ export const canUserListBooks = async (userId: string): Promise<boolean> => {
           const addr = best.address as any;
           if (addr.street || addr.streetAddress || addr.line1) {
             if (addr.city && addr.province && (addr.postalCode || addr.postal_code || addr.zip)) {
-              console.log("📫 Using fallback user_addresses pickup address for listing validation");
               return true;
             }
           }
         }
       }
     } catch (error) {
-      console.warn("Fallback user_addresses check failed:", error);
+      // Fallback user_addresses check failed
     }
 
-    // 3) Fallback: legacy plaintext pickup_address on profiles or books table
+    // 4) Fallback: legacy plaintext pickup_address on profiles or books table
     try {
       const { getUserAddresses, getSellerPickupAddress } = await import("@/services/addressService");
 
@@ -73,29 +90,26 @@ export const canUserListBooks = async (userId: string): Promise<boolean> => {
         if (profileAddresses && profileAddresses.pickup_address) {
           const pa: any = profileAddresses.pickup_address;
           if ((pa.street || pa.streetAddress || pa.line1) && pa.city && pa.province && (pa.postalCode || pa.postal_code || pa.zip)) {
-            console.log("📄 Using addressService pickup address for listing validation");
             return true;
           }
         }
       } catch (err) {
-        console.warn("addressService.getUserAddresses failed:", err);
+        // addressService.getUserAddresses failed
       }
 
       // Check books table legacy pickup address
       try {
         const bookPickup = await getSellerPickupAddress(userId);
         if (bookPickup && (bookPickup.street || bookPickup.streetAddress) && bookPickup.city && bookPickup.province && (bookPickup.postal_code || bookPickup.postalCode)) {
-          console.log("📦 Using books table pickup address for listing validation");
           return true;
         }
       } catch (err) {
-        console.warn("addressService.getSellerPickupAddress failed:", err);
+        // addressService.getSellerPickupAddress failed
       }
     } catch (error) {
-      console.warn("Legacy addressService fallback failed:", error);
+      // Legacy addressService fallback failed
     }
 
-    console.log(`❌ User ${userId} cannot list books - no valid pickup address found`);
     return false;
   } catch (error) {
     safeLogError("Error in canUserListBooks", error, { userId });

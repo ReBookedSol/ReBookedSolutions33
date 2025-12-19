@@ -75,7 +75,6 @@ export const initializeBobPayCheckout = async (
     }
 
     const orderId = createData.order.id;
-    console.log('Order created:', orderId);
 
     // Step 2: Initialize BobPay payment
     const notifyUrl = `${window.location.origin}/api/bobpay-webhook`;
@@ -135,7 +134,6 @@ export const initializeBobPayCheckout = async (
 
     throw new Error('No payment URL received');
   } catch (error) {
-    console.error('BobPay checkout initialization error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     toast.error(errorMessage);
     return null;
@@ -143,7 +141,7 @@ export const initializeBobPayCheckout = async (
 };
 
 /**
- * Handle BobPay refund for an order
+ * Handle BobPay refund for an order (only for non-committed orders)
  */
 export const initiateBobPayRefund = async (
   orderId: string,
@@ -153,6 +151,22 @@ export const initiateBobPayRefund = async (
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) {
       throw new Error('Not authenticated');
+    }
+
+    // Check order status first - only refund if not committed
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .select('status')
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !orderData) {
+      throw new Error('Order not found');
+    }
+
+    // Only invoke BobPay refund for non-committed orders
+    if ((orderData.status || '').toLowerCase() === 'committed') {
+      throw new Error('Cannot refund committed orders directly. Please use the standard cancel-order-with-refund flow.');
     }
 
     const { data, error } = await supabase.functions.invoke(
@@ -175,7 +189,6 @@ export const initiateBobPayRefund = async (
     toast.success('Refund processed successfully');
     return true;
   } catch (err) {
-    console.error('BobPay refund error:', err);
     const errorMessage = err instanceof Error ? err.message : 'Refund failed';
     toast.error(errorMessage);
     return false;

@@ -339,6 +339,25 @@ const GettingStarted = () => {
                   </div>
                 </div>
 
+                <div id="payout-issues" className="rounded-lg border border-amber-200 bg-amber-50 p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-base font-semibold text-gray-900 mb-2">Issues with your payouts?</h4>
+                      <p className="text-gray-700 text-sm mb-4">
+                        If you experience any issues with your payouts or transfers, please reach out to our payments team. To help us assist you faster, provide as much information as possible about the issue.
+                      </p>
+                      <div className="text-sm space-y-2">
+                        <p className="text-gray-700 font-semibold">Contact our payments team:</p>
+                        <a href="mailto:payments@rebookedsolutions.co.za" className="flex items-center gap-2 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm font-medium w-full sm:w-auto justify-center sm:justify-start">
+                          <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                          <span className="break-all sm:break-normal">payments@rebookedsolutions.co.za</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="pt-2">
                   <a href="#top" className="text-sm text-book-700 underline">Back to top</a>
                 </div>

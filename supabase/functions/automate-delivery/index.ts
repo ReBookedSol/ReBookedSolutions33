@@ -55,10 +55,7 @@ serve(async (req) => {
       .single();
 
     if (orderError || !order) {
-      console.warn(
-        "Order not found, proceeding with automation anyway:",
-        orderError?.message,
-      );
+      // Order not found, proceeding with automation anyway
     }
 
     // Step 1: Get quotes from Bob Go
@@ -110,12 +107,10 @@ serve(async (req) => {
         }));
       }
     } catch (quoteError) {
-      console.error("Failed to get Bob Go rates:", quoteError);
     }
 
     // Add fallback quote if no quotes received
     if (quotes.length === 0) {
-      console.warn("No quotes received, adding fallback Bob Go quote");
       quotes.push({
         courier: "bobgo",
         service_name: "Standard Delivery",
@@ -147,18 +142,14 @@ serve(async (req) => {
               order_id,
               provider_slug: selectedQuote.provider_slug,
               service_level_code: selectedQuote.service_level_code,
-              pickup_address: {
-                ...normalizeAddress(seller_address),
-                contact_name: seller_address?.contact_name || seller_address?.contactName || seller_address?.name || "",
-                contact_phone: seller_address?.contact_phone || seller_address?.phone || "",
-                contact_email: seller_address?.contact_email || seller_address?.email || "",
-              },
-              delivery_address: {
-                ...normalizeAddress(buyer_address),
-                contact_name: buyer_address?.contact_name || buyer_address?.contactName || buyer_address?.name || "",
-                contact_phone: buyer_address?.contact_phone || buyer_address?.phone || "",
-                contact_email: buyer_address?.contact_email || buyer_address?.email || "",
-              },
+              pickup_address: normalizeAddress(seller_address),
+              pickup_contact_name: seller_address?.contact_name || seller_address?.contactName || seller_address?.name || "",
+              pickup_contact_phone: seller_address?.contact_phone || seller_address?.phone || "",
+              pickup_contact_email: seller_address?.contact_email || seller_address?.email || "",
+              delivery_address: normalizeAddress(buyer_address),
+              delivery_contact_name: buyer_address?.contact_name || buyer_address?.contactName || buyer_address?.name || "",
+              delivery_contact_phone: buyer_address?.contact_phone || buyer_address?.phone || "",
+              delivery_contact_email: buyer_address?.contact_email || buyer_address?.email || "",
               parcels: [{ weight: weight || 1, length: 25, width: 20, height: 3, value: 100 }],
               reference: `AUTO-${order_id}`,
             }),
@@ -168,7 +159,6 @@ serve(async (req) => {
         const shipmentData = await shipmentResponse.json();
         shipmentResult = shipmentData;
       } catch (shipmentError) {
-        console.error("Failed to create Bob Go shipment:", shipmentError);
       }
     }
 
@@ -196,7 +186,6 @@ serve(async (req) => {
         .eq("id", order_id);
 
       if (updateError) {
-        console.error("Failed to update order:", updateError);
       }
     }
 
@@ -213,10 +202,6 @@ serve(async (req) => {
         created_at: new Date().toISOString(),
       });
     } catch (logError) {
-      console.warn(
-        "Failed to log automation activity (table may not exist):",
-        logError?.message,
-      );
       // Don't fail for logging errors
     }
 
@@ -235,7 +220,6 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error("Automate delivery error:", error);
 
     const errorMessage = error instanceof Error ? error.message :
                         typeof error === "string" ? error :

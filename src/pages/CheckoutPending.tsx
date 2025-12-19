@@ -27,11 +27,9 @@ const CheckoutPending: React.FC = () => {
     try {
       setLoading(true);
 
-      console.log("Checking payment status for reference:", reference);
-
+      // Checking payment status
       // Clean the reference - remove any suffixes like ":1" that may be appended by payment providers
       const cleanReference = reference ? reference.split(':')[0] : reference;
-      console.log("Clean reference:", cleanReference);
 
       // Query payment_transactions to find the payment by reference
       const { data: paymentTx, error: txError } = await supabase
@@ -41,17 +39,14 @@ const CheckoutPending: React.FC = () => {
         .maybeSingle();
 
       if (txError) {
-        console.error("Payment transaction not found:", txError);
         setMessage("Payment record not found. Please contact support.");
         return;
       }
 
       if (paymentTx) {
-        console.log("Payment transaction:", paymentTx);
         setMessage("Your payment is being processed. This may take a few moments.");
       }
     } catch (err) {
-      console.error("Error checking payment status:", err);
       setMessage(err instanceof Error ? err.message : "Failed to check payment status");
     } finally {
       setLoading(false);

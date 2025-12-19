@@ -71,21 +71,12 @@ class FallbackService {
           );
 
           if (result.success) {
-            console.log(
-              `✅ ${functionName} succeeded via ${source}${attempt > 0 ? ` (retry ${attempt})` : ""}`,
-            );
             return { ...result, source, retryCount: attempt };
           }
 
           lastError = result.error || "Unknown error";
-          console.warn(
-            `⚠️ ${functionName} failed via ${source} (attempt ${attempt + 1}): ${lastError}`,
-          );
         } catch (error: any) {
           lastError = error.message;
-          console.warn(
-            `⚠️ ${functionName} error via ${source} (attempt ${attempt + 1}): ${lastError}`,
-          );
         }
 
         // Wait before retry (except on last attempt)
@@ -102,9 +93,6 @@ class FallbackService {
       }
     }
 
-    console.error(
-      `💥 ${functionName} failed on all sources after ${retryCount} attempts`,
-    );
     return {
       success: false,
       error: lastError || "All service endpoints failed",
@@ -298,7 +286,6 @@ export function useServiceStatus() {
         lastChecked: new Date(),
       });
     } catch (error) {
-      console.error("Health check failed:", error);
     }
   }, []);
 

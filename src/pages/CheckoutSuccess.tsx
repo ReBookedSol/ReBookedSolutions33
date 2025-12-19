@@ -34,22 +34,16 @@ const CheckoutSuccess: React.FC = () => {
    */
   const handlePostPaymentActions = async (order: any) => {
     try {
-      console.log("🔄 Processing post-payment actions for order:", order.id);
+      // Processing post-payment actions
 
       const bookItem = order.items?.[0];
       const bookId = bookItem?.book_id || order.book_id;
-
-      console.log("📚 Book ID extracted:", {
-        fromItems: bookItem?.book_id,
-        fromOrder: order.book_id,
-        final: bookId
-      });
 
       // Step 1: Invoke create-order function to mark book as sold
       // This is a fallback mechanism in case the webhook didn't fire
       if (bookId && order.buyer_id && order.seller_id) {
         try {
-          console.log("📞 Invoking create-order function to mark book as sold...");
+          // Invoking create-order function
 
           const { data: createOrderResult, error: createOrderError } = await supabase.functions.invoke(
             'create-order',
@@ -66,28 +60,22 @@ const CheckoutSuccess: React.FC = () => {
                 selected_courier_name: order.selected_courier_name,
                 selected_service_name: order.selected_service_name,
                 selected_shipping_cost: order.selected_shipping_cost,
+                delivery_type: order.delivery_type || "door",
+                delivery_locker_data: order.delivery_locker_data || null,
+                delivery_locker_location_id: order.delivery_locker_location_id || null,
+                delivery_locker_provider_slug: order.delivery_locker_provider_slug || null,
               }
             }
           );
 
           if (createOrderError) {
-            console.warn("⚠️ create-order function returned error (book may already be marked):", createOrderError);
             // Don't throw - this might be expected if already marked
           } else if (createOrderResult?.success) {
-            console.log("✅ create-order function executed successfully - book marked as sold");
-          } else {
-            console.warn("⚠️ create-order function returned non-success response:", createOrderResult);
+            // Book marked as sold
           }
         } catch (functionError) {
-          console.warn("⚠️ Error invoking create-order function:", functionError);
           // Continue with other actions even if function call fails
         }
-      } else {
-        console.warn("⚠️ Missing required data to invoke create-order:", {
-          bookId,
-          buyer_id: order.buyer_id,
-          seller_id: order.seller_id
-        });
       }
 
       // Step 2: Send emails via EnhancedPurchaseEmailService
@@ -110,9 +98,8 @@ const CheckoutSuccess: React.FC = () => {
           orderTotal,
           orderDate: new Date(order.created_at).toLocaleDateString(),
         });
-        console.log("✅ Purchase emails sent successfully");
+        // Purchase emails sent
       } catch (emailError) {
-        console.warn("⚠️ Email service error (emails may still be queued):", emailError);
       }
 
       // Step 3: Create in-app notifications
@@ -124,9 +111,8 @@ const CheckoutSuccess: React.FC = () => {
           bookTitle,
           false // isForSeller
         );
-        console.log("✅ Buyer notification created");
+        // Buyer notification created
       } catch (notifError) {
-        console.warn("⚠️ Failed to create buyer notification:", notifError);
       }
 
       try {
@@ -137,9 +123,8 @@ const CheckoutSuccess: React.FC = () => {
           bookTitle,
           true // isForSeller
         );
-        console.log("✅ Seller notification created");
+        // Seller notification created
       } catch (notifError) {
-        console.warn("⚠️ Failed to create seller notification:", notifError);
       }
 
       // Step 4: Update order status to pending_commit if still pending
@@ -155,18 +140,16 @@ const CheckoutSuccess: React.FC = () => {
             .eq("id", order.id);
 
           if (updateError) {
-            console.warn("⚠️ Failed to update order status:", updateError);
+            // Failed to update status
           } else {
-            console.log("✅ Order status updated to pending_commit");
+            // Order status updated
           }
         } catch (updateError) {
-          console.warn("⚠️ Order status update error:", updateError);
         }
       }
 
-      console.log("✅ All post-payment actions completed");
+      // All post-payment actions completed
     } catch (error) {
-      console.error("❌ Post-payment actions failed:", error);
       // Don't throw - show success page anyway as order was created
     }
   };
@@ -176,11 +159,9 @@ const CheckoutSuccess: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching order data for order_id:", reference);
-
+      // Fetching order data
       // Clean the reference - remove any suffixes like ":1" that may be appended by payment providers
       const cleanReference = reference ? reference.split(':')[0] : reference;
-      console.log("Clean reference:", cleanReference);
 
       // Fetch the order directly from orders table using payment_reference
       const { data: order, error: orderError } = await supabase
@@ -190,13 +171,12 @@ const CheckoutSuccess: React.FC = () => {
         .maybeSingle();
 
       if (orderError || !order) {
-        console.error("Order not found:", orderError);
         setError("Order not found. Please check your reference number. Your payment may still be processing.");
         // Give user a longer time to see the error
         return;
       }
 
-      console.log("Order found:", order);
+      // Order found
 
       // Trigger post-payment actions as a fallback (webhook may have already done this)
       await handlePostPaymentActions(order);
@@ -216,16 +196,15 @@ const CheckoutSuccess: React.FC = () => {
                 payment_reference: cleanReference,
               },
             })
-            .then(() => console.log("✅ Success page visit logged"))
-            .catch(err => console.error("Failed to log success page visit:", err));
+            .then(() => {})
+            .catch(() => {});
         } catch (logError) {
-          console.warn("Activity logging failed (non-critical):", logError);
+          // Activity logging failed
         }
       }
 
       // Get the payment_reference from the order record
       const paymentReference = order.payment_reference || cleanReference;
-      console.log("Payment reference from order:", paymentReference);
 
       // Extract book info from items array
       const bookItem = order.items?.[0];
@@ -255,7 +234,6 @@ const CheckoutSuccess: React.FC = () => {
 
       setOrderData(confirmation);
     } catch (err) {
-      console.error("Error fetching order data:", err);
       setError(err instanceof Error ? err.message : "Failed to load order");
     } finally {
       setLoading(false);

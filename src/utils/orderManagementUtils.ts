@@ -43,7 +43,6 @@ export async function getUserOrderSummary(userId: string): Promise<OrderSummary>
       .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
 
     if (error) {
-      console.error("Error fetching order summary:", error);
       return {
         totalOrders: 0,
         pendingCommits: 0,
@@ -63,7 +62,6 @@ export async function getUserOrderSummary(userId: string): Promise<OrderSummary>
 
     return summary;
   } catch (error) {
-    console.error("Failed to get order summary:", error);
     return {
       totalOrders: 0,
       pendingCommits: 0,
@@ -117,7 +115,6 @@ export async function getUserOrdersWithDetails(
     const { data: orders, error } = await query;
 
     if (error) {
-      console.error("Error fetching detailed orders:", error);
       throw error;
     }
 
@@ -134,13 +131,13 @@ export async function getUserOrdersWithDetails(
       } : null,
     }));
   } catch (error) {
-    console.error("Failed to get user orders:", error);
     throw error;
   }
 }
 
 /**
  * Check if user can cancel an order
+ * Aligned with server-side blocked statuses: ['collected', 'in transit', 'out for delivery', 'delivered']
  */
 export function canCancelOrder(order: OrderWithDetails, userId: string): {
   canCancel: boolean;
@@ -151,14 +148,22 @@ export function canCancelOrder(order: OrderWithDetails, userId: string): {
     return { canCancel: false, reason: "Only buyers can cancel orders" };
   }
 
-  // Check order status
-  const cancellableStatuses = ["pending_commit", "committed", "pending_delivery"];
-  if (!cancellableStatuses.includes(order.status)) {
-    return { canCancel: false, reason: `Cannot cancel order with status: ${order.status}` };
+  // Block cancellation for committed orders - user must contact support
+  const orderStatusLower = (order.status || "").toLowerCase();
+  if (orderStatusLower === "committed") {
+    return { canCancel: false, reason: "Once confirmed by the seller, please contact support if you need to cancel this order." };
   }
 
-  // Check if already delivered/collected
-  if (order.delivery_status === "delivered" || order.delivery_status === "collected") {
+  // Check order status - block only the statuses that the server blocks
+  const blockedOrderStatuses = ["collected", "in transit", "out for delivery", "delivered"];
+  if (blockedOrderStatuses.includes(orderStatusLower)) {
+    return { canCancel: false, reason: `Cannot cancel - your order is "${order.status}"` };
+  }
+
+  // Check delivery status - block only the statuses that the server blocks
+  const blockedDeliveryStatuses = ["collected", "in transit", "out for delivery", "delivered"];
+  const deliveryStatusLower = (order.delivery_status || "").toLowerCase();
+  if (blockedDeliveryStatuses.includes(deliveryStatusLower)) {
     return { canCancel: false, reason: "Cannot cancel - book has already been collected/delivered" };
   }
 

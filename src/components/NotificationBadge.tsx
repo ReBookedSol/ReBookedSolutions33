@@ -34,7 +34,6 @@ const NotificationBadge = ({
     isAuthenticated = auth.isAuthenticated;
     authLoading = auth.isLoading;
   } catch (error) {
-    console.warn("Auth context not available in NotificationBadge, hiding component");
     // Fallback to unauthenticated state
     isAuthenticated = false;
     authLoading = false;

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,11 @@ import {
   Mail,
   Eye,
   ShoppingBag,
+  Loader2,
 } from "lucide-react";
 import { OrderConfirmation } from "@/types/checkout";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
 
 interface Step4ConfirmationProps {
   orderData: OrderConfirmation;
@@ -26,6 +28,9 @@ const Step4Confirmation: React.FC<Step4ConfirmationProps> = ({
   onViewOrders,
   onContinueShopping,
 }) => {
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = React.useState(false);
+
   useEffect(() => {
     // Send confirmation email
     sendConfirmationEmail();
@@ -45,64 +50,39 @@ const Step4Confirmation: React.FC<Step4ConfirmationProps> = ({
   const sendConfirmationEmail = async () => {
     try {
       // This would typically call your email service
-      console.log("Sending confirmation email for order:", orderData.order_id);
     } catch (error) {
-      console.error("Failed to send confirmation email:", error);
     }
   };
 
-  const downloadReceipt = () => {
-    // Generate and download receipt PDF
-    const receiptContent = generateReceiptText();
-    const blob = new Blob([receiptContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `receipt-${orderData.order_id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const downloadReceipt = async () => {
+    if (!receiptRef.current) {
+      toast.error("Receipt element not found");
+      return;
+    }
 
-    toast.success("Receipt downloaded successfully!");
-  };
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: 800,
+      });
 
-  const generateReceiptText = () => {
-    return `
-REBOOKED SOLUTIONS - PURCHASE RECEIPT
-=====================================
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `receipt-${orderData.order_id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-Order ID: ${orderData.order_id}
-Payment Reference: ${orderData.payment_reference}
-Date: ${new Date(orderData.created_at).toLocaleDateString()}
-Time: ${new Date(orderData.created_at).toLocaleTimeString()}
-
-BOOK DETAILS
-============
-Title: ${orderData.book_title}
-Book ID: ${orderData.book_id}
-Price: R${orderData.book_price.toFixed(2)}
-
-SELLER INFORMATION
-==================
-Seller ID: ${orderData.seller_id}
-
-DELIVERY INFORMATION
-====================
-Method: ${orderData.delivery_method}
-Cost: R${orderData.delivery_price.toFixed(2)}
-
-PAYMENT SUMMARY
-===============
-Book Price: R${orderData.book_price.toFixed(2)}
-Delivery Fee: R${orderData.delivery_price.toFixed(2)}
-Total Paid: R${orderData.total_paid.toFixed(2)}
-
-Status: ${orderData.status.toUpperCase()}
-
-Thank you for your purchase!
-Visit https://rebooked.co.za to track your order.
-    `.trim();
+      toast.success("Receipt downloaded successfully!");
+    } catch (error) {
+      toast.error("Failed to generate receipt image");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -294,11 +274,21 @@ Visit https://rebooked.co.za to track your order.
         <div className="flex gap-4">
           <Button
             onClick={downloadReceipt}
+            disabled={isDownloading}
             variant="outline"
             className="flex-1"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Download Receipt
+            {isDownloading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Download Receipt (PNG)
+              </>
+            )}
           </Button>
           <Button onClick={onViewOrders} variant="outline" className="flex-1">
             <Eye className="w-4 h-4 mr-2" />
@@ -323,6 +313,162 @@ Visit https://rebooked.co.za to track your order.
           </p>
         </CardContent>
       </Card>
+
+      {/* Hidden Receipt for PNG Generation */}
+      <div
+        ref={receiptRef}
+        style={{
+          position: "fixed",
+          left: "-9999px",
+          top: "-9999px",
+          width: "800px",
+          padding: "40px",
+          fontFamily: "'Arial', sans-serif",
+          color: "#1f4e3d",
+        }}
+      >
+        <div style={{ backgroundColor: "#ffffff", padding: "40px" }}>
+          {/* Header */}
+          <div
+            style={{
+              borderBottom: "3px solid #3ab26f",
+              paddingBottom: "20px",
+              marginBottom: "30px",
+              textAlign: "center",
+            }}
+          >
+            <h1 style={{ fontSize: "32px", margin: "0 0 5px 0", color: "#1f4e3d" }}>
+              ReBooked Solutions
+            </h1>
+            <p style={{ fontSize: "14px", margin: "0", color: "#4e7a63" }}>
+              Purchase Receipt
+            </p>
+          </div>
+
+          {/* Order Info */}
+          <div style={{ marginBottom: "30px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", fontSize: "14px" }}>
+              <div>
+                <p style={{ margin: "0 0 5px 0", color: "#4e7a63", fontWeight: "bold" }}>
+                  Order ID
+                </p>
+                <p style={{ margin: "0", fontSize: "16px", fontWeight: "bold", fontFamily: "monospace" }}>
+                  {orderData.order_id}
+                </p>
+              </div>
+              <div>
+                <p style={{ margin: "0 0 5px 0", color: "#4e7a63", fontWeight: "bold" }}>
+                  Payment Reference
+                </p>
+                <p style={{ margin: "0", fontSize: "14px", fontFamily: "monospace" }}>
+                  {orderData.payment_reference}
+                </p>
+              </div>
+              <div>
+                <p style={{ margin: "0 0 5px 0", color: "#4e7a63", fontWeight: "bold" }}>
+                  Date
+                </p>
+                <p style={{ margin: "0" }}>
+                  {new Date(orderData.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div>
+                <p style={{ margin: "0 0 5px 0", color: "#4e7a63", fontWeight: "bold" }}>
+                  Time
+                </p>
+                <p style={{ margin: "0" }}>
+                  {new Date(orderData.created_at).toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <hr style={{ border: "none", borderTop: "1px solid #e0e0e0", margin: "30px 0" }} />
+
+          {/* Book Details */}
+          <div style={{ marginBottom: "30px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px", color: "#1f4e3d" }}>
+              📚 Book Details
+            </h2>
+            <div style={{ backgroundColor: "#f3fef7", padding: "15px", borderRadius: "8px" }}>
+              <p style={{ margin: "0 0 10px 0", fontSize: "15px", fontWeight: "bold" }}>
+                {orderData.book_title}
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", fontSize: "13px" }}>
+                <p style={{ margin: "0", color: "#4e7a63" }}>
+                  Book ID: {orderData.book_id}
+                </p>
+                <p style={{ margin: "0", textAlign: "right", fontWeight: "bold" }}>
+                  R{orderData.book_price.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery Information */}
+          <div style={{ marginBottom: "30px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px", color: "#1f4e3d" }}>
+              🚚 Delivery Information
+            </h2>
+            <div style={{ backgroundColor: "#f3fef7", padding: "15px", borderRadius: "8px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", fontSize: "13px" }}>
+                <p style={{ margin: "0", color: "#4e7a63" }}>
+                  Method: {orderData.delivery_method}
+                </p>
+                <p style={{ margin: "0", textAlign: "right", fontWeight: "bold" }}>
+                  R{orderData.delivery_price.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <hr style={{ border: "none", borderTop: "1px solid #e0e0e0", margin: "30px 0" }} />
+
+          {/* Price Breakdown */}
+          <div style={{ marginBottom: "30px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px", color: "#1f4e3d" }}>
+              💰 Price Breakdown
+            </h2>
+            <div style={{ backgroundColor: "#f3fef7", padding: "15px", borderRadius: "8px", fontSize: "13px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span>Book Price</span>
+                <span>R{orderData.book_price.toFixed(2)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span>Delivery Fee</span>
+                <span>R{orderData.delivery_price.toFixed(2)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+                <span>Platform Fee</span>
+                <span>R{(orderData.platform_fee || 20).toFixed(2)}</span>
+              </div>
+              <hr style={{ border: "none", borderTop: "1px solid #d0d0d0", margin: "12px 0" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px", fontWeight: "bold", color: "#3ab26f" }}>
+                <span>Total Paid</span>
+                <span>R{orderData.total_paid.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Status */}
+          <div style={{ marginBottom: "30px" }}>
+            <h2 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "15px", color: "#1f4e3d" }}>
+              ✅ Status
+            </h2>
+            <div style={{ backgroundColor: "#d4f4e8", padding: "15px", borderRadius: "8px", color: "#1f4e3d", fontWeight: "bold" }}>
+              PAID - Payment completed successfully
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{ textAlign: "center", marginTop: "40px", paddingTop: "20px", borderTop: "1px solid #e0e0e0", fontSize: "12px", color: "#4e7a63" }}>
+            <p style={{ margin: "10px 0" }}>Thank you for your purchase!</p>
+            <p style={{ margin: "10px 0" }}>Track your order: https://rebookedsolutions.co.za/orders/{orderData.order_id}</p>
+            <p style={{ margin: "10px 0", fontStyle: "italic" }}>"Pre-Loved Pages, New Adventure"</p>
+            <p style={{ margin: "10px 0" }}>© ReBooked Solutions</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

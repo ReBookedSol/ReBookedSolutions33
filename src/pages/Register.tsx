@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, BookOpen, Book } from "lucide-react";
 import { BackupEmailService } from "@/utils/backupEmailService";
+import { callEdgeFunction } from "@/utils/edgeFunctionClient";
 
 // Affiliate tracking storage key
 const AFFILIATE_STORAGE_KEY = 'affiliate_code';
@@ -88,12 +89,7 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    console.log("🚀 Starting registration process...");
-    console.log("📧 Email:", email);
-    console.log("👤 First Name:", firstName);
-    console.log("👤 Last Name:", lastName);
-    console.log("🔐 Password length:", password.length);
-    console.log("✅ Terms accepted:", termsAccepted);
+    // Starting registration process - sensitive data not logged
 
     try {
       if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim() || !phone.trim()) {
@@ -127,11 +123,27 @@ const Register = () => {
         }
       }
 
-      console.log("🔄 Calling register function...");
       const affiliateCode = getStoredAffiliateCode();
-      console.log("🔖 Using affiliate code:", affiliateCode);
       const result = await register(email, password, firstName, lastName, normalizedPhone, affiliateCode ?? undefined);
-      console.log("✅ Register function returned:", result);
+
+      // Call Brevo to create contact after successful signup (non-blocking)
+      if (result?.needsVerification || result?.emailWarning) {
+        try {
+          await callEdgeFunction('create-brevo-contact', {
+            method: 'POST',
+            body: {
+              email,
+              firstName,
+              lastName,
+              phone: normalizedPhone,
+              updateIfExists: true,
+            }
+          });
+        } catch (brevoError) {
+          // Log but don't fail signup if Brevo contact creation fails
+          console.warn('Failed to create Brevo contact:', brevoError);
+        }
+      }
 
       // Handle different registration outcomes
       if (result?.needsVerification) {
@@ -207,14 +219,7 @@ const Register = () => {
         }, 1000);
       }
     } catch (error: unknown) {
-      // Better error logging
-      console.group("📝 Registration Error Details");
-      console.error("Error:", error);
-      console.error("Message:", error instanceof Error ? error.message : String(error));
-      console.error("Email:", email);
-      console.error("First Name:", firstName);
-      console.error("Last Name:", lastName);
-      console.groupEnd();
+      // Handle registration errors
 
       const errorMessage =
         error instanceof Error
@@ -263,7 +268,6 @@ const Register = () => {
           }
         );
 
-        console.log("📧 Email service configuration needed - user informed");
       } else {
         // Show the error to the user
         toast.error(errorMessage, {

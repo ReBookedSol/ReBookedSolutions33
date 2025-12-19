@@ -22,8 +22,6 @@ const ResetPassword = () => {
   useEffect(() => {
     const verifySession = async () => {
       try {
-        console.log("Verifying reset password session");
-
         // First check if user has an active session (likely from auth callback)
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
@@ -63,10 +61,6 @@ const ResetPassword = () => {
 
         // Check for errors in URL
         if (error_code || error_description) {
-          console.error("Reset password error from URL:", {
-            error_code,
-            error_description,
-          });
           toast.error(error_description || "Invalid or expired reset link");
           setIsValidSession(false);
           setTimeout(() => navigate("/forgot-password"), 3000);
@@ -111,7 +105,6 @@ const ResetPassword = () => {
         setIsValidSession(false);
         setTimeout(() => navigate("/forgot-password"), 4000);
       } catch (error) {
-        console.error("Error verifying session:", error);
         const errorMessage = getSafeErrorMessage(error, "Something went wrong. Please try again.");
         toast.error(errorMessage);
         setIsValidSession(false);
@@ -157,24 +150,20 @@ const ResetPassword = () => {
         throw new Error(`Password requirements: ${passwordErrors.join(", ")}`);
       }
 
-      console.log("Updating user password");
       const { data, error } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (error) {
-        console.error("Password update error:", error);
         throw error;
       }
 
-      console.log("Password updated successfully");
       toast.success("Password updated successfully!");
 
       // Sign out and redirect to login
       await supabase.auth.signOut();
       navigate("/login", { replace: true });
     } catch (error: unknown) {
-      console.error("Password reset error:", error);
       const errorMessage = getSafeErrorMessage(error, "Failed to update password");
       toast.error(errorMessage);
     } finally {

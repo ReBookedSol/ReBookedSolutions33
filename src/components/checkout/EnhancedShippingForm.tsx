@@ -164,7 +164,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
       }
       setHasAutofilled(true);
     } catch (error) {
-      console.error("Error autofilling user info:", error);
     }
   };
 
@@ -179,7 +178,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
   }, [watchedValues.city, watchedValues.province, watchedValues.postal_code]);
 
   if (!onComplete || !cartItems) {
-    console.error("EnhancedShippingForm: Invalid props");
     return <div>Loading shipping form...</div>;
   }
 
@@ -199,10 +197,8 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
 
         if (addressData?.shipping_address) {
           savedShippingAddress = addressData.shipping_address;
-          console.log("🔐 Using encrypted shipping address");
         }
       } catch (error) {
-        console.warn("Failed to get encrypted shipping address:", error);
       }
 
       // No plaintext fallback allowed
@@ -215,7 +211,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
         }
       }
     } catch (error) {
-      console.error("Error loading saved address:", error);
     }
   };
 
@@ -294,7 +289,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
         },
       );
 
-      console.log("🚛 Setting delivery options:", fallbackOptions);
       setDeliveryOptions(fallbackOptions);
       if (fallbackOptions.length > 0) {
         setSelectedDeliveryOption(fallbackOptions[0]);
@@ -302,7 +296,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
 
       toast.success(`${fallbackOptions.length} delivery options loaded`);
     } catch (error) {
-      console.error("Error getting delivery quotes:", error);
       toast.error("Failed to load delivery options");
     } finally {
       setIsLoadingQuotes(false);
@@ -322,12 +315,7 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
   };
 
   const onSubmit = async (data: ShippingFormData) => {
-    console.log("🔥 FORM SUBMIT TRIGGERED!");
-    console.log("📋 Form data:", data);
-
     if (Object.keys(errors).length > 0) {
-      console.error("❌ Form has validation errors:");
-      console.table(errors);
 
       const errorFields = Object.keys(errors);
       toast.error(`Please fix these fields: ${errorFields.join(", ")}`);
@@ -335,13 +323,11 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
     }
 
     if (!data.recipient_name || data.recipient_name.trim() === "") {
-      console.error("❌ Critical validation: recipient_name is empty");
       toast.error("Please enter the recipient's full name");
       return;
     }
 
     if (deliveryOptions.length === 0) {
-      console.log("⚠️ No delivery options, creating fallback...");
       const emergencyOptions: DeliveryOption[] = [
         {
           id: "emergency_standard",
@@ -410,7 +396,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
       onComplete(data, optionsToPass);
       toast.success("Proceeding to delivery selection");
     } catch (error) {
-      console.error("❌ Error processing shipping form:", error);
       toast.error("Failed to process shipping information");
     } finally {
       setIsLoading(false);
@@ -428,9 +413,6 @@ const EnhancedShippingForm: React.FC<EnhancedShippingFormProps> = ({
       <CardContent>
         <form
           onSubmit={handleSubmit(onSubmit, (validationErrors) => {
-            console.error("🚨 FORM VALIDATION FAILED:");
-            console.table(validationErrors);
-
             const firstError = Object.entries(validationErrors)[0];
             if (firstError && firstError[1]?.message) {
               toast.error(`Please complete: ${firstError[1].message}`, {

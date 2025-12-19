@@ -38,7 +38,6 @@ const ContactUs = () => {
       setSubject("");
       setMessage("");
     } catch (error) {
-      console.error("Failed to send message:", error);
       toast.error("Unable to send message. Please try again or contact support.");
     } finally {
       setIsSubmitting(false);

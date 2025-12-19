@@ -11,7 +11,6 @@ import {
   LogOut,
   UserPlus,
   Truck,
-  GraduationCap,
   MapPin,
 } from "lucide-react";
 import CartButton from "./CartButton";
@@ -34,7 +33,6 @@ const Navbar = () => {
     isLoading = auth.isLoading;
     profile = auth.profile;
   } catch (error) {
-    console.warn("Auth context not available in Navbar, using default values");
     // Fallback values already set above
   }
 
@@ -49,7 +47,6 @@ const Navbar = () => {
       toast.success(`Successfully logged out. Goodbye!`);
       navigate("/");
     } catch (error) {
-      console.error("Logout error:", error);
       toast.error("Failed to logout. Please try again.");
     }
   };
@@ -78,9 +75,7 @@ const Navbar = () => {
                   <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <span className="text-lg sm:text-xl font-bold text-book-600 truncate">
-                  {location.pathname.startsWith("/university")
-                    ? "ReBooked Campus"
-                    : "ReBooked Solutions"}
+                  ReBooked Solutions
                 </span>
               </Link>
             </div>
@@ -92,12 +87,6 @@ const Navbar = () => {
                 className="text-gray-700 hover:text-book-600 px-3 py-2 text-sm font-medium transition-colors"
               >
                 Books
-              </Link>
-              <Link
-                to="/university-info"
-                className="text-gray-700 hover:text-book-600 px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Campus
               </Link>
               <div className="w-20 h-10 bg-gray-200 rounded animate-pulse"></div>
             </div>
@@ -138,16 +127,8 @@ const Navbar = () => {
                 <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <span className="text-lg sm:text-xl font-bold text-book-600 truncate">
-                <span className="hidden sm:inline">
-                  {location.pathname.startsWith("/university")
-                    ? "ReBooked Campus"
-                    : "ReBooked Solutions"}
-                </span>
-                <span className="sm:hidden">
-                  {location.pathname.startsWith("/university")
-                    ? "ReBooked Campus"
-                    : "ReBooked Solutions"}
-                </span>
+                <span className="hidden sm:inline">ReBooked Solutions</span>
+                <span className="sm:hidden">ReBooked Solutions</span>
               </span>
             </Link>
           </div>
@@ -165,17 +146,6 @@ const Navbar = () => {
               <span className="lg:hidden">Books</span>
             </Link>
 
-            <Link
-              to="/university-info"
-              className={`flex items-center space-x-1 text-sm font-medium transition-colors hover:text-book-600 ${
-                location.pathname.startsWith("/university")
-                  ? "text-book-600"
-                  : "text-gray-700"
-              }`}
-            >
-              <GraduationCap className="w-4 h-4" />
-              <span>Campus</span>
-            </Link>
 
             <Link
               to="/shipping"
@@ -299,18 +269,6 @@ const Navbar = () => {
                 <span>Browse Books</span>
               </Link>
 
-              <Link
-                to="/university-info"
-                className={`flex items-center space-x-3 px-4 py-3 text-base font-medium rounded-md transition-colors min-h-[44px] ${
-                  location.pathname.startsWith("/university")
-                    ? "bg-book-50 text-book-600"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-book-600"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <GraduationCap className="w-5 h-5" />
-                <span>Campus</span>
-              </Link>
 
               <Link
                 to="/shipping"

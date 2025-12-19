@@ -30,7 +30,6 @@ export class RefundService {
     reason: string,
   ): Promise<RefundResult> {
     try {
-      console.log(`💸 Processing refund for order ${orderId}: R${amount}`);
 
       // Get the original transaction from our database
       const { data: transaction, error: transactionError } = await supabase
@@ -90,7 +89,6 @@ export class RefundService {
         .insert(refundData);
 
       if (insertError) {
-        console.error("Failed to store refund in database:", insertError);
         // Continue anyway since Paystack refund was successful
       }
 
@@ -105,7 +103,6 @@ export class RefundService {
         })
         .eq("id", orderId);
 
-      console.log(`✅ Refund processed successfully for order ${orderId}`);
 
       return {
         success: true,
@@ -116,7 +113,6 @@ export class RefundService {
         expectedDate: refundResult.expectedDate,
       };
     } catch (error) {
-      console.error("Refund processing failed:", error);
 
       // Store failed refund attempt
       try {
@@ -132,7 +128,6 @@ export class RefundService {
           created_at: new Date().toISOString(),
         });
       } catch (dbError) {
-        console.error("Failed to store failed refund:", dbError);
       }
 
       return {
@@ -197,7 +192,6 @@ export class RefundService {
         paystackData: result.data,
       };
     } catch (error) {
-      console.error("Paystack refund API error:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Paystack API error",
@@ -242,7 +236,6 @@ export class RefundService {
         processedAt: result.data.created_at,
       };
     } catch (error) {
-      console.error("Failed to check refund status:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Status check failed",
@@ -285,7 +278,6 @@ export class RefundService {
         refunds: refunds || [],
       };
     } catch (error) {
-      console.error("Failed to fetch user refunds:", error);
       return {
         success: false,
         error:

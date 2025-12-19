@@ -59,25 +59,17 @@ class NotificationManager {
   setupSubscription(userId: string, refreshCallback: () => Promise<void>) {
     // Circuit breaker - prevent operations if destroyed
     if (this.isDestroyed) {
-      console.log('[NotificationManager] Manager is destroyed, ignoring setup request');
       return;
     }
 
     // Enhanced subscription guard - prevent multiple subscriptions more strictly
     if (this.subscribingRef) {
-      console.log("[NotificationManager] Already subscribing, ignoring request for user:", userId);
       return;
     }
 
     if (this.subscriptionRef && this.currentUserId === userId) {
       // Check if existing subscription is still valid
       if (this.connectionStatus === 'connected' || this.connectionStatus === 'connecting') {
-        console.log(
-          "[NotificationManager] Valid subscription already exists for user:",
-          userId,
-          "status:",
-          this.connectionStatus,
-        );
         return;
       }
     }
@@ -91,12 +83,6 @@ class NotificationManager {
 
     // Clean up any existing subscription for a different user
     if (this.subscriptionRef && this.currentUserId !== userId) {
-      console.log(
-        "[NotificationManager] Switching subscription from",
-        this.currentUserId,
-        "to",
-        userId,
-      );
       this.safeCleanup();
     }
 
@@ -111,14 +97,6 @@ class NotificationManager {
     }
 
     const channelName = `notifications_${userId}_${Date.now()}`; // Add timestamp to ensure uniqueness
-    console.log(
-      "[NotificationManager] Setting up subscription for user:",
-      userId,
-      "channel:",
-      channelName,
-      "attempt:",
-      this.reconnectAttempts + 1,
-    );
 
     try {
       const channel = supabase.channel(channelName);
@@ -133,10 +111,6 @@ class NotificationManager {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          console.log(
-            "[NotificationManager] Received event from notifications table:",
-            payload.eventType,
-          );
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
             clearNotificationCache(userId);
             refreshCallback().catch((err) => {
@@ -157,10 +131,6 @@ class NotificationManager {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          console.log(
-            "[NotificationManager] Received event from order_notifications table:",
-            payload.eventType,
-          );
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
             clearNotificationCache(userId);
             refreshCallback().catch((err) => {
@@ -172,15 +142,11 @@ class NotificationManager {
       );
 
       channel.subscribe((status) => {
-        console.log(`[NotificationManager] Channel ${channelName} status:`, status);
-
         if (status === "SUBSCRIBED") {
           this.subscribingRef = false;
           this.connectionStatus = 'connected';
           this.reconnectAttempts = 0; // Reset retry counter on success
-          console.log("[NotificationManager] 🔔 Successfully connected to realtime");
         } else if (status === "CHANNEL_ERROR" || status === "CLOSED" || status === "TIMED_OUT") {
-          console.warn(`[NotificationManager] 🔌 Connection ${status.toLowerCase()}`);
           this.connectionStatus = 'error';
           this.subscribingRef = false;
           this.safeCleanup();
@@ -196,10 +162,6 @@ class NotificationManager {
 
       this.subscriptionRef = channel;
     } catch (error) {
-      console.error(
-        "[NotificationManager] Error setting up subscription:",
-        error,
-      );
       this.connectionStatus = 'error';
       this.subscriptionRef = null;
       this.subscribingRef = false;
@@ -214,19 +176,12 @@ class NotificationManager {
   private scheduleReconnect(userId: string, refreshCallback: () => Promise<void>) {
     // Circuit breaker checks
     if (this.isDestroyed || this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.warn(
-        "[NotificationManager] 🔕 Notifications temporarily disabled due to connection issues",
-      );
       this.connectionStatus = 'error';
       return;
     }
 
     this.reconnectAttempts++;
     const delay = Math.min(3000 * this.reconnectAttempts, 15000); // Simpler delay calculation
-
-    console.log(
-      `[NotificationManager] 🔄 Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
-    );
 
     this.reconnectTimeoutId = setTimeout(() => {
       // Additional checks before attempting reconnect
@@ -250,12 +205,10 @@ class NotificationManager {
       }
     } catch (error) {
       // Ignore cleanup errors to prevent recursion
-      console.warn("[NotificationManager] Cleanup error (ignored):", error);
     }
   }
 
   cleanup() {
-    console.log('[NotificationManager] Starting cleanup...');
     this.isDestroyed = true; // Set circuit breaker
 
     // Clear any pending reconnect timeout
@@ -271,8 +224,6 @@ class NotificationManager {
     this.notifications = [];
     this.connectionStatus = 'disconnected';
     this.reconnectAttempts = 0;
-
-    console.log('[NotificationManager] Cleanup completed');
   }
 }
 
@@ -378,38 +329,17 @@ export const useNotifications = (): NotificationHookReturn => {
         }
       } catch (error) {
         const errorMessage = getSafeErrorMessage(error, "Failed to fetch notifications");
-        console.error(
-          `[NotificationHook] Error fetching notifications:`,
-          errorMessage
-        );
-
-        // Also log the original error object with proper serialization
-        if (error && typeof error === 'object') {
-          console.error('[NotificationHook] Original error object:', {
-            message: error.message,
-            code: error.code,
-            details: error.details,
-            hint: error.hint,
-            status: error.status
-          });
-        }
 
         // Handle 403 errors with session refresh
         if (
           errorMessage.includes("403") ||
           errorMessage.includes("forbidden")
         ) {
-          console.log(
-            "[NotificationHook] 403 error detected, attempting session refresh",
-          );
           try {
             const {
               data: { session },
             } = await supabase.auth.refreshSession();
             if (session) {
-              console.log(
-                "[NotificationHook] Session refreshed, retrying notification fetch",
-              );
               // Clear error and retry immediately
               setHasError(false);
               setLastError(undefined);
@@ -417,10 +347,7 @@ export const useNotifications = (): NotificationHookReturn => {
               return;
             }
           } catch (refreshError) {
-            console.error(
-              "[NotificationHook] Session refresh failed:",
-              refreshError,
-            );
+            // Session refresh failed
           }
         }
 
@@ -440,22 +367,10 @@ export const useNotifications = (): NotificationHookReturn => {
               RETRY_DELAYS[retryCountRef.current - 1] ||
               RETRY_DELAYS[RETRY_DELAYS.length - 1];
 
-            console.log(
-              `[NotificationHook] Scheduling retry ${retryCountRef.current}/${MAX_RETRY_ATTEMPTS} in ${retryDelay}ms`,
-            );
-
             retryTimeoutRef.current = setTimeout(() => {
               refreshNotifications(true);
             }, retryDelay);
-          } else {
-            console.warn(
-              `[NotificationHook] Max retry attempts reached (${MAX_RETRY_ATTEMPTS})`,
-            );
           }
-        } else {
-          console.warn(
-            `[NotificationHook] Non-retryable error: ${errorMessage}`,
-          );
         }
       } finally {
         setIsLoading(false);
@@ -523,17 +438,11 @@ export const useNotifications = (): NotificationHookReturn => {
     const cleanupInterval = setInterval(() => {
       // Force garbage collection of old notification data
       if (notifications.length > 200) {
-        console.log(
-          "[NotificationHook] Cleaning up old notifications for performance",
-        );
         setNotifications((prev) => prev.slice(-100)); // Keep only last 100 notifications
       }
     }, 60000); // Every minute
 
     return () => {
-      console.log(
-        "[NotificationHook] Component unmounting - cleaning up all resources",
-      );
 
       clearInterval(cleanupInterval);
 

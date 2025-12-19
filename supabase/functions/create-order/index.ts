@@ -10,13 +10,22 @@ interface CreateOrderRequest {
   seller_id: string;
   book_id: string;
   delivery_option: string;
-  shipping_address_encrypted: string;
+  shipping_address_encrypted?: string;
   payment_reference?: string;
   selected_courier_slug?: string;
   selected_service_code?: string;
   selected_courier_name?: string;
   selected_service_name?: string;
   selected_shipping_cost?: number;
+  // Locker support
+  pickup_type?: 'door' | 'locker';
+  pickup_locker_data?: any;
+  pickup_locker_location_id?: number;
+  pickup_locker_provider_slug?: string;
+  delivery_type?: 'door' | 'locker';
+  delivery_locker_data?: any;
+  delivery_locker_location_id?: number;
+  delivery_locker_provider_slug?: string;
 }
 
 serve(async (req) => {
@@ -27,21 +36,12 @@ serve(async (req) => {
   try {
     const requestData: CreateOrderRequest = await req.json();
 
-    console.log("📋 Processing order creation:", {
-      buyer_id: requestData.buyer_id,
-      seller_id: requestData.seller_id,
-      book_id: requestData.book_id,
-      delivery_option: requestData.delivery_option,
-      payment_reference: requestData.payment_reference ?? 'none'
-    });
-
     // Validate required fields
-    if (!requestData.buyer_id || !requestData.seller_id || !requestData.book_id || !requestData.delivery_option || !requestData.shipping_address_encrypted) {
-      console.error("❌ Missing required fields");
+    if (!requestData.buyer_id || !requestData.seller_id || !requestData.book_id || !requestData.delivery_option) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Missing required fields: buyer_id, seller_id, book_id, delivery_option, shipping_address_encrypted"
+          error: "Missing required fields: buyer_id, seller_id, book_id, delivery_option"
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -59,14 +59,12 @@ serve(async (req) => {
           .maybeSingle();
 
         if (bookRowError) {
-          console.warn('⚠️ Failed to fetch book for ensureBookMarkedSold:', bookRowError);
           return;
         }
 
         if (!bookRow) return;
 
         if (!bookRow.sold) {
-          // Only decrement available_quantity if it's > 0
           const newAvailable = (typeof bookRow.available_quantity === 'number' && bookRow.available_quantity > 0) ? bookRow.available_quantity - 1 : 0;
           const newSoldQuantity = (bookRow.sold_quantity || 0) + 1;
 
@@ -74,33 +72,21 @@ serve(async (req) => {
             .from('books')
             .update({ sold: true, available_quantity: newAvailable, sold_quantity: newSoldQuantity, updated_at: new Date().toISOString() })
             .eq('id', bookId);
-
-          if (markError) {
-            console.warn('⚠️ Failed to mark book as sold in ensureBookMarkedSold:', markError);
-          } else {
-            console.log('✅ ensureBookMarkedSold: book updated');
-          }
         }
       } catch (e) {
-        console.warn('⚠️ ensureBookMarkedSold unexpected error:', e);
+        // Error marking book as sold
       }
     }
 
     // If a payment_reference was provided, check for existing order to make this operation idempotent
     if (requestData.payment_reference) {
-      console.log("🔎 Checking for existing order with payment_reference:", requestData.payment_reference);
       const { data: existingByRef, error: existingRefError } = await supabase
         .from('orders')
         .select('*')
         .eq('payment_reference', requestData.payment_reference)
         .maybeSingle();
 
-      if (existingRefError) {
-        console.warn('⚠️ Failed to query existing order by payment_reference:', existingRefError);
-      }
-
       if (existingByRef) {
-        console.log('ℹ️ Existing order found by payment_reference. Ensuring book is marked sold and returning existing order.');
         await ensureBookMarkedSold(requestData.book_id);
 
         return new Response(
@@ -110,8 +96,7 @@ serve(async (req) => {
       }
     }
 
-    // Additionally check for an existing order for this buyer/seller/book combination in active states
-    console.log('🔎 Checking for existing active order for buyer/seller/book');
+    // Check for existing active order for this buyer/seller/book combination
     const { data: existingCombo, error: existingComboError } = await supabase
       .from('orders')
       .select('*')
@@ -121,12 +106,7 @@ serve(async (req) => {
       .in('status', ['pending', 'pending_commit', 'paid', 'committed'])
       .maybeSingle();
 
-    if (existingComboError) {
-      console.warn('⚠️ Failed to query existing order by combo:', existingComboError);
-    }
-
     if (existingCombo) {
-      console.log('ℹ️ Existing active order found for combo. Ensuring book is marked sold and returning existing order.');
       await ensureBookMarkedSold(requestData.book_id);
 
       return new Response(
@@ -136,43 +116,34 @@ serve(async (req) => {
     }
 
     // Fetch buyer info from profiles
-    console.log("🔍 Fetching buyer profile:", requestData.buyer_id);
     const { data: buyer, error: buyerError } = await supabase
       .from("profiles")
-      .select("id, full_name, name, first_name, last_name, email, phone_number")
+      .select("id, full_name, name, first_name, last_name, email, phone_number, preferred_delivery_locker_data, preferred_delivery_locker_location_id, preferred_delivery_locker_provider_slug, shipping_address_encrypted")
       .eq("id", requestData.buyer_id)
       .single();
 
     if (buyerError) {
-      console.error("❌ Buyer fetch error:", buyerError);
       return new Response(
         JSON.stringify({ success: false, error: "Buyer not found: " + buyerError.message }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("✅ Buyer found:", { id: buyer?.id, full_name: buyer?.full_name, email: buyer?.email });
-
-    // Fetch seller info from profiles (including pickup_address_encrypted)
-    console.log("🔍 Fetching seller profile:", requestData.seller_id);
+    // Fetch seller info from profiles
     const { data: seller, error: sellerError } = await supabase
       .from("profiles")
-      .select("id, full_name, name, first_name, last_name, email, phone_number, pickup_address_encrypted")
+      .select("id, full_name, name, first_name, last_name, email, phone_number, pickup_address_encrypted, preferred_pickup_locker_data, preferred_pickup_locker_location_id, preferred_pickup_locker_provider_slug")
       .eq("id", requestData.seller_id)
       .single();
 
     if (sellerError) {
-      console.error("❌ Seller fetch error:", sellerError);
       return new Response(
         JSON.stringify({ success: false, error: "Seller not found: " + sellerError.message }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("✅ Seller found:", { id: seller?.id, full_name: seller?.full_name, has_pickup_address: !!seller?.pickup_address_encrypted });
-
     // Fetch book info
-    console.log("🔍 Fetching book:", requestData.book_id);
     const { data: book, error: bookError } = await supabase
       .from("books")
       .select("*")
@@ -180,27 +151,21 @@ serve(async (req) => {
       .single();
 
     if (bookError) {
-      console.error("❌ Book fetch error:", bookError);
       return new Response(
         JSON.stringify({ success: false, error: "Book not found: " + bookError.message }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("✅ Book found:", { id: book?.id, title: book?.title, sold: book?.sold, available_quantity: book?.available_quantity });
-
-    // Step 2: Check if book is available (BEFORE marking sold)
+    // Check if book is available
     if (book.sold || book.available_quantity < 1) {
-      console.error("❌ Book is not available");
       return new Response(
         JSON.stringify({ success: false, error: "Book is not available" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // ⭐ Step 3: MARK BOOK AS SOLD (THE CRITICAL UPDATE)
-    // This happens BEFORE order insertion to ensure atomicity
-    console.log("📝 Marking book as sold...");
+    // Mark book as sold
     const { error: updateBookError } = await supabase
       .from("books")
       .update({
@@ -212,19 +177,75 @@ serve(async (req) => {
       .eq("id", requestData.book_id);
 
     if (updateBookError) {
-      console.error("❌ Failed to mark book as sold:", updateBookError);
       return new Response(
         JSON.stringify({ success: false, error: "Failed to reserve book" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("✅ Book marked as sold:", { id: book.id, title: book.title });
+    // Determine pickup type and data
+    const pickupType = requestData.pickup_type || 'door';
+    let pickupLockerData = null;
+    let pickupLockerLocationId = null;
+    let pickupLockerProviderSlug = null;
+
+    if (pickupType === 'locker') {
+      // Use provided locker info or fall back to seller's preferred
+      pickupLockerData = requestData.pickup_locker_data || seller.preferred_pickup_locker_data;
+      pickupLockerLocationId = requestData.pickup_locker_location_id || seller.preferred_pickup_locker_location_id;
+      pickupLockerProviderSlug = requestData.pickup_locker_provider_slug || seller.preferred_pickup_locker_provider_slug;
+    }
+
+    // Determine delivery type and data
+    const deliveryType = requestData.delivery_type || 'door';
+    let deliveryLockerData = null;
+    let deliveryLockerLocationId = null;
+    let deliveryLockerProviderSlug = null;
+    let shippingAddressEncrypted = requestData.shipping_address_encrypted;
+
+    if (deliveryType === 'locker') {
+      // Use provided locker info or fall back to buyer's preferred
+      deliveryLockerData = requestData.delivery_locker_data || buyer.preferred_delivery_locker_data;
+      deliveryLockerLocationId = requestData.delivery_locker_location_id || buyer.preferred_delivery_locker_location_id;
+      deliveryLockerProviderSlug = requestData.delivery_locker_provider_slug || buyer.preferred_delivery_locker_provider_slug;
+    } else {
+      // For door delivery, use provided address or fall back to buyer's stored address
+      shippingAddressEncrypted = shippingAddressEncrypted || buyer.shipping_address_encrypted;
+    }
+
+    // Validate we have required delivery information
+    if (deliveryType === 'locker' && !deliveryLockerLocationId) {
+      // Rollback book marking
+      await supabase.from("books").update({ 
+        sold: false, 
+        available_quantity: book.available_quantity, 
+        sold_quantity: book.sold_quantity 
+      }).eq("id", requestData.book_id);
+      
+      return new Response(
+        JSON.stringify({ success: false, error: "Locker delivery requires locker location" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (deliveryType === 'door' && !shippingAddressEncrypted) {
+      // Rollback book marking
+      await supabase.from("books").update({ 
+        sold: false, 
+        available_quantity: book.available_quantity, 
+        sold_quantity: book.sold_quantity 
+      }).eq("id", requestData.book_id);
+      
+      return new Response(
+        JSON.stringify({ success: false, error: "Door delivery requires shipping address" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Generate unique order_id
     const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
-    // Prepare denormalized data with fallbacks
+    // Prepare denormalized data
     const buyerFullName = buyer.full_name || buyer.name || `${buyer.first_name || ''} ${buyer.last_name || ''}`.trim() || 'Unknown Buyer';
     const sellerFullName = seller.full_name || seller.name || `${seller.first_name || ''} ${seller.last_name || ''}`.trim() || 'Unknown Seller';
     const buyerEmail = buyer.email || '';
@@ -233,9 +254,7 @@ serve(async (req) => {
     const sellerPhone = seller.phone_number || '';
     const pickupAddress = seller.pickup_address_encrypted || '';
 
-    console.log("📝 Preparing order data:", { buyer_full_name: buyerFullName, seller_full_name: sellerFullName });
-
-    // Create order with denormalized data from profiles
+    // Create order with locker support
     const orderData = {
       order_id: orderId,
       buyer_id: requestData.buyer_id,
@@ -248,10 +267,22 @@ serve(async (req) => {
       buyer_phone_number: buyerPhone,
       seller_phone_number: sellerPhone,
       pickup_address_encrypted: pickupAddress,
-      shipping_address_encrypted: requestData.shipping_address_encrypted,
+      shipping_address_encrypted: shippingAddressEncrypted,
       delivery_option: requestData.delivery_option,
+      // Pickup locker fields
+      pickup_type: pickupType,
+      pickup_locker_data: pickupLockerData,
+      pickup_locker_location_id: pickupLockerLocationId,
+      pickup_locker_provider_slug: pickupLockerProviderSlug,
+      // Delivery locker fields
+      delivery_type: deliveryType,
+      delivery_locker_data: deliveryLockerData,
+      delivery_locker_location_id: deliveryLockerLocationId,
+      delivery_locker_provider_slug: deliveryLockerProviderSlug,
       delivery_data: {
         delivery_option: requestData.delivery_option,
+        delivery_type: deliveryType,
+        pickup_type: pickupType,
         requested_at: new Date().toISOString(),
         selected_courier_slug: requestData.selected_courier_slug,
         selected_service_code: requestData.selected_service_code,
@@ -273,7 +304,6 @@ serve(async (req) => {
       items: [{ book_id: book.id, title: book.title, author: book.author, price: book.price, condition: book.condition }]
     };
 
-    console.log("💾 Inserting order into database...");
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert(orderData)
@@ -281,21 +311,11 @@ serve(async (req) => {
       .single();
 
     if (orderError) {
-      console.error("❌ Failed to create order:", orderError);
-      console.error("Order data that failed:", JSON.stringify(orderData, null, 2));
-
       // ROLLBACK: Undo the book marking
-      console.log("🔄 Rolling back book marking...");
-      const { error: rollbackError } = await supabase
+      await supabase
         .from("books")
         .update({ sold: false, available_quantity: book.available_quantity, sold_quantity: book.sold_quantity, updated_at: new Date().toISOString() })
         .eq("id", requestData.book_id);
-
-      if (rollbackError) {
-        console.error("❌ Failed to rollback book marking:", rollbackError);
-      } else {
-        console.log("✅ Book marking rolled back successfully");
-      }
 
       return new Response(
         JSON.stringify({ success: false, error: "Failed to create order: " + orderError.message }),
@@ -303,15 +323,25 @@ serve(async (req) => {
       );
     }
 
-    console.log("✅ Order created successfully:", { id: order.id, order_id: order.order_id });
-
     return new Response(
-      JSON.stringify({ success: true, message: "Order created successfully", order: { id: order.id, order_id: order.order_id, status: order.status, payment_status: order.payment_status, total_amount: order.total_amount, buyer_email: order.buyer_email, seller_email: order.seller_email } }),
+      JSON.stringify({ 
+        success: true, 
+        message: "Order created successfully", 
+        order: { 
+          id: order.id, 
+          order_id: order.order_id, 
+          status: order.status, 
+          payment_status: order.payment_status, 
+          total_amount: order.total_amount, 
+          buyer_email: order.buyer_email, 
+          seller_email: order.seller_email,
+          pickup_type: order.pickup_type,
+          delivery_type: order.delivery_type
+        } 
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("❌ Error creating order:", error);
-    console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

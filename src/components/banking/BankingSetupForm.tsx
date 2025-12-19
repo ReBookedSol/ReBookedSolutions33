@@ -106,7 +106,6 @@ const BankingSetupForm: React.FC<BankingSetupFormProps> = ({
         );
         setAccountValidation(result);
       } catch (error) {
-        console.error("Account validation error:", error);
         setAccountValidation({ valid: false });
       }
       setIsValidatingAccount(false);
@@ -232,7 +231,6 @@ const BankingSetupForm: React.FC<BankingSetupFormProps> = ({
 
     try {
       // First, run banking system diagnostics
-      console.log("🔍 Running banking system diagnostics before submission...");
       const diagnostics = await diagnoseBankingIssues();
 
       // Check if we can proceed
@@ -301,8 +299,6 @@ const BankingSetupForm: React.FC<BankingSetupFormProps> = ({
         }
       }
     } catch (error) {
-      console.error("Banking setup error:", error);
-
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
       if (errorMessage.includes("mock subaccount")) {

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface BobPayInitRequest {
   amount: number;
@@ -62,7 +63,6 @@ export const initializeBobPayPayment = async (
     });
 
     if (error) {
-      console.error('BobPay initialization error:', error);
       return {
         success: false,
         error: error.message || 'Failed to initialize payment',
@@ -78,7 +78,6 @@ export const initializeBobPayPayment = async (
 
     return data;
   } catch (err) {
-    console.error('BobPay initialization exception:', err);
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error occurred',
@@ -87,7 +86,7 @@ export const initializeBobPayPayment = async (
 };
 
 /**
- * Process a BobPay refund
+ * Process a BobPay refund (only for non-committed orders)
  */
 export const processBobPayRefund = async (
   refundData: BobPayRefundRequest
@@ -98,6 +97,28 @@ export const processBobPayRefund = async (
       throw new Error('Not authenticated');
     }
 
+    // Check order status first - only refund if not committed
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .select('status')
+      .eq('id', refundData.order_id)
+      .single();
+
+    if (orderError || !orderData) {
+      return {
+        success: false,
+        error: 'Order not found',
+      };
+    }
+
+    // Only invoke BobPay refund for non-committed orders
+    if ((orderData.status || '').toLowerCase() === 'committed') {
+      return {
+        success: false,
+        error: 'Cannot refund committed orders directly. Please use the standard cancel-order-with-refund flow.',
+      };
+    }
+
     const { data, error } = await supabase.functions.invoke('bobpay-refund', {
       headers: {
         Authorization: `Bearer ${session.access_token}`,
@@ -106,7 +127,6 @@ export const processBobPayRefund = async (
     });
 
     if (error) {
-      console.error('BobPay refund error:', error);
       return {
         success: false,
         error: error.message || 'Failed to process refund',
@@ -122,7 +142,6 @@ export const processBobPayRefund = async (
 
     return data;
   } catch (err) {
-    console.error('BobPay refund exception:', err);
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Unknown error occurred',

@@ -33,8 +33,6 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    console.log("🔄 Starting mail queue processing...");
-
     // Get pending emails from queue
     const { data: pendingEmails, error: fetchError } = await supabase
       .from("mail_queue")
@@ -45,7 +43,6 @@ serve(async (req) => {
       .limit(BATCH_SIZE);
 
     if (fetchError) {
-      console.error("❌ Error fetching emails from queue:", fetchError);
       return new Response(
         JSON.stringify({
           success: false,
@@ -60,7 +57,6 @@ serve(async (req) => {
     }
 
     if (!pendingEmails || pendingEmails.length === 0) {
-      console.log("✅ No pending emails to process");
       return new Response(
         JSON.stringify({
           success: true,
@@ -74,8 +70,6 @@ serve(async (req) => {
       );
     }
 
-    console.log(`📬 Found ${pendingEmails.length} pending emails to process`);
-
     let successCount = 0;
     let failureCount = 0;
     const results = [];
@@ -83,8 +77,6 @@ serve(async (req) => {
     // Process each email
     for (const email of pendingEmails) {
       try {
-        console.log(`📧 Processing email ${email.id} to ${email.email}`);
-
         // Call the send-email function
         const emailResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
           method: "POST",
@@ -119,8 +111,6 @@ serve(async (req) => {
             status: "sent",
             message_id: emailResult.messageId,
           });
-
-          console.log(`✅ Email ${email.id} sent successfully`);
         } else {
           // Email failed
           const retryCount = (email.retry_count || 0) + 1;
@@ -136,8 +126,6 @@ serve(async (req) => {
                 retry_count: retryCount,
               })
               .eq("id", email.id);
-
-            console.log(`❌ Email ${email.id} failed permanently after ${retryCount} attempts`);
           } else {
             // Increment retry count but keep as pending
             await supabase
@@ -147,8 +135,6 @@ serve(async (req) => {
                 retry_count: retryCount,
               })
               .eq("id", email.id);
-
-            console.log(`⚠️ Email ${email.id} failed, will retry (attempt ${retryCount}/${MAX_RETRIES})`);
           }
 
           failureCount++;
@@ -160,8 +146,6 @@ serve(async (req) => {
           });
         }
       } catch (processingError) {
-        console.error(`❌ Error processing email ${email.id}:`, processingError);
-
         // Update retry count and error message
         const retryCount = (email.retry_count || 0) + 1;
         const status = retryCount >= MAX_RETRIES ? "failed" : "pending";
@@ -185,8 +169,6 @@ serve(async (req) => {
       }
     }
 
-    console.log(`📊 Processing complete: ${successCount} sent, ${failureCount} failed`);
-
     return new Response(
       JSON.stringify({
         success: true,
@@ -202,8 +184,6 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("❌ Critical error in mail queue processor:", error);
-
     return new Response(
       JSON.stringify({
         success: false,

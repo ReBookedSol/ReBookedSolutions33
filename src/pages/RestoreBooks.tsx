@@ -156,7 +156,6 @@ const RestoreBooks: React.FC = () => {
       }
       
     } catch (error) {
-      console.error('Error restoring books:', error);
       toast.error('Failed to restore books');
     } finally {
       setIsRestoring(false);

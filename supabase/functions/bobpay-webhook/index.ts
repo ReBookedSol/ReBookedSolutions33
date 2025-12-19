@@ -68,15 +68,10 @@ async function verifySignature(
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const calculatedSignature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    console.log('Signature verification:', {
-      received: webhookData.signature,
-      calculated: calculatedSignature,
-      match: calculatedSignature === webhookData.signature,
-    });
+    // Signature verification completed
 
     return calculatedSignature === webhookData.signature;
   } catch (error) {
-    console.error('Signature verification error:', error);
     return false;
   }
 }
@@ -98,7 +93,7 @@ Deno.serve(async (req) => {
       req.headers.get('x-real-ip') ||
       'unknown';
 
-    console.log('Webhook received from IP:', clientIp);
+    // Webhook received
 
     // Verify IP address (BobPay IPs: sandbox=13.246.115.225, production=13.246.100.25)
     const allowedIPs = ['13.246.115.225', '13.246.100.25'];
@@ -106,16 +101,11 @@ Deno.serve(async (req) => {
     const isProduction = Deno.env.get('BOBPAY_ENV') === 'production';
 
     if (isProduction && !allowedIPs.includes(clientIp)) {
-      console.warn('Webhook from unauthorized IP:', clientIp);
-      // Still process but log the warning
+      // Webhook from unauthorized IP
     }
 
     const webhookData: BobPayWebhook = await req.json();
-    console.log('BobPay webhook received:', {
-      custom_payment_id: webhookData.custom_payment_id,
-      status: webhookData.status,
-      amount: webhookData.paid_amount,
-    });
+    // Webhook data processed - sensitive data not logged
 
     // Verify signature
     const passphrase = Deno.env.get('BOBPAY_PASSPHRASE');
@@ -125,7 +115,6 @@ Deno.serve(async (req) => {
 
     const isValidSignature = await verifySignature(webhookData, passphrase);
     if (!isValidSignature) {
-      console.error('Invalid signature for webhook');
       return new Response('Invalid signature', { status: 400 });
     }
 
@@ -147,7 +136,6 @@ Deno.serve(async (req) => {
       );
 
       if (!validationResponse.ok) {
-        console.error('BobPay validation failed');
         return new Response('Payment validation failed', { status: 400 });
       }
     }
@@ -160,12 +148,10 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (orderError) {
-      console.error('Order not found:', orderError);
       return new Response('Order not found', { status: 404 });
     }
 
     if (!orders) {
-      console.error('No order found for payment_reference:', webhookData.custom_payment_id);
       return new Response('Order not found', { status: 404 });
     }
 
@@ -183,7 +169,7 @@ Deno.serve(async (req) => {
       .eq('reference', webhookData.custom_payment_id);
 
     if (txUpdateError) {
-      console.error('Error updating transaction:', txUpdateError);
+      // Handle transaction update error silently
     }
 
     // Update order based on payment status
@@ -198,13 +184,13 @@ Deno.serve(async (req) => {
         .eq('id', orders.id);
 
       if (orderUpdateError) {
-        console.error('Error updating order:', orderUpdateError);
+        // Handle order update error silently
       }
 
       // Mark book as sold (PRIMARY MECHANISM for BobPay)
       const bookId = orders.book_id || (orders.items?.[0]?.book_id);
       if (bookId) {
-        console.log('📚 Attempting to mark book as sold:', bookId);
+        // Attempting to mark book as sold
 
         try {
           // Get current book data FIRST with all required fields
@@ -215,27 +201,18 @@ Deno.serve(async (req) => {
             .single();
 
           if (bookFetchError) {
-            console.error('❌ Failed to fetch book data:', bookFetchError);
             throw bookFetchError;
           }
 
           if (!bookData) {
-            console.error('❌ Book not found:', bookId);
             throw new Error(`Book ${bookId} not found`);
           }
 
-          console.log('📖 Book current state:', {
-            id: bookData.id,
-            title: bookData.title,
-            sold: bookData.sold,
-            availability: bookData.availability,
-            available_quantity: bookData.available_quantity,
-            sold_quantity: bookData.sold_quantity
-          });
+          // Book state retrieved
 
           // Check if already marked as sold (prevents double-selling)
           if (bookData.sold) {
-            console.log('ℹ️ Book already marked as sold, skipping update:', bookId);
+            // Book already marked as sold
           } else {
             // Mark as sold with ALL required fields
             const { error: bookUpdateError } = await supabaseClient
@@ -250,21 +227,16 @@ Deno.serve(async (req) => {
               .eq('id', bookId);
 
             if (bookUpdateError) {
-              console.error('❌ Error marking book as sold:', bookUpdateError);
               throw bookUpdateError;
             }
 
-            console.log('✅ Book successfully marked as sold:', bookId);
+            // Book marked as sold
           }
         } catch (bookError) {
-          console.error('❌ Critical error in book marking:', bookError);
           // Continue processing - book marking failure shouldn't prevent order update
         }
       } else {
-        console.warn('⚠️ No book ID found in order:', {
-          book_id: orders.book_id,
-          items: orders.items
-        });
+        // No book ID found in order
       }
 
       // Log activity for buyer's purchase
@@ -284,8 +256,8 @@ Deno.serve(async (req) => {
             payment_reference: webhookData.custom_payment_id,
           },
         })
-        .then(() => console.log('✅ Purchase activity logged for buyer'))
-        .catch(err => console.error('Failed to log purchase activity:', err));
+        .then(() => {})
+        .catch(() => {});
 
       // Log activity for seller's sale
       await supabaseClient
@@ -303,8 +275,8 @@ Deno.serve(async (req) => {
             payment_reference: webhookData.custom_payment_id,
           },
         })
-        .then(() => console.log('✅ Sale activity logged for seller'))
-        .catch(err => console.error('Failed to log sale activity:', err));
+        .then(() => {})
+        .catch(() => {});
 
       // Get buyer and seller info for email notifications
       const { data: buyerProfile } = await supabaseClient
@@ -459,10 +431,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Webhook processed successfully');
+    // Webhook processed
     return new Response('OK', { status: 200, headers: corsHeaders });
   } catch (error) {
-    console.error('Error processing webhook:', error);
     // Return 200 to prevent retries for processing errors
     return new Response('Received', { status: 200, headers: corsHeaders });
   }

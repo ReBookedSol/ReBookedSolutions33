@@ -51,8 +51,6 @@ const OrderCommitButton: React.FC<OrderCommitButtonProps> = ({
     setIsDialogOpen(false);
 
     try {
-      console.log(`🚀 Enhanced commit: Starting commit with guaranteed emails for order: ${orderId}`);
-
       // 🔧 USE ENHANCED COMMIT SERVICE WITH EMAIL FALLBACKS
       const result = await EnhancedCommitService.commitWithEmailFallback(orderId, sellerId);
 
@@ -69,8 +67,6 @@ const OrderCommitButton: React.FC<OrderCommitButtonProps> = ({
       } else {
         successMessage = "✅ Sale committed! Emails queued for manual processing.";
       }
-
-      console.log(`✅ Enhanced commit completed:`, result);
 
       // Show enhanced success messages with email status
       toast.success(successMessage, {
@@ -101,8 +97,6 @@ const OrderCommitButton: React.FC<OrderCommitButtonProps> = ({
       // Call success callback
       onCommitSuccess?.();
     } catch (error: unknown) {
-      console.error("💥 Commit error:", error);
-
       let errorMessage = "Failed to commit to sale";
       const errorObj = error as Error;
 
@@ -166,7 +160,7 @@ const OrderCommitButton: React.FC<OrderCommitButtonProps> = ({
         </Button>
       </AlertDialogTrigger>
 
-      <AlertDialogContent>
+      <AlertDialogContent className="w-[calc(100vw-2rem)] sm:w-full max-w-sm sm:max-w-md mx-auto">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-amber-500" />

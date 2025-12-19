@@ -18,7 +18,6 @@ const AuthErrorHandler = () => {
 
       // If we're on the home page but have verification parameters, clean them up
       if (window.location.pathname === "/" && (hasToken || hasTokenHash || hasType)) {
-        console.warn("🧹 Cleaning verification parameters from home page URL");
         url.searchParams.delete("token");
         url.searchParams.delete("token_hash");
         url.searchParams.delete("type");
@@ -28,10 +27,6 @@ const AuthErrorHandler = () => {
       }
 
       if (error) {
-        console.warn("🚨 Auth error detected in URL:", {
-          error,
-          errorDescription,
-        });
 
         // Mark for cleanup instead of immediate action
         url.searchParams.delete("error");
@@ -45,7 +40,6 @@ const AuthErrorHandler = () => {
         const codeVerifier = localStorage.getItem("supabase.auth.token");
 
         if (!codeVerifier) {
-          console.warn("🧹 Auth code detected without verifier, cleaning URL");
 
           // Mark for cleanup instead of immediate action
           url.searchParams.delete("code");
@@ -70,30 +64,7 @@ const AuthErrorHandler = () => {
     // Run immediately
     handleAuthErrors();
 
-    // Also listen for auth errors from Supabase
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      const message = args.join(" ");
-
-      // Detect PKCE errors and handle them silently
-      if (
-        message.includes("code verifier") &&
-        message.includes("AuthApiError")
-      ) {
-        console.warn(
-          "🔇 Suppressing PKCE error (handled by AuthContext):",
-          message,
-        );
-        return;
-      }
-
-      // Let other errors through
-      originalConsoleError(...args);
-    };
-
-    return () => {
-      console.error = originalConsoleError;
-    };
+    return () => {};
   }, []);
 
   // This component doesn't render anything

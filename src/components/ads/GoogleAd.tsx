@@ -49,9 +49,6 @@ const GoogleAd = forwardRef<GoogleAdHandle, GoogleAdProps>(
         (window as any).adsbygoogle = (window as any).adsbygoogle || [];
         (window as any).adsbygoogle.push({});
       } catch (e) {
-        if (import.meta.env.DEV) {
-          console.debug("AdSense load skipped or blocked", e);
-        }
       }
     }, [refreshKey]);
 

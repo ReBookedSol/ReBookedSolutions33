@@ -36,6 +36,7 @@ import { BookTypeSection } from "@/components/create-listing/BookTypeSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { canUserListBooks } from "@/services/addressValidationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 const CreateListing = () => {
   const { user, profile } = useAuth();
@@ -49,10 +50,11 @@ const CreateListing = () => {
     price: 0,
     condition: "Good",
     category: "",
-    curriculum: undefined,
+    itemType: "textbook",
     grade: "",
     universityYear: "",
     university: "",
+    genre: "",
     imageUrl: "",
     frontCover: "",
     backCover: "",
@@ -70,7 +72,7 @@ const CreateListing = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [bookType, setBookType] = useState<"school" | "university">("school");
+  const [bookType, setBookType] = useState<"school" | "university" | "reader">("school");
   const [showFirstUploadDialog, setShowFirstUploadDialog] = useState(false);
   const [showPostListingDialog, setShowPostListingDialog] = useState(false);
   const [showShareProfileDialog, setShowShareProfileDialog] = useState(false);
@@ -80,7 +82,7 @@ const CreateListing = () => {
   const [sellerPolicyAccepted, setSellerPolicyAccepted] = useState(false);
   const [canListBooks, setCanListBooks] = useState<boolean | null>(null);
   const [isCheckingAddress, setIsCheckingAddress] = useState(true);
-  const [canProceedWithBanking, setCanProceedWithBanking] = useState(false);
+  const [preferredPickupMethod, setPreferredPickupMethod] = useState<"locker" | "pickup" | null>(null);
 
   // Check if user can list books on component mount
   useEffect(() => {
@@ -94,8 +96,18 @@ const CreateListing = () => {
       try {
         const canList = await canUserListBooks(user.id);
         setCanListBooks(canList);
+
+        // Fetch preferred pickup method
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("preferred_pickup_method")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (!error && profile?.preferred_pickup_method) {
+          setPreferredPickupMethod(profile.preferred_pickup_method);
+        }
       } catch (error) {
-        console.error("Error checking address status:", error);
         setCanListBooks(false);
       } finally {
         setIsCheckingAddress(false);
@@ -137,13 +149,22 @@ const CreateListing = () => {
     }
   };
 
-  const handleBookTypeChange = (type: "school" | "university") => {
+  const handleBookTypeChange = (type: "school" | "university" | "reader") => {
     setBookType(type);
-    if (type === "school") {
-      setFormData({ ...formData, universityYear: "", university: "" });
-    } else {
-      setFormData({ ...formData, grade: "" });
-    }
+    const newItemType: "textbook" | "reader" = type === "reader" ? "reader" : "textbook";
+
+    // Clear category and type-specific fields when book type changes since categories are different for each type
+    let updatedFormData = {
+      ...formData,
+      category: "",
+      itemType: newItemType,
+      grade: "",
+      universityYear: "",
+      university: "",
+      genre: "",
+    };
+
+    setFormData(updatedFormData);
   };
 
   const validateForm = () => {
@@ -166,6 +187,10 @@ const CreateListing = () => {
 
     if (bookType === "university" && !formData.universityYear) {
       newErrors.universityYear = "University Year is required for university books";
+    }
+
+    if (bookType === "reader" && !(formData as any).genre) {
+      newErrors.genre = "Genre is required for reader books";
     }
 
     if (!bookImages.frontCover)
@@ -195,17 +220,17 @@ const CreateListing = () => {
       return;
     }
 
-    // Check if user can list books before validating form
+    // Check if user can list books before validating form (address is required)
     if (canListBooks === false) {
       toast.error("❌ Please add a pickup address before listing your book.");
-      navigate("/profile");
+      navigate("/profile?tab=addresses");
       return;
     }
 
-    // Check banking requirements
-    if (!canProceedWithBanking) {
-      toast.error("❌ Please complete banking setup and address verification before listing your book.");
-      navigate("/profile");
+    // Check if user has chosen a preferred pickup method
+    if (!preferredPickupMethod) {
+      toast.error("Please choose your preferred pickup method before listing another book.");
+      navigate("/profile?tab=addresses");
       return;
     }
 
@@ -261,7 +286,7 @@ const CreateListing = () => {
           message: `Your book "${bookData.title}" has been listed successfully. Students can now find and purchase your book.`,
         });
       } catch (notificationError) {
-        console.warn('Failed to create listing notification:', notificationError);
+        // Handle notification error silently
       }
 
       toast.success("Your book has been listed successfully!", {
@@ -284,10 +309,7 @@ const CreateListing = () => {
             setShowShareProfileDialog(true);
           }
         } catch (prefError) {
-          console.warn(
-            "Could not track first upload preference:",
-            prefError,
-          );
+          // Handle preference tracking error silently
           // Fallback: check if it's first book before showing post-listing dialog
           try {
             const isFirstBook = await isFirstBookListing(user.id);
@@ -297,7 +319,6 @@ const CreateListing = () => {
               setShowShareProfileDialog(true);
             }
           } catch (bookError) {
-            console.warn("Could not check if first book:", bookError);
             setShowShareProfileDialog(true);
           }
         }
@@ -319,7 +340,6 @@ const CreateListing = () => {
         }
       } catch (prefError) {
         // Don't fail the whole process if preference tracking fails
-        console.warn("Could not track first upload preference:", prefError);
       }
 
       // Reset form
@@ -330,9 +350,11 @@ const CreateListing = () => {
         price: 0,
         condition: "Good",
         category: "",
+        itemType: "textbook",
         grade: "",
         universityYear: "",
         university: "",
+        genre: "",
         imageUrl: "",
         frontCover: "",
         backCover: "",
@@ -351,7 +373,6 @@ const CreateListing = () => {
 
       setErrors({});
     } catch (error) {
-      console.error("Error creating listing:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -378,41 +399,7 @@ const CreateListing = () => {
       <div
         className="container mx-auto px-4 md:px-8 py-4 md:py-8 max-w-5xl"
       >
-        {/* Address Requirement Alert */}
-        {!isCheckingAddress && canListBooks === false && (
-          <Alert className="mb-6 border-orange-200 bg-orange-50">
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-medium">Pickup Address Required</span>
-                  <p className="text-sm mt-1">
-                    You need to set a pickup address in your profile before you
-                    can list books for sale.
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/profile")}
-                  className="ml-4 border-orange-300 text-orange-700 hover:bg-orange-100"
-                >
-                  Go to Profile
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
         {/* Loading Address Check */}
-        {isCheckingAddress && (
-          <Alert className="mb-6">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <AlertDescription>
-              Checking address requirements...
-            </AlertDescription>
-          </Alert>
-        )}
-
         <BackButton
           fallbackPath="/books"
           className={`mb-4 md:mb-6 text-book-600 hover:text-book-700 ${isMobile ? "h-10" : ""}`}
@@ -420,7 +407,7 @@ const CreateListing = () => {
           {isMobile ? "" : "Back"}
         </BackButton>
 
-        <BankingRequirementCheck onCanProceed={setCanProceedWithBanking}>
+        <BankingRequirementCheck onCanProceed={() => {}}>
           <div
             className={`bg-white rounded-lg shadow-md ${isMobile ? "p-4" : "p-8"}`}
           >
@@ -546,7 +533,6 @@ const CreateListing = () => {
                   isSubmitting ||
                   isCheckingAddress ||
                   canListBooks === false ||
-                  !canProceedWithBanking ||
                   !sellerPolicyAccepted
                 }
                 className="w-full transition-all duration-200 font-semibold bg-book-600 hover:bg-book-700 hover:shadow-lg active:scale-[0.98] text-white py-4 h-12 md:h-14 md:text-lg touch-manipulation rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -563,8 +549,6 @@ const CreateListing = () => {
                   </>
                 ) : canListBooks === false ? (
                   "❌ Pickup Address Required"
-                ) : !canProceedWithBanking ? (
-                  "❌ Banking Setup Required"
                 ) : !sellerPolicyAccepted ? (
                   "Accept Policy to Continue"
                 ) : (
@@ -588,7 +572,6 @@ const CreateListing = () => {
                   setShowShareProfileDialog(true);
                 }
               } catch (error) {
-                console.warn('Could not check if first book listing:', error);
                 setShowShareProfileDialog(true);
               }
             }}

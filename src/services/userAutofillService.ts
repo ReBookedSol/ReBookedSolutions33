@@ -17,7 +17,6 @@ export class UserAutofillService {
         .single();
 
       if (error) {
-        console.warn("Error loading user profile for autofill:", error);
       }
 
       return {
@@ -25,15 +24,6 @@ export class UserAutofillService {
         email: user.email || "",
       };
     } catch (error) {
-      console.error("Error in getUserInfo:", {
-        message: error instanceof Error ? error.message : String(error),
-        error: error instanceof Error ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        } : error,
-        timestamp: new Date().toISOString()
-      });
       return null;
     }
   }

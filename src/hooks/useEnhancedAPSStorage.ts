@@ -59,7 +59,6 @@ export function useEnhancedAPSStorage() {
 
         // ✅ VERIFY SAVE SUCCESS
         const verification = localStorage.getItem(APS_STORAGE_KEY);
-        console.log("🔍 Profile saved and verified:", !!verification);
 
         // Update state
         setUserProfileState(profileWithTimestamp);
@@ -69,16 +68,12 @@ export function useEnhancedAPSStorage() {
           try {
             await saveAPSProfile(profileWithTimestamp, user);
           } catch (dbError) {
-            console.warn(
-              "Database save failed, localStorage still works:",
-              dbError,
-            );
+            // Database save failed, but localStorage still works
           }
         }
 
         return true;
       } catch (error) {
-        console.error("❌ Failed to save APS profile:", error);
         setError("Failed to save profile");
         return false;
       }
@@ -90,7 +85,6 @@ export function useEnhancedAPSStorage() {
   const loadProfile = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log("📂 Loading APS profile...");
 
       let profile: UserAPSProfile | null = null;
 
@@ -105,11 +99,9 @@ export function useEnhancedAPSStorage() {
       }
 
       setUserProfileState(profile);
-      console.log("📂 APS profile loaded:", profile ? "✅" : "❌");
 
       return profile;
     } catch (error) {
-      console.error("❌ Error loading profile:", error);
       setError("Failed to load profile");
       return null;
     } finally {
@@ -117,22 +109,19 @@ export function useEnhancedAPSStorage() {
     }
   }, [user]);
 
-  // �� LOAD PROFILE ON MOUNT - Runs automatically when app starts
+  // 📂 LOAD PROFILE ON MOUNT - Runs automatically when app starts
   useEffect(() => {
-    console.log("🚀 Initializing APS localStorage hook...");
     loadProfile();
 
     // 📡 LISTEN FOR CHANGES FROM OTHER TABS
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === APS_STORAGE_KEY) {
-        console.log("📡 localStorage changed in another tab, reloading...");
         loadProfile();
       }
     };
 
     // 📡 LISTEN FOR CUSTOM CLEAR EVENTS
     const handleProfileCleared = () => {
-      console.log("📡 APS profile cleared event received");
       setUserProfileState(null);
       setError(null);
     };
@@ -173,19 +162,9 @@ export function useEnhancedAPSStorage() {
 
         // 💾 AUTO-SAVE TO LOCALSTORAGE (PERSISTENT!)
         const success = await saveProfile(profile);
-        console.log("📊 [DEBUG] APS profile auto-saved:", success);
-        console.log("📊 [DEBUG] Profile being saved:", profile);
-
-        // Verify it was actually saved
-        const verification = localStorage.getItem("userAPSProfile");
-        console.log(
-          "📊 [DEBUG] localStorage after save:",
-          verification ? "DATA FOUND" : "NO DATA",
-        );
 
         return success;
       } catch (error) {
-        console.error("❌ Error updating subjects:", error);
         setError("Failed to update subjects");
         return false;
       } finally {
@@ -198,29 +177,15 @@ export function useEnhancedAPSStorage() {
   // 🗑️ CLEAR FUNCTION - Only triggered by user action
   const clearUserProfile = useCallback(async () => {
     try {
-      console.log("🗑️ [EnhancedAPSStorage] Starting to clear APS profile from localStorage");
-      console.log("���️ [DEBUG] Current userProfile state:", userProfile);
-
       const success = clearAPSProfileSimple();
-      console.log("🗑️ [DEBUG] clearAPSProfileSimple returned:", success);
 
       if (success) {
         setUserProfileState(null);
         setError(null);
-        console.log(
-          "✅ [DEBUG] APS Profile cleared successfully - state set to null",
-        );
-
-        // Force a re-check of localStorage
-        const checkCleared = localStorage.getItem("userAPSProfile");
-        console.log("🗑️ [DEBUG] localStorage after clear:", checkCleared);
-      } else {
-        console.error("❌ [DEBUG] clearAPSProfile returned false");
       }
 
       return success;
     } catch (error) {
-      console.error("❌ [DEBUG] Failed to clear APS profile:", error);
       setError("Failed to clear profile");
       return false;
     }

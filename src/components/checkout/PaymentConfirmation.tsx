@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { sendPurchaseWebhook } from "@/utils/webhookUtils";
 
 interface PaymentData {
   order_id: string;
@@ -53,8 +54,6 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
 
   const finalizeOrder = async () => {
     try {
-      console.log("🔄 Finalizing order after payment success...");
-
       // Get user details for email
       const { data: userData, error: userError } =
         await supabase.auth.getUser();
@@ -68,7 +67,6 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
         email: userData.user.email,
       };
 
-      console.log("🔐 Encrypting shipping address...");
       const { data: encResult, error: encError } = await supabase.functions.invoke(
         "encrypt-address",
         { body: { object: shippingObject } }
@@ -81,8 +79,6 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
       const shipping_address_encrypted = JSON.stringify(encResult.data);
 
       // Create order via Supabase Edge Function
-      console.log("📦 Invoking create-order function...");
-
       const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
         "create-order",
         {
@@ -98,7 +94,6 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
       );
 
       if (invokeError) {
-        console.error("🚫 Function invoke error:", invokeError);
         throw new Error(invokeError.message || "Failed to invoke create-order function");
       }
 
@@ -108,8 +103,10 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
         throw new Error(result?.error || "Failed to create order");
       }
 
-      console.log("✅ Order created successfully:", result);
       setOrderDetails(result.order);
+
+      // Send webhook notification for purchase (non-blocking)
+      sendPurchaseWebhook(result.order).catch(err => console.error("Webhook send failed:", err));
 
       // Store payment transaction
       const { error: paymentError } = await supabase
@@ -132,7 +129,6 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
         });
 
       if (paymentError) {
-        console.error("Failed to store payment transaction:", paymentError);
         // Don't fail the entire process for this
       }
 
@@ -143,7 +139,6 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
         description: `Order #${result.orders[0].id}`,
       });
     } catch (error) {
-      console.error("Order finalization error:", error);
       setError(
         error instanceof Error ? error.message : "Failed to finalize order",
       );
@@ -160,17 +155,13 @@ const PaymentConfirmation: React.FC<PaymentConfirmationProps> = ({
       // Import email service to use proper Supabase function endpoint
       const { emailService } = await import("@/services/emailService");
 
-      // Send buyer confirmation email
       await emailService.sendEmail({
         to: user.email,
         subject: "🎉 Payment Confirmed - Your Custom Receipt from ReBooked Marketplace",
         html: generateBuyerConfirmationEmail(order, paymentData),
         text: `Payment Confirmed - Your Custom Receipt\n\n✅ Your payment has been successfully processed!\n\nORDER SUMMARY:\nOrder ID: ${order.id}\nPayment Reference: ${paymentData.payment_reference}\nBook: ${paymentData.book_title}\nTotal Paid: R${paymentData.total_paid.toFixed(2)}\nDelivery Method: ${paymentData.delivery_method}\n\nWHAT HAPPENS NEXT (Step-by-Step):\n\n1. SELLER NOTIFICATION (Right Now)\n   The seller has been automatically notified of your order.\n\n2. SELLER COMMITMENT (Within 48 Hours)\n   The seller has exactly 48 hours to commit to fulfilling your order.\n   If they don't respond, you'll get an automatic full refund.\n\n3. COURIER PICKUP (Same Day as Commitment)\n   Once seller commits, we arrange courier pickup immediately.\n\n4. SHIPPING & TRACKING (1-2 Days After Pickup)\n   You'll receive tracking details via email and SMS.\n\n5. DELIVERY (2-3 Business Days)\n   Expected delivery: 2-3 business days after pickup.\n\nTOTAL TIMEFRAME: 3-5 business days from now to delivery\n\nTrack your order: https://rebookedsolutions.co.za/orders/${order.id}\n\nThis is your official receipt from ReBooked Marketplace.\n\nFor assistance: support@rebookedsolutions.co.za\nReBooked Marketplace - "Pre-Loved Pages, New Adventures"`,
       });
-
-      console.log("✅ Confirmation emails sent");
     } catch (error) {
-      console.error("Email sending error:", error);
       // Don't fail the process for email errors
     }
   };

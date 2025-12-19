@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     );
 
     const paymentData: PaymentInitRequest = await req.json();
-    console.log('Initializing BobPay payment:', paymentData);
+    // Initializing payment - sensitive data not logged
 
     // Get BobPay credentials from environment
     const bobpayApiUrl = Deno.env.get('BOBPAY_API_URL');
@@ -92,12 +92,11 @@ Deno.serve(async (req) => {
 
     if (!bobpayResponse.ok) {
       const errorText = await bobpayResponse.text();
-      console.error('BobPay API error:', errorText);
       throw new Error(`BobPay API error: ${errorText}`);
     }
 
     const bobpayData = await bobpayResponse.json();
-    console.log('BobPay payment link created:', bobpayData);
+    // Payment link created - sensitive data not logged
 
     // Store transaction in database if order_id provided
     if (paymentData.order_id) {
@@ -127,7 +126,6 @@ Deno.serve(async (req) => {
         });
 
       if (txError) {
-        console.error('Error storing transaction:', txError);
         throw new Error(`Failed to store transaction: ${txError.message}`);
       }
     }
@@ -147,7 +145,6 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in bobpay-initialize-payment:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({

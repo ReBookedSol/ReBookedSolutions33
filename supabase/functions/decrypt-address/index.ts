@@ -184,8 +184,6 @@ function parseRequestBody(body: any): DecryptionParams | null {
 }
 
 Deno.serve(async (req: Request) => {
-  console.log(`[decrypt-address] ${req.method} request received`)
-
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -229,7 +227,7 @@ Deno.serve(async (req: Request) => {
       }, { status: 400 })
     }
 
-    console.log(`[decrypt-address] Processing request for authenticated user`)
+    // Processing decryption request for authenticated user
 
     // Check if this is a legacy format request (direct table/target_id/address_type)
     if (body && body.table && body.target_id && body.address_type) {
@@ -281,7 +279,7 @@ Deno.serve(async (req: Request) => {
               .limit(1)
 
             if (booksError) {
-              console.error('[decrypt-address] Error checking seller books:', booksError)
+              // Error validating seller access
               throw new Error('Failed to validate seller access')
             }
 
@@ -290,7 +288,7 @@ Deno.serve(async (req: Request) => {
               throw new Error('Unauthorized access to profile data')
             }
 
-            console.log(`[decrypt-address] Allowing checkout access to seller ${target_id} pickup address`)
+            // Allowing checkout access to seller pickup address
           } else {
             // For non-pickup addresses (shipping), only allow own data or admin
             throw new Error('Unauthorized access to profile data')
@@ -301,12 +299,12 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await query.eq('id', target_id).single()
       
       if (error) {
-        console.error(`[decrypt-address] Database error:`, error)
+        // Database error occurred
         throw new Error(`Failed to fetch record: ${error.message}`)
       }
 
       if (!data) {
-        console.log(`[decrypt-address] No record found`)
+        // Record not found
         return jsonResponse({
           success: false, 
           data: null, 
@@ -319,7 +317,7 @@ Deno.serve(async (req: Request) => {
       // If we have encrypted data, try to decrypt it
       if (encryptedData) {
         try {
-          console.log(`[decrypt-address] Processing encrypted data`)
+          // Processing encrypted data
 
           let bundle: EncryptedBundle
           try {
@@ -354,12 +352,11 @@ Deno.serve(async (req: Request) => {
             }, { status: 422 })
           }
         } catch (decryptError) {
-          console.error(`[decrypt-address] Decryption failed:`, decryptError)
+          // Decryption error
         }
       }
 
       // No data found
-      console.log(`[decrypt-address] No address data found`)
       return jsonResponse({
         success: false,
         data: null, 
@@ -413,7 +410,7 @@ Deno.serve(async (req: Request) => {
               .limit(1)
 
             if (booksError) {
-              console.error('[decrypt-address] Error checking seller books:', booksError)
+              // Error validating seller access
               throw new Error('Failed to validate seller access')
             }
 
@@ -508,7 +505,7 @@ Deno.serve(async (req: Request) => {
     }
 
   } catch (error) {
-    console.error(`[decrypt-address] Error:`, error)
+    // Error occurred during address decryption
     
     const err = error as Error
     switch (err.message) {

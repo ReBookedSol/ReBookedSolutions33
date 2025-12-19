@@ -94,7 +94,6 @@ const OrderNotificationSystem: React.FC = () => {
       await markNotificationAsRead(notificationId);
       await refreshNotifications();
     } catch (error) {
-      console.error("Error marking notification as read:", error);
       toast.error("Failed to mark notification as read");
     }
   };
@@ -129,18 +128,17 @@ const OrderNotificationSystem: React.FC = () => {
       }
 
       if (notifError) {
-        console.warn("Failed to mark some notifications as read in notifications table:", notifError);
+        // Failed to mark some notifications as read in notifications table
       }
 
       if (orderNotifError) {
-        console.warn("Failed to mark some notifications as read in order_notifications table:", orderNotifError);
+        // Failed to mark some notifications as read in order_notifications table
       }
 
       await refreshNotifications();
 
       toast.success(`Marked ${unreadIds.length} notifications as read`);
     } catch (error) {
-      console.error("Error marking all as read:", error);
       toast.error("Failed to mark all notifications as read");
     }
   };

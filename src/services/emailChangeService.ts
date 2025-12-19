@@ -37,12 +37,6 @@ export class EmailChangeService {
     newEmail: string,
   ): Promise<EmailChangeResult> {
     try {
-      console.log(
-        "🔄 Requesting email change for user:",
-        userId,
-        "to:",
-        newEmail,
-      );
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -120,7 +114,6 @@ export class EmailChangeService {
         return emailSent;
       }
 
-      console.log("✅ Email change request successful");
       return {
         success: true,
         message:
@@ -218,7 +211,6 @@ ReBooked Solutions
       });
 
       if (error) {
-        console.error("❌ Email sending failed:", error);
         logError("Email sending failed", error);
         return {
           success: false,
@@ -228,7 +220,6 @@ ReBooked Solutions
       }
 
       if (!data?.success) {
-        console.error("❌ Email service returned error:", data);
         return {
           success: false,
           message: "Error sending confirmation email. Please try again later.",
@@ -236,7 +227,6 @@ ReBooked Solutions
         };
       }
 
-      console.log("✅ Confirmation email sent successfully to:", newEmail);
 
       // Store a notification for the user as backup
       try {
@@ -256,7 +246,7 @@ ReBooked Solutions
           });
         }
       } catch (notifError) {
-        console.warn("Could not create notification:", notifError);
+        // Could not create notification
       }
 
       return {
@@ -279,7 +269,6 @@ ReBooked Solutions
    */
   static async confirmEmailChange(token: string): Promise<EmailChangeResult> {
     try {
-      console.log("🔍 Confirming email change with token");
 
       if (!token) {
         return {
@@ -296,7 +285,6 @@ ReBooked Solutions
         .single();
 
       if (findError || !profile) {
-        console.log("❌ Email change token not found");
         return {
           success: false,
           message: "Invalid or expired confirmation link",
@@ -309,7 +297,6 @@ ReBooked Solutions
       const now = new Date();
 
       if (now > expiresAt) {
-        console.log("❌ Email change token expired");
 
         // Clean up expired token
         await supabase
@@ -369,7 +356,6 @@ ReBooked Solutions
         };
       }
 
-      console.log("✅ Email change confirmed successfully");
       return {
         success: true,
         message:
@@ -390,7 +376,6 @@ ReBooked Solutions
    */
   static async cancelEmailChange(userId: string): Promise<EmailChangeResult> {
     try {
-      console.log("🔄 Cancelling email change for user:", userId);
 
       const { error } = await supabase
         .from("profiles")
