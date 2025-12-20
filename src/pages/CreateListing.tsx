@@ -77,7 +77,6 @@ const CreateListing = () => {
   const [showSellerPolicyModal, setShowSellerPolicyModal] = useState(false);
   const [showCommitReminderModal, setShowCommitReminderModal] = useState(false);
   const [showSellerInfoModal, setShowSellerInfoModal] = useState(false);
-  const [sellerPolicyAccepted, setSellerPolicyAccepted] = useState(false);
   const [canListBooks, setCanListBooks] = useState<boolean | null>(null);
   const [isCheckingAddress, setIsCheckingAddress] = useState(true);
   const [preferredPickupMethod, setPreferredPickupMethod] = useState<"locker" | "pickup" | null>(null);
