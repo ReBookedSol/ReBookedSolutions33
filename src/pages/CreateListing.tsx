@@ -556,11 +556,6 @@ const CreateListing = () => {
             }}
             type="seller"
           />
-
-          <SellerInfoModal
-            isOpen={showSellerInfoModal}
-            onClose={() => setShowSellerInfoModal(false)}
-          />
         </BankingRequirementCheck>
       </div>
     </Layout>
