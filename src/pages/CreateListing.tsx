@@ -478,48 +478,6 @@ const CreateListing = () => {
                 )}
               </div>
 
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="sellerPolicy"
-                  checked={sellerPolicyAccepted}
-                  onCheckedChange={(checked) =>
-                    setSellerPolicyAccepted(checked === true)
-                  }
-                  className="mt-1 h-4 w-4"
-                  required
-                />
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-start gap-2 flex-wrap">
-                    <Label
-                      htmlFor="sellerPolicy"
-                      className="text-sm text-gray-600 leading-snug cursor-pointer break-words whitespace-normal flex-1"
-                    >
-                      I agree to the{" "}
-                      <button
-                        type="button"
-                        onClick={() => setShowSellerPolicyModal(true)}
-                        className="text-book-600 hover:text-book-800 underline font-medium inline break-words whitespace-normal text-left"
-                      >
-                        Seller Policy and ReBooked's platform rules
-                      </button>
-                    </Label>
-                    <button
-                      type="button"
-                      onClick={() => setShowSellerInfoModal(true)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                      title="Seller information"
-                    >
-                      <Info className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {errors.sellerPolicy && (
-                    <p className="text-xs text-red-500">
-                      {errors.sellerPolicy}
-                    </p>
-                  )}
-                </div>
-              </div>
-
               <Button
                 type="submit"
                 disabled={
