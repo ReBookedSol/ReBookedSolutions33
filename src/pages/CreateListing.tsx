@@ -90,15 +90,44 @@ const CreateListing = () => {
         const canList = await canUserListBooks(user.id);
         setCanListBooks(canList);
 
-        // Fetch preferred pickup method
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("preferred_pickup_method")
-          .eq("id", user.id)
-          .maybeSingle();
+        // Auto-determine preferred pickup method based on what addresses user has
+        // Priority: locker > pickup (if both exist, use locker)
+        try {
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("preferred_delivery_locker_data")
+            .eq("id", user.id)
+            .maybeSingle();
 
-        if (!error && profile?.preferred_pickup_method) {
-          setPreferredPickupMethod(profile.preferred_pickup_method);
+          // If user has a locker saved, prefer locker
+          if (!error && profile?.preferred_delivery_locker_data) {
+            const lockerData = profile.preferred_delivery_locker_data as any;
+            if (lockerData.id && lockerData.name) {
+              setPreferredPickupMethod("locker");
+              return;
+            }
+          }
+
+          // If no locker, check for pickup address
+          const { getSellerDeliveryAddress } = await import("@/services/simplifiedAddressService");
+          const decrypted = await getSellerDeliveryAddress(user.id);
+
+          if (decrypted && (decrypted.street || decrypted.streetAddress)) {
+            setPreferredPickupMethod("pickup");
+            return;
+          }
+
+          // Fallback: check user_addresses table
+          const fallbackModule = await import("@/services/fallbackAddressService");
+          const fallbackSvc = fallbackModule?.default || fallbackModule?.fallbackAddressService;
+          if (fallbackSvc && typeof fallbackSvc.getBestAddress === 'function') {
+            const best = await fallbackSvc.getBestAddress(user.id, 'pickup');
+            if (best && best.success && best.address) {
+              setPreferredPickupMethod("pickup");
+            }
+          }
+        } catch (error) {
+          // Auto-determination failed but user can still list - will be determined at save time
         }
       } catch (error) {
         setCanListBooks(false);
