@@ -197,10 +197,6 @@ const CreateListing = () => {
     if (!bookImages.insidePages)
       newErrors.insidePages = "Inside pages photo is required";
 
-    if (!sellerPolicyAccepted)
-      newErrors.sellerPolicy =
-        "You must accept the Seller Policy and platform rules";
-
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
