@@ -499,8 +499,6 @@ const CreateListing = () => {
                   </>
                 ) : canListBooks === false ? (
                   "❌ Pickup Address Required"
-                ) : !sellerPolicyAccepted ? (
-                  "Accept Policy to Continue"
                 ) : (
                   "📚 Create Listing"
                 )}
