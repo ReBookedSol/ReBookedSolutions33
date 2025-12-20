@@ -544,11 +544,6 @@ const CreateListing = () => {
             isOwnProfile={true}
           />
 
-          <SellerPolicyModal
-            isOpen={showSellerPolicyModal}
-            onClose={() => setShowSellerPolicyModal(false)}
-          />
-
           <CommitReminderModal
             isOpen={showCommitReminderModal}
             onClose={async () => {
