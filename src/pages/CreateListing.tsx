@@ -245,13 +245,6 @@ const CreateListing = () => {
       return;
     }
 
-    // Check if user has chosen a preferred pickup method
-    if (!preferredPickupMethod) {
-      toast.error("Please choose your preferred pickup method before listing another book.");
-      navigate("/profile?tab=addresses");
-      return;
-    }
-
     if (!validateForm()) {
       const firstErrorField = Object.keys(errors)[0];
       if (firstErrorField) {
