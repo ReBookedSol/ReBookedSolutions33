@@ -12,9 +12,7 @@ import EnhancedMobileImageUpload from "@/components/EnhancedMobileImageUpload";
 import FirstUploadSuccessDialog from "@/components/FirstUploadSuccessDialog";
 import PostListingSuccessDialog from "@/components/PostListingSuccessDialog";
 import ShareProfileDialog from "@/components/ShareProfileDialog";
-import SellerPolicyModal from "@/components/SellerPolicyModal";
 import CommitReminderModal from "@/components/CommitReminderModal";
-import SellerInfoModal from "@/components/SellerInfoModal";
 import {
   shouldShowCommitReminder,
   shouldShowFirstUpload,
