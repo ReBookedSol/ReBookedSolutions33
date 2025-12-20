@@ -483,8 +483,7 @@ const CreateListing = () => {
                 disabled={
                   isSubmitting ||
                   isCheckingAddress ||
-                  canListBooks === false ||
-                  !sellerPolicyAccepted
+                  canListBooks === false
                 }
                 className="w-full transition-all duration-200 font-semibold bg-book-600 hover:bg-book-700 hover:shadow-lg active:scale-[0.98] text-white py-4 h-12 md:h-14 md:text-lg touch-manipulation rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
