@@ -21,26 +21,51 @@ export const createBook = async (bookData: BookFormData): Promise<Book> => {
     let affiliateRefId = null;
 
     try {
-      // Get encrypted address from profile - required for book creation
-      const { data: encryptedAddressData, error: decryptError } = await supabase.functions.invoke('decrypt-address', {
-        body: {
-          fetch: {
-            table: 'profiles',
-            target_id: user.id,
-            address_type: 'pickup'
+      // First check if user has a locker (preferred)
+      let hasLocker = false;
+      try {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("preferred_delivery_locker_data")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profileData?.preferred_delivery_locker_data) {
+          const lockerData = profileData.preferred_delivery_locker_data as any;
+          if (lockerData.id && lockerData.name) {
+            hasLocker = true;
+            // Extract province from locker if available
+            if (lockerData.province) {
+              province = lockerData.province;
+            }
           }
         }
-      });
+      } catch (lockerError) {
+        // Locker check failed, continue to pickup address check
+      }
 
-      if (encryptedAddressData && encryptedAddressData.success && encryptedAddressData.data) {
-        pickupAddress = encryptedAddressData.data;
+      // If no locker, get pickup address from encrypted profile
+      if (!hasLocker) {
+        const { data: encryptedAddressData, error: decryptError } = await supabase.functions.invoke('decrypt-address', {
+          body: {
+            fetch: {
+              table: 'profiles',
+              target_id: user.id,
+              address_type: 'pickup'
+            }
+          }
+        });
 
-        // Extract province from encrypted address
-        if (pickupAddress?.province) {
-          province = pickupAddress.province;
+        if (encryptedAddressData && encryptedAddressData.success && encryptedAddressData.data) {
+          pickupAddress = encryptedAddressData.data;
+
+          // Extract province from encrypted address
+          if (pickupAddress?.province) {
+            province = pickupAddress.province;
+          }
+        } else {
+          throw new Error("You must set up your pickup address or locker in your profile before listing a book. Please go to your profile and add your address.");
         }
-      } else {
-        throw new Error("You must set up your pickup address in your profile before listing a book. Please go to your profile and add your address.");
       }
 
       // Check if user was referred - if so, get the affiliate_ref_id
