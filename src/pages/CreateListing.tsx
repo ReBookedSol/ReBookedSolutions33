@@ -4,19 +4,15 @@ import BackButton from "@/components/ui/BackButton";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { createBook } from "@/services/book/bookMutations";
 import { BookFormData } from "@/types/book";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, Info } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import EnhancedMobileImageUpload from "@/components/EnhancedMobileImageUpload";
 import FirstUploadSuccessDialog from "@/components/FirstUploadSuccessDialog";
 import PostListingSuccessDialog from "@/components/PostListingSuccessDialog";
 import ShareProfileDialog from "@/components/ShareProfileDialog";
-import SellerPolicyModal from "@/components/SellerPolicyModal";
 import CommitReminderModal from "@/components/CommitReminderModal";
-import SellerInfoModal from "@/components/SellerInfoModal";
 import {
   shouldShowCommitReminder,
   shouldShowFirstUpload,
@@ -76,10 +72,7 @@ const CreateListing = () => {
   const [showFirstUploadDialog, setShowFirstUploadDialog] = useState(false);
   const [showPostListingDialog, setShowPostListingDialog] = useState(false);
   const [showShareProfileDialog, setShowShareProfileDialog] = useState(false);
-  const [showSellerPolicyModal, setShowSellerPolicyModal] = useState(false);
   const [showCommitReminderModal, setShowCommitReminderModal] = useState(false);
-  const [showSellerInfoModal, setShowSellerInfoModal] = useState(false);
-  const [sellerPolicyAccepted, setSellerPolicyAccepted] = useState(false);
   const [canListBooks, setCanListBooks] = useState<boolean | null>(null);
   const [isCheckingAddress, setIsCheckingAddress] = useState(true);
   const [preferredPickupMethod, setPreferredPickupMethod] = useState<"locker" | "pickup" | null>(null);
@@ -97,15 +90,44 @@ const CreateListing = () => {
         const canList = await canUserListBooks(user.id);
         setCanListBooks(canList);
 
-        // Fetch preferred pickup method
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("preferred_pickup_method")
-          .eq("id", user.id)
-          .maybeSingle();
+        // Auto-determine preferred pickup method based on what addresses user has
+        // Priority: locker > pickup (if both exist, use locker)
+        try {
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("preferred_delivery_locker_data")
+            .eq("id", user.id)
+            .maybeSingle();
 
-        if (!error && profile?.preferred_pickup_method) {
-          setPreferredPickupMethod(profile.preferred_pickup_method);
+          // If user has a locker saved, prefer locker
+          if (!error && profile?.preferred_delivery_locker_data) {
+            const lockerData = profile.preferred_delivery_locker_data as any;
+            if (lockerData.id && lockerData.name) {
+              setPreferredPickupMethod("locker");
+              return;
+            }
+          }
+
+          // If no locker, check for pickup address
+          const { getSellerDeliveryAddress } = await import("@/services/simplifiedAddressService");
+          const decrypted = await getSellerDeliveryAddress(user.id);
+
+          if (decrypted && (decrypted.street || decrypted.streetAddress)) {
+            setPreferredPickupMethod("pickup");
+            return;
+          }
+
+          // Fallback: check user_addresses table
+          const fallbackModule = await import("@/services/fallbackAddressService");
+          const fallbackSvc = fallbackModule?.default || fallbackModule?.fallbackAddressService;
+          if (fallbackSvc && typeof fallbackSvc.getBestAddress === 'function') {
+            const best = await fallbackSvc.getBestAddress(user.id, 'pickup');
+            if (best && best.success && best.address) {
+              setPreferredPickupMethod("pickup");
+            }
+          }
+        } catch (error) {
+          // Auto-determination failed but user can still list - will be determined at save time
         }
       } catch (error) {
         setCanListBooks(false);
@@ -200,10 +222,6 @@ const CreateListing = () => {
     if (!bookImages.insidePages)
       newErrors.insidePages = "Inside pages photo is required";
 
-    if (!sellerPolicyAccepted)
-      newErrors.sellerPolicy =
-        "You must accept the Seller Policy and platform rules";
-
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
@@ -223,13 +241,6 @@ const CreateListing = () => {
     // Check if user can list books before validating form (address is required)
     if (canListBooks === false) {
       toast.error("❌ Please add a pickup address before listing your book.");
-      navigate("/profile?tab=addresses");
-      return;
-    }
-
-    // Check if user has chosen a preferred pickup method
-    if (!preferredPickupMethod) {
-      toast.error("Please choose your preferred pickup method before listing another book.");
       navigate("/profile?tab=addresses");
       return;
     }
@@ -485,55 +496,12 @@ const CreateListing = () => {
                 )}
               </div>
 
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="sellerPolicy"
-                  checked={sellerPolicyAccepted}
-                  onCheckedChange={(checked) =>
-                    setSellerPolicyAccepted(checked === true)
-                  }
-                  className="mt-1 h-4 w-4"
-                  required
-                />
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-start gap-2 flex-wrap">
-                    <Label
-                      htmlFor="sellerPolicy"
-                      className="text-sm text-gray-600 leading-snug cursor-pointer break-words whitespace-normal flex-1"
-                    >
-                      I agree to the{" "}
-                      <button
-                        type="button"
-                        onClick={() => setShowSellerPolicyModal(true)}
-                        className="text-book-600 hover:text-book-800 underline font-medium inline break-words whitespace-normal text-left"
-                      >
-                        Seller Policy and ReBooked's platform rules
-                      </button>
-                    </Label>
-                    <button
-                      type="button"
-                      onClick={() => setShowSellerInfoModal(true)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                      title="Seller information"
-                    >
-                      <Info className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {errors.sellerPolicy && (
-                    <p className="text-xs text-red-500">
-                      {errors.sellerPolicy}
-                    </p>
-                  )}
-                </div>
-              </div>
-
               <Button
                 type="submit"
                 disabled={
                   isSubmitting ||
                   isCheckingAddress ||
-                  canListBooks === false ||
-                  !sellerPolicyAccepted
+                  canListBooks === false
                 }
                 className="w-full transition-all duration-200 font-semibold bg-book-600 hover:bg-book-700 hover:shadow-lg active:scale-[0.98] text-white py-4 h-12 md:h-14 md:text-lg touch-manipulation rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
@@ -549,8 +517,6 @@ const CreateListing = () => {
                   </>
                 ) : canListBooks === false ? (
                   "❌ Pickup Address Required"
-                ) : !sellerPolicyAccepted ? (
-                  "Accept Policy to Continue"
                 ) : (
                   "📚 Create Listing"
                 )}
@@ -598,11 +564,6 @@ const CreateListing = () => {
             isOwnProfile={true}
           />
 
-          <SellerPolicyModal
-            isOpen={showSellerPolicyModal}
-            onClose={() => setShowSellerPolicyModal(false)}
-          />
-
           <CommitReminderModal
             isOpen={showCommitReminderModal}
             onClose={async () => {
@@ -614,11 +575,6 @@ const CreateListing = () => {
               await handlePostCommitFlow();
             }}
             type="seller"
-          />
-
-          <SellerInfoModal
-            isOpen={showSellerInfoModal}
-            onClose={() => setShowSellerInfoModal(false)}
           />
         </BankingRequirementCheck>
       </div>
