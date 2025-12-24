@@ -118,25 +118,6 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
   // For debugging: show cart checkout if cart data exists (even for single item)
   const isCartCheckout = cartData && cartData.items && cartData.items.length >= 1;
 
-  const handleCouponApply = (coupon: AppliedCoupon) => {
-    setAppliedCoupon(coupon);
-    if (onCouponChange) {
-      onCouponChange(coupon);
-    }
-  };
-
-  const handleCouponRemove = () => {
-    setAppliedCoupon(null);
-    if (onCouponChange) {
-      onCouponChange(null);
-    }
-  };
-
-  // Calculate subtotal and final total
-  const subtotal = isCartCheckout ? cartData.totalPrice : book.price;
-  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const finalTotal = subtotal - discountAmount;
-
   return (
     <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
       <div className="text-center mb-4 sm:mb-8">
