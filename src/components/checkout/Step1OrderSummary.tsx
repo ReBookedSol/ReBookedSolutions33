@@ -23,11 +23,13 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
   onNext,
   onCancel,
   loading = false,
+  onCouponChange,
 }) => {
   // Use useState to make cart data reactive
   const [cartData, setCartData] = useState(null);
   const [sellerFullName, setSellerFullName] = useState<string | null>(null);
   const [sellerCartFullNames, setSellerCartFullNames] = useState<{ [key: string]: string }>({});
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   // Function to load cart data from localStorage
   const loadCartData = () => {
