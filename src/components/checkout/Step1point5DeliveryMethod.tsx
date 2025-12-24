@@ -39,7 +39,7 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
   onCancel,
   loading = false,
 }) => {
-  const [deliveryMethod, setDeliveryMethod] = useState<"home" | "locker">("home");
+  const [deliveryMethod, setDeliveryMethod] = useState<"home" | "locker">("locker");
   const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
   const [savedLocker, setSavedLocker] = useState<BobGoLocation | null>(null);
   const [isLoadingSavedLocker, setIsLoadingSavedLocker] = useState(true);
