@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AppliedCoupon, Coupon, couponUtils } from "@/types/coupon";
 import { X, Check, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CouponInputProps {
   subtotal: number;
