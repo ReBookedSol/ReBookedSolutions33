@@ -1202,11 +1202,30 @@ Time: ${new Date().toISOString()}
           <Separator />
 
           {/* Total */}
-          <div className="flex justify-between items-center text-lg font-bold">
-            <span>Total</span>
-            <span className="text-green-600">
-              R{orderSummary.total_price.toFixed(2)}
-            </span>
+          <div className="space-y-2">
+            {appliedCoupon && appliedCoupon.discountAmount > 0 ? (
+              <>
+                <div className="flex justify-between items-center text-base font-semibold">
+                  <span className="text-gray-500">Original Total</span>
+                  <span className="text-gray-400 line-through">
+                    R{subtotal.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span className="text-green-600">Total After Discount</span>
+                  <span className="text-green-600">
+                    R{totalWithCoupon.toFixed(2)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between items-center text-lg font-bold">
+                <span>Total</span>
+                <span className="text-green-600">
+                  R{subtotal.toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
