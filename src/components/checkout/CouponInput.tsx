@@ -38,22 +38,27 @@ const CouponInput: React.FC<CouponInputProps> = ({
     try {
       const formattedCode = couponUtils.formatCode(couponCode);
 
+      // Build the URL for the edge function
+      const url = `${ENV.VITE_SUPABASE_URL}/functions/v1/validate-coupon`;
+      console.log("Calling coupon validation endpoint:", url);
+
       // Call the edge function to validate coupon
-      const response = await fetch(
-        `${ENV.VITE_SUPABASE_URL}/functions/v1/validate-coupon`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            code: formattedCode,
-            subtotal: subtotal,
-          }),
-        }
-      );
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code: formattedCode,
+          subtotal: subtotal,
+        }),
+      });
+
+      // Log the response status for debugging
+      console.log("Coupon validation response status:", response.status);
 
       const data = await response.json();
+      console.log("Coupon validation response data:", data);
 
       if (!response.ok || !data.isValid) {
         setError(data.error || "Invalid coupon code");
@@ -94,7 +99,14 @@ const CouponInput: React.FC<CouponInputProps> = ({
       toast.success(`Coupon applied! You save R${discountAmount.toFixed(2)}`);
     } catch (err) {
       console.error("Error applying coupon:", err);
-      setError("Failed to apply coupon. Please try again.");
+      const errorMsg =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      console.error("Detailed error:", errorMsg);
+      setError(
+        errorMsg.includes("fetch")
+          ? "Unable to connect to coupon service. Please check your connection."
+          : "Failed to apply coupon. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
