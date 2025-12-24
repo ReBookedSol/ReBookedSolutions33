@@ -102,6 +102,7 @@ export interface CheckoutState {
   order_summary: OrderSummary | null;
   delivery_method: "home" | "locker" | null;
   selected_locker: BobGoLocker | null;
+  applied_coupon: any | null;
   loading: boolean;
   error: string | null;
 }
