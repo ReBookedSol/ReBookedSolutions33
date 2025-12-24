@@ -800,6 +800,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
             userId={user.id}
+            onCouponChange={(coupon) => {
+              setCheckoutState((prev) => ({
+                ...prev,
+                applied_coupon: coupon,
+              }));
+            }}
           />
         )}
 
