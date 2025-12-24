@@ -6,6 +6,7 @@ import { AppliedCoupon, Coupon, couponUtils } from "@/types/coupon";
 import { X, Check, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ENV } from "@/config/environment";
+import { couponService } from "@/services/couponService";
 
 interface CouponInputProps {
   subtotal: number;
