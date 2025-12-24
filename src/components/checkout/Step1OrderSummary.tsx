@@ -272,6 +272,53 @@ const Step1OrderSummary: React.FC<Step1OrderSummaryProps> = ({
         </CardContent>
       </Card>
 
+      {/* Coupon Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base sm:text-lg">
+            Have a Coupon?
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CouponInput
+            subtotal={subtotal}
+            onCouponApply={handleCouponApply}
+            onCouponRemove={handleCouponRemove}
+            appliedCoupon={appliedCoupon}
+            disabled={loading}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Order Total Summary Card */}
+      <Card className="border-2 border-green-200 bg-green-50">
+        <CardContent className="pt-6">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700">Subtotal:</span>
+              <span className="font-semibold">R{subtotal.toFixed(2)}</span>
+            </div>
+            {appliedCoupon && (
+              <div className="flex justify-between items-center text-green-700">
+                <span>Coupon Discount ({appliedCoupon.code}):</span>
+                <span className="font-semibold">-R{appliedCoupon.discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="border-t-2 border-green-200 pt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-bold text-gray-900">Total (before delivery):</span>
+                <span className="text-2xl font-bold text-green-600">
+                  R{finalTotal.toFixed(2)}
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-600 text-center pt-2">
+              Delivery charges will be added in the next step
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Action Buttons */}
       <div className="flex justify-between items-center pt-6">
         <Button
