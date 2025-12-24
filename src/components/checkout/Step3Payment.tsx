@@ -1128,7 +1128,7 @@ Time: ${new Date().toISOString()}
           <Separator />
 
           {/* Coupon Discount */}
-          {orderSummary.coupon_discount && orderSummary.coupon_discount > 0 && (
+          {appliedCoupon && appliedCoupon.discountAmount > 0 && (
             <>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded">
@@ -1136,7 +1136,7 @@ Time: ${new Date().toISOString()}
                 </div>
                 <div className="flex-1">
                   <p className="font-medium">
-                    Coupon Discount ({orderSummary.coupon_code})
+                    Coupon Discount ({appliedCoupon.code})
                   </p>
                   <p className="text-sm text-gray-600">
                     Promotion applied successfully
@@ -1144,7 +1144,7 @@ Time: ${new Date().toISOString()}
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-green-600">
-                    -R{orderSummary.coupon_discount.toFixed(2)}
+                    -R{appliedCoupon.discountAmount.toFixed(2)}
                   </p>
                 </div>
               </div>
