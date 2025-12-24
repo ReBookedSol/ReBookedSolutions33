@@ -40,12 +40,31 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
   onPaymentSuccess,
   onPaymentError,
   userId,
+  onCouponChange,
 }) => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<PaymentError | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const isMobile = useIsMobile();
+
+  const handleCouponApply = (coupon: AppliedCoupon) => {
+    setAppliedCoupon(coupon);
+    if (onCouponChange) {
+      onCouponChange(coupon);
+    }
+  };
+
+  const handleCouponRemove = () => {
+    setAppliedCoupon(null);
+    if (onCouponChange) {
+      onCouponChange(null);
+    }
+  };
+
+  // Calculate the current book price considering coupon
+  const currentBookPrice = orderSummary.book_price;
 
   // Fetch user email only
   React.useEffect(() => {
