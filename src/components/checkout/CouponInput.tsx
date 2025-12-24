@@ -39,14 +39,19 @@ const CouponInput: React.FC<CouponInputProps> = ({
     try {
       const formattedCode = couponUtils.formatCode(couponCode);
 
+      // Get session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+
       // Call the edge function to validate coupon
       const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/coupons/validate`,
+        `${ENV.VITE_SUPABASE_URL}/functions/v1/coupons/validate`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${supabase.supabaseKey}`,
+            Authorization: session?.access_token
+              ? `Bearer ${session.access_token}`
+              : "",
           },
           body: JSON.stringify({
             code: formattedCode,
