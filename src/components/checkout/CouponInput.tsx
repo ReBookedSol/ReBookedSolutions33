@@ -5,6 +5,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AppliedCoupon, Coupon, couponUtils } from "@/types/coupon";
 import { X, Check, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { ENV } from "@/config/environment";
+import { couponService } from "@/services/couponService";
 
 interface CouponInputProps {
   subtotal: number;
@@ -37,26 +39,65 @@ const CouponInput: React.FC<CouponInputProps> = ({
     try {
       const formattedCode = couponUtils.formatCode(couponCode);
 
-      // Call your API to validate coupon
-      const response = await fetch("/api/coupons/validate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code: formattedCode,
-          subtotal: subtotal,
-        }),
-      });
+      let result: Coupon & { discountAmount?: number } | null = null;
+      let usedEdgeFunction = false;
 
-      const data = await response.json();
+      // Try edge function first
+      if (ENV.VITE_SUPABASE_URL) {
+        try {
+          usedEdgeFunction = true;
+          const url = `${ENV.VITE_SUPABASE_URL}/functions/v1/validate-coupon`;
+          console.log("Calling coupon validation endpoint:", url);
 
-      if (!response.ok) {
-        setError(data.error || "Invalid coupon code");
-        return;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              code: formattedCode,
+              subtotal: subtotal,
+            }),
+          });
+
+          console.log("Edge function response status:", response.status);
+
+          const data = await response.json();
+          console.log("Edge function response data:", data);
+
+          if (response.ok && data.isValid) {
+            result = data.coupon;
+            result.discountAmount = data.discountAmount;
+          } else if (!response.ok) {
+            throw new Error(data.error || "Edge function validation failed");
+          }
+        } catch (edgeErr) {
+          console.warn(
+            "Edge function failed, falling back to local validation:",
+            edgeErr
+          );
+          usedEdgeFunction = false;
+        }
       }
 
-      const coupon: Coupon = data.coupon;
+      // Fallback to local couponService if edge function fails
+      if (!result) {
+        console.log("Using local coupon service for validation");
+        const validationResult = await couponService.validateCoupon(
+          formattedCode,
+          subtotal
+        );
+
+        if (!validationResult.isValid) {
+          setError(validationResult.error || "Invalid coupon code");
+          return;
+        }
+
+        result = validationResult.coupon!;
+        result.discountAmount = validationResult.discountAmount;
+      }
+
+      const coupon: Coupon = result;
 
       // Validate coupon is usable
       if (!couponUtils.isUsable(coupon)) {
@@ -67,13 +108,18 @@ const CouponInput: React.FC<CouponInputProps> = ({
       // Check minimum order amount
       if (!couponUtils.meetsMinimumOrder(coupon, subtotal)) {
         const minAmount = coupon.min_order_amount || 0;
-        setError(`Minimum order amount of R${minAmount.toFixed(2)} required for this coupon`);
+        setError(
+          `Minimum order amount of R${minAmount.toFixed(2)} required for this coupon`
+        );
         return;
       }
 
       // Calculate discount
-      const discountAmount = couponUtils.calculateDiscount(coupon, subtotal);
-      const discountPercentage = coupon.discount_type === 'percentage' ? coupon.discount_value : undefined;
+      const discountAmount =
+        result.discountAmount ||
+        couponUtils.calculateDiscount(coupon, subtotal);
+      const discountPercentage =
+        coupon.discount_type === "percentage" ? coupon.discount_value : undefined;
 
       const appliedCoupon: AppliedCoupon = {
         code: coupon.code,
@@ -84,9 +130,14 @@ const CouponInput: React.FC<CouponInputProps> = ({
 
       onCouponApply(appliedCoupon);
       setCouponCode("");
-      toast.success(`Coupon applied! You save R${discountAmount.toFixed(2)}`);
+      toast.success(
+        `Coupon applied! You save R${discountAmount.toFixed(2)} (via ${usedEdgeFunction ? "server" : "local"} validation)`
+      );
     } catch (err) {
       console.error("Error applying coupon:", err);
+      const errorMsg =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      console.error("Detailed error:", errorMsg);
       setError("Failed to apply coupon. Please try again.");
     } finally {
       setIsLoading(false);

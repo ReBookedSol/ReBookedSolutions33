@@ -49,6 +49,26 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const isMobile = useIsMobile();
 
+  // Calculate subtotal including delivery and fees
+  const calculateSubtotal = (): number => {
+    const platformFee = orderSummary.platform_fee || 20;
+    return (
+      orderSummary.book_price +
+      orderSummary.delivery_price +
+      platformFee
+    );
+  };
+
+  const subtotal = calculateSubtotal();
+
+  // Calculate total with applied coupon
+  const calculateTotalWithCoupon = (): number => {
+    const couponDiscount = appliedCoupon?.discountAmount || 0;
+    return Math.max(0, subtotal - couponDiscount);
+  };
+
+  const totalWithCoupon = calculateTotalWithCoupon();
+
   const handleCouponApply = (coupon: AppliedCoupon) => {
     setAppliedCoupon(coupon);
     if (onCouponChange) {
@@ -62,9 +82,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       onCouponChange(null);
     }
   };
-
-  // Calculate the current book price considering coupon
-  const currentBookPrice = orderSummary.book_price;
 
   // Fetch user email only
   React.useEffect(() => {
@@ -1062,7 +1079,7 @@ Time: ${new Date().toISOString()}
         </CardHeader>
         <CardContent>
           <CouponInput
-            subtotal={orderSummary.subtotal_before_discount || orderSummary.book_price}
+            subtotal={subtotal}
             onCouponApply={handleCouponApply}
             onCouponRemove={handleCouponRemove}
             appliedCoupon={appliedCoupon}
@@ -1111,7 +1128,7 @@ Time: ${new Date().toISOString()}
           <Separator />
 
           {/* Coupon Discount */}
-          {orderSummary.coupon_discount && orderSummary.coupon_discount > 0 && (
+          {appliedCoupon && appliedCoupon.discountAmount > 0 && (
             <>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded">
@@ -1119,7 +1136,7 @@ Time: ${new Date().toISOString()}
                 </div>
                 <div className="flex-1">
                   <p className="font-medium">
-                    Coupon Discount ({orderSummary.coupon_code})
+                    Coupon Discount ({appliedCoupon.code})
                   </p>
                   <p className="text-sm text-gray-600">
                     Promotion applied successfully
@@ -1127,7 +1144,7 @@ Time: ${new Date().toISOString()}
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-green-600">
-                    -R{orderSummary.coupon_discount.toFixed(2)}
+                    -R{appliedCoupon.discountAmount.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -1135,6 +1152,12 @@ Time: ${new Date().toISOString()}
               <Separator />
             </>
           )}
+
+          {/* Subtotal before delivery */}
+          <div className="flex justify-between items-center text-sm text-gray-600">
+            <span>Book Price</span>
+            <span>R{orderSummary.book_price.toFixed(2)}</span>
+          </div>
 
           {/* Delivery Details */}
           <div className="flex items-center gap-3">
@@ -1177,7 +1200,7 @@ Time: ${new Date().toISOString()}
             </div>
             <div className="text-right">
               <p className="font-semibold">
-                R20.00
+                R{(orderSummary.platform_fee || 20).toFixed(2)}
               </p>
             </div>
           </div>
@@ -1185,11 +1208,30 @@ Time: ${new Date().toISOString()}
           <Separator />
 
           {/* Total */}
-          <div className="flex justify-between items-center text-lg font-bold">
-            <span>Total</span>
-            <span className="text-green-600">
-              R{orderSummary.total_price.toFixed(2)}
-            </span>
+          <div className="space-y-2">
+            {appliedCoupon && appliedCoupon.discountAmount > 0 ? (
+              <>
+                <div className="flex justify-between items-center text-base font-semibold">
+                  <span className="text-gray-500">Original Total</span>
+                  <span className="text-gray-400 line-through">
+                    R{subtotal.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span className="text-green-600">Total After Discount</span>
+                  <span className="text-green-600">
+                    R{totalWithCoupon.toFixed(2)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between items-center text-lg font-bold">
+                <span>Total</span>
+                <span className="text-green-600">
+                  R{subtotal.toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
