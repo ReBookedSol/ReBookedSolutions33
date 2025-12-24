@@ -39,7 +39,7 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
   onCancel,
   loading = false,
 }) => {
-  const [deliveryMethod, setDeliveryMethod] = useState<"home" | "locker">("home");
+  const [deliveryMethod, setDeliveryMethod] = useState<"home" | "locker">("locker");
   const [selectedLocker, setSelectedLocker] = useState<BobGoLocation | null>(null);
   const [savedLocker, setSavedLocker] = useState<BobGoLocation | null>(null);
   const [isLoadingSavedLocker, setIsLoadingSavedLocker] = useState(true);
@@ -210,49 +210,6 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            {/* Home Delivery Option */}
-            <div
-              className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                deliveryMethod === "home"
-                  ? "bg-blue-50 border-blue-500"
-                  : "bg-gray-50 border-gray-200 hover:border-blue-300"
-              }`}
-              onClick={() => {
-                setDeliveryMethod("home");
-                setSelectedLocker(null);
-              }}
-              role="radio"
-              aria-checked={deliveryMethod === "home"}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setDeliveryMethod("home");
-                  setSelectedLocker(null);
-                }
-              }}
-            >
-              <div className="mt-1 flex-shrink-0 w-4 h-4 rounded-full border-2 border-gray-300 flex items-center justify-center" style={
-                deliveryMethod === "home" ? {
-                  borderColor: "#3b82f6",
-                  backgroundColor: "#3b82f6"
-                } : {}
-              }>
-                {deliveryMethod === "home" && (
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 font-medium text-base">
-                  <Home className="w-5 h-5 flex-shrink-0" />
-                  <span>Home Delivery</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Our courier will collect the book from the seller's address and deliver it to your home.
-                </p>
-              </div>
-            </div>
-
             {/* Locker Drop-Off Option */}
             <div
               className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
@@ -298,6 +255,49 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                     You have a saved locker
                   </Badge>
                 )}
+              </div>
+            </div>
+
+            {/* Home Delivery Option */}
+            <div
+              className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                deliveryMethod === "home"
+                  ? "bg-blue-50 border-blue-500"
+                  : "bg-gray-50 border-gray-200 hover:border-blue-300"
+              }`}
+              onClick={() => {
+                setDeliveryMethod("home");
+                setSelectedLocker(null);
+              }}
+              role="radio"
+              aria-checked={deliveryMethod === "home"}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setDeliveryMethod("home");
+                  setSelectedLocker(null);
+                }
+              }}
+            >
+              <div className="mt-1 flex-shrink-0 w-4 h-4 rounded-full border-2 border-gray-300 flex items-center justify-center" style={
+                deliveryMethod === "home" ? {
+                  borderColor: "#3b82f6",
+                  backgroundColor: "#3b82f6"
+                } : {}
+              }>
+                {deliveryMethod === "home" && (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 font-medium text-base">
+                  <Home className="w-5 h-5 flex-shrink-0" />
+                  <span>Home Delivery</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Our courier will collect the book from the seller's address and deliver it to your home.
+                </p>
               </div>
             </div>
           </div>
