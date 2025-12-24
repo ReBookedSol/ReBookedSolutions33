@@ -1079,7 +1079,7 @@ Time: ${new Date().toISOString()}
         </CardHeader>
         <CardContent>
           <CouponInput
-            subtotal={orderSummary.subtotal_before_discount || orderSummary.book_price}
+            subtotal={subtotal}
             onCouponApply={handleCouponApply}
             onCouponRemove={handleCouponRemove}
             appliedCoupon={appliedCoupon}
