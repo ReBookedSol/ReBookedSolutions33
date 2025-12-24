@@ -278,6 +278,258 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          message: string
+          starts_at: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          message: string
+          starts_at?: string
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string
+          starts_at?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      article_feedback: {
+        Row: {
+          article_id: string
+          comment: string | null
+          created_at: string
+          helpful: boolean
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          article_id: string
+          comment?: string | null
+          created_at?: string
+          helpful: boolean
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          article_id?: string
+          comment?: string | null
+          created_at?: string
+          helpful?: boolean
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_feedback_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_images: {
+        Row: {
+          article_id: string
+          caption: string | null
+          created_at: string | null
+          display_order: number
+          id: string
+          image_url: string
+        }
+        Insert: {
+          article_id: string
+          caption?: string | null
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          image_url: string
+        }
+        Update: {
+          article_id?: string
+          caption?: string | null
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_images_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_likes: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_likes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_reports: {
+        Row: {
+          article_id: string
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_email: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_email?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_email?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_reports_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      articles: {
+        Row: {
+          author_id: string | null
+          category: string
+          content: string
+          created_at: string | null
+          description: string
+          id: string
+          platform: string
+          read_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          category: string
+          content: string
+          created_at?: string | null
+          description: string
+          id?: string
+          platform: string
+          read_time?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          category?: string
+          content?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          platform?: string
+          read_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "account_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "articles_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -847,6 +1099,99 @@ export type Database = {
           status?: string
           subject?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          discount_applied: number
+          id: string
+          order_id: string
+          redeemed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          discount_applied: number
+          id?: string
+          order_id: string
+          redeemed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          discount_applied?: number
+          id?: string
+          order_id?: string
+          redeemed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_discount_amount: number | null
+          max_uses: number | null
+          min_order_amount: number | null
+          updated_at: string | null
+          usage_count: number | null
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          updated_at?: string | null
+          usage_count?: number | null
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          updated_at?: string | null
+          usage_count?: number | null
+          valid_from?: string
+          valid_until?: string
         }
         Relationships: []
       }
@@ -1996,6 +2341,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_wallets: {
         Row: {
           available_balance: number | null
@@ -2310,6 +2676,10 @@ export type Database = {
           total_referrals: number
         }[]
       }
+      get_article_like_count: {
+        Args: { p_article_id: string }
+        Returns: number
+      }
       get_bobbox_webhooks: {
         Args: never
         Returns: {
@@ -2464,6 +2834,13 @@ export type Database = {
         }[]
       }
       has_role:
+      | {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       | { Args: { role_name: string; user_id: number }; Returns: boolean }
       | { Args: { role_name: string; user_id: string }; Returns: boolean }
       is_admin: { Args: { uid: string }; Returns: boolean }
@@ -2559,6 +2936,10 @@ export type Database = {
         Args: { book_id: string; user_id: string }
         Returns: boolean
       }
+      validate_coupon: {
+        Args: { p_code: string; p_subtotal: number }
+        Returns: Json
+      }
       validate_payment_amount: { Args: { amount: number }; Returns: boolean }
       validate_payout_request: {
         Args: { p_amount: number; p_seller_id: string }
@@ -2588,6 +2969,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       broadcast_priority: "low" | "normal" | "medium" | "high" | "urgent"
       broadcast_target_audience: "all" | "users" | "admin"
       broadcast_type: "info" | "warning" | "success" | "error"
@@ -2720,6 +3102,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       broadcast_priority: ["low", "normal", "medium", "high", "urgent"],
       broadcast_target_audience: ["all", "users", "admin"],
       broadcast_type: ["info", "warning", "success", "error"],

@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { OrderSummary, OrderConfirmation } from "@/types/checkout";
+import { AppliedCoupon } from "@/types/coupon";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -22,6 +23,7 @@ import PaymentErrorHandler, {
 } from "@/components/payments/PaymentErrorHandler";
 import { logError, getUserFriendlyErrorMessage } from "@/utils/errorLogging";
 import { sendPurchaseWebhook } from "@/utils/webhookUtils";
+import CouponInput from "./CouponInput";
 
 interface Step3PaymentProps {
   orderSummary: OrderSummary;
@@ -29,6 +31,7 @@ interface Step3PaymentProps {
   onPaymentSuccess: (orderData: OrderConfirmation) => void;
   onPaymentError: (error: string) => void;
   userId: string;
+  onCouponChange?: (coupon: AppliedCoupon | null) => void;
 }
 
 const Step3Payment: React.FC<Step3PaymentProps> = ({
@@ -37,12 +40,31 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
   onPaymentSuccess,
   onPaymentError,
   userId,
+  onCouponChange,
 }) => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<PaymentError | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const isMobile = useIsMobile();
+
+  const handleCouponApply = (coupon: AppliedCoupon) => {
+    setAppliedCoupon(coupon);
+    if (onCouponChange) {
+      onCouponChange(coupon);
+    }
+  };
+
+  const handleCouponRemove = () => {
+    setAppliedCoupon(null);
+    if (onCouponChange) {
+      onCouponChange(null);
+    }
+  };
+
+  // Calculate the current book price considering coupon
+  const currentBookPrice = orderSummary.book_price;
 
   // Fetch user email only
   React.useEffect(() => {
@@ -176,6 +198,9 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
               original_total: orderSummary.total_price,
               original_book_price: orderSummary.book_price,
               original_delivery_price: orderSummary.delivery_price,
+              coupon_code: orderSummary.coupon_code || null,
+              coupon_discount: orderSummary.coupon_discount ? Math.round(orderSummary.coupon_discount * 100) : null,
+              original_book_price_before_discount: orderSummary.subtotal_before_discount ? Math.round(orderSummary.subtotal_before_discount * 100) : null,
             },
 
             total_amount: orderSummary.total_price,
@@ -1028,6 +1053,24 @@ Time: ${new Date().toISOString()}
         <p className="text-gray-600">Review and complete your purchase</p>
       </div>
 
+      {/* Coupon Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base sm:text-lg">
+            Have a Coupon?
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CouponInput
+            subtotal={orderSummary.subtotal_before_discount || orderSummary.book_price}
+            onCouponApply={handleCouponApply}
+            onCouponRemove={handleCouponRemove}
+            appliedCoupon={appliedCoupon}
+            disabled={processing}
+          />
+        </CardContent>
+      </Card>
+
       {/* Order Summary Card */}
       <Card>
         <CardHeader>
@@ -1066,6 +1109,32 @@ Time: ${new Date().toISOString()}
           </div>
 
           <Separator />
+
+          {/* Coupon Discount */}
+          {orderSummary.coupon_discount && orderSummary.coupon_discount > 0 && (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">
+                    Coupon Discount ({orderSummary.coupon_code})
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Promotion applied successfully
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-green-600">
+                    -R{orderSummary.coupon_discount.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+            </>
+          )}
 
           {/* Delivery Details */}
           <div className="flex items-center gap-3">

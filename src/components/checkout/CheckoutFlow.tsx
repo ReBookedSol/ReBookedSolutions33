@@ -56,6 +56,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
     order_summary: null,
     delivery_method: null,
     selected_locker: null,
+    applied_coupon: null,
     loading: true,
     error: null,
   });
@@ -442,18 +443,25 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
       };
     }
 
+    const bookPrice = checkoutState.book!.price;
+    const couponDiscount = checkoutState.applied_coupon?.discountAmount || 0;
+    const priceAfterDiscount = Math.max(0, bookPrice - couponDiscount);
+
     const orderSummary: OrderSummary = {
       book: checkoutState.book!,
       delivery,
       buyer_address: deliveryAddress,
       seller_address: checkoutState.seller_address,
       seller_locker_data: checkoutState.seller_locker_data,
-      book_price: checkoutState.book!.price,
+      book_price: priceAfterDiscount,
       delivery_price: delivery.price,
       platform_fee: PLATFORM_FEE,
-      total_price: checkoutState.book!.price + delivery.price + PLATFORM_FEE,
+      total_price: priceAfterDiscount + delivery.price + PLATFORM_FEE,
       delivery_method: checkoutState.delivery_method,
       selected_locker: checkoutState.selected_locker,
+      coupon_code: checkoutState.applied_coupon?.code,
+      coupon_discount: couponDiscount,
+      subtotal_before_discount: bookPrice,
     };
 
     setCheckoutState((prev) => ({
@@ -786,6 +794,12 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
             userId={user.id}
+            onCouponChange={(coupon) => {
+              setCheckoutState((prev) => ({
+                ...prev,
+                applied_coupon: coupon,
+              }));
+            }}
           />
         )}
 

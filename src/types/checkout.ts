@@ -55,6 +55,9 @@ export interface OrderSummary {
   total_price: number;
   delivery_method?: "home" | "locker";
   selected_locker?: BobGoLocker | null;
+  coupon_code?: string;
+  coupon_discount?: number;
+  subtotal_before_discount?: number;
 }
 
 export interface OrderConfirmation {
@@ -99,6 +102,7 @@ export interface CheckoutState {
   order_summary: OrderSummary | null;
   delivery_method: "home" | "locker" | null;
   selected_locker: BobGoLocker | null;
+  applied_coupon: any | null;
   loading: boolean;
   error: string | null;
 }
