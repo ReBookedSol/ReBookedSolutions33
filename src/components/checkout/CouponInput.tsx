@@ -39,34 +39,65 @@ const CouponInput: React.FC<CouponInputProps> = ({
     try {
       const formattedCode = couponUtils.formatCode(couponCode);
 
-      // Build the URL for the edge function
-      const url = `${ENV.VITE_SUPABASE_URL}/functions/v1/validate-coupon`;
-      console.log("Calling coupon validation endpoint:", url);
+      let result: Coupon & { discountAmount?: number } | null = null;
+      let usedEdgeFunction = false;
 
-      // Call the edge function to validate coupon
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code: formattedCode,
-          subtotal: subtotal,
-        }),
-      });
+      // Try edge function first
+      if (ENV.VITE_SUPABASE_URL) {
+        try {
+          usedEdgeFunction = true;
+          const url = `${ENV.VITE_SUPABASE_URL}/functions/v1/validate-coupon`;
+          console.log("Calling coupon validation endpoint:", url);
 
-      // Log the response status for debugging
-      console.log("Coupon validation response status:", response.status);
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              code: formattedCode,
+              subtotal: subtotal,
+            }),
+          });
 
-      const data = await response.json();
-      console.log("Coupon validation response data:", data);
+          console.log("Edge function response status:", response.status);
 
-      if (!response.ok || !data.isValid) {
-        setError(data.error || "Invalid coupon code");
-        return;
+          const data = await response.json();
+          console.log("Edge function response data:", data);
+
+          if (response.ok && data.isValid) {
+            result = data.coupon;
+            result.discountAmount = data.discountAmount;
+          } else if (!response.ok) {
+            throw new Error(data.error || "Edge function validation failed");
+          }
+        } catch (edgeErr) {
+          console.warn(
+            "Edge function failed, falling back to local validation:",
+            edgeErr
+          );
+          usedEdgeFunction = false;
+        }
       }
 
-      const coupon: Coupon = data.coupon;
+      // Fallback to local couponService if edge function fails
+      if (!result) {
+        console.log("Using local coupon service for validation");
+        const validationResult = await couponService.validateCoupon(
+          formattedCode,
+          subtotal
+        );
+
+        if (!validationResult.isValid) {
+          setError(validationResult.error || "Invalid coupon code");
+          return;
+        }
+
+        result = validationResult.coupon!;
+        result.discountAmount = validationResult.discountAmount;
+      }
+
+      const coupon: Coupon = result;
 
       // Validate coupon is usable
       if (!couponUtils.isUsable(coupon)) {
@@ -84,7 +115,9 @@ const CouponInput: React.FC<CouponInputProps> = ({
       }
 
       // Calculate discount
-      const discountAmount = couponUtils.calculateDiscount(coupon, subtotal);
+      const discountAmount =
+        result.discountAmount ||
+        couponUtils.calculateDiscount(coupon, subtotal);
       const discountPercentage =
         coupon.discount_type === "percentage" ? coupon.discount_value : undefined;
 
@@ -97,17 +130,15 @@ const CouponInput: React.FC<CouponInputProps> = ({
 
       onCouponApply(appliedCoupon);
       setCouponCode("");
-      toast.success(`Coupon applied! You save R${discountAmount.toFixed(2)}`);
+      toast.success(
+        `Coupon applied! You save R${discountAmount.toFixed(2)} (via ${usedEdgeFunction ? "server" : "local"} validation)`
+      );
     } catch (err) {
       console.error("Error applying coupon:", err);
       const errorMsg =
         err instanceof Error ? err.message : "Unknown error occurred";
       console.error("Detailed error:", errorMsg);
-      setError(
-        errorMsg.includes("fetch")
-          ? "Unable to connect to coupon service. Please check your connection."
-          : "Failed to apply coupon. Please try again."
-      );
+      setError("Failed to apply coupon. Please try again.");
     } finally {
       setIsLoading(false);
     }
