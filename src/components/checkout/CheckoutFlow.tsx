@@ -713,12 +713,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ book }) => {
             onNext={() => goToStep(2)}
             onCancel={handleCancelCheckout}
             loading={checkoutState.loading}
-            onCouponChange={(coupon) => {
-              setCheckoutState((prev) => ({
-                ...prev,
-                applied_coupon: coupon,
-              }));
-            }}
           />
         )}
 
