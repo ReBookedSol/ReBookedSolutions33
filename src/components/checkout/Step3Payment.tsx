@@ -49,6 +49,26 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const isMobile = useIsMobile();
 
+  // Calculate subtotal including delivery and fees
+  const calculateSubtotal = (): number => {
+    const platformFee = orderSummary.platform_fee || 20;
+    return (
+      orderSummary.book_price +
+      orderSummary.delivery_price +
+      platformFee
+    );
+  };
+
+  const subtotal = calculateSubtotal();
+
+  // Calculate total with applied coupon
+  const calculateTotalWithCoupon = (): number => {
+    const couponDiscount = appliedCoupon?.discountAmount || 0;
+    return Math.max(0, subtotal - couponDiscount);
+  };
+
+  const totalWithCoupon = calculateTotalWithCoupon();
+
   const handleCouponApply = (coupon: AppliedCoupon) => {
     setAppliedCoupon(coupon);
     if (onCouponChange) {
@@ -62,9 +82,6 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
       onCouponChange(null);
     }
   };
-
-  // Calculate the current book price considering coupon
-  const currentBookPrice = orderSummary.book_price;
 
   // Fetch user email only
   React.useEffect(() => {
