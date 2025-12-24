@@ -38,17 +38,21 @@ const CouponInput: React.FC<CouponInputProps> = ({
     try {
       const formattedCode = couponUtils.formatCode(couponCode);
 
-      // Call your API to validate coupon
-      const response = await fetch("/api/coupons/validate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code: formattedCode,
-          subtotal: subtotal,
-        }),
-      });
+      // Call the edge function to validate coupon
+      const response = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/coupons/validate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabase.supabaseKey}`,
+          },
+          body: JSON.stringify({
+            code: formattedCode,
+            subtotal: subtotal,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -68,13 +72,16 @@ const CouponInput: React.FC<CouponInputProps> = ({
       // Check minimum order amount
       if (!couponUtils.meetsMinimumOrder(coupon, subtotal)) {
         const minAmount = coupon.min_order_amount || 0;
-        setError(`Minimum order amount of R${minAmount.toFixed(2)} required for this coupon`);
+        setError(
+          `Minimum order amount of R${minAmount.toFixed(2)} required for this coupon`
+        );
         return;
       }
 
       // Calculate discount
       const discountAmount = couponUtils.calculateDiscount(coupon, subtotal);
-      const discountPercentage = coupon.discount_type === 'percentage' ? coupon.discount_value : undefined;
+      const discountPercentage =
+        coupon.discount_type === "percentage" ? coupon.discount_value : undefined;
 
       const appliedCoupon: AppliedCoupon = {
         code: coupon.code,
