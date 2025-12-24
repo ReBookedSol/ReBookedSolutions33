@@ -176,6 +176,9 @@ const Step3Payment: React.FC<Step3PaymentProps> = ({
               original_total: orderSummary.total_price,
               original_book_price: orderSummary.book_price,
               original_delivery_price: orderSummary.delivery_price,
+              coupon_code: orderSummary.coupon_code || null,
+              coupon_discount: orderSummary.coupon_discount ? Math.round(orderSummary.coupon_discount * 100) : null,
+              original_book_price_before_discount: orderSummary.subtotal_before_discount ? Math.round(orderSummary.subtotal_before_discount * 100) : null,
             },
 
             total_amount: orderSummary.total_price,
