@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { OrderSummary, OrderConfirmation } from "@/types/checkout";
+import { AppliedCoupon } from "@/types/coupon";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -22,6 +23,7 @@ import PaymentErrorHandler, {
 } from "@/components/payments/PaymentErrorHandler";
 import { logError, getUserFriendlyErrorMessage } from "@/utils/errorLogging";
 import { sendPurchaseWebhook } from "@/utils/webhookUtils";
+import CouponInput from "./CouponInput";
 
 interface Step3PaymentProps {
   orderSummary: OrderSummary;
@@ -29,6 +31,7 @@ interface Step3PaymentProps {
   onPaymentSuccess: (orderData: OrderConfirmation) => void;
   onPaymentError: (error: string) => void;
   userId: string;
+  onCouponChange?: (coupon: AppliedCoupon | null) => void;
 }
 
 const Step3Payment: React.FC<Step3PaymentProps> = ({
