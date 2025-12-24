@@ -1153,12 +1153,6 @@ Time: ${new Date().toISOString()}
             </>
           )}
 
-          {/* Subtotal before delivery */}
-          <div className="flex justify-between items-center text-sm text-gray-600">
-            <span>Book Price</span>
-            <span>R{orderSummary.book_price.toFixed(2)}</span>
-          </div>
-
           {/* Delivery Details */}
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded">
