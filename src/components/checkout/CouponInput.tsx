@@ -38,35 +38,60 @@ const CouponInput: React.FC<CouponInputProps> = ({
     try {
       const formattedCode = couponUtils.formatCode(couponCode);
 
-      // Validate coupon using the service
-      const result = await couponService.validateCoupon(
-        formattedCode,
-        subtotal
+      // Call the edge function to validate coupon
+      const response = await fetch(
+        `${ENV.VITE_SUPABASE_URL}/functions/v1/validate-coupon`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code: formattedCode,
+            subtotal: subtotal,
+          }),
+        }
       );
 
-      if (!result.isValid) {
-        setError(result.error || "Invalid coupon code");
+      const data = await response.json();
+
+      if (!response.ok || !data.isValid) {
+        setError(data.error || "Invalid coupon code");
         return;
       }
 
-      const coupon = result.coupon!;
+      const coupon: Coupon = data.coupon;
 
-      // Create applied coupon object
+      // Validate coupon is usable
+      if (!couponUtils.isUsable(coupon)) {
+        setError("This coupon has expired or is no longer available");
+        return;
+      }
+
+      // Check minimum order amount
+      if (!couponUtils.meetsMinimumOrder(coupon, subtotal)) {
+        const minAmount = coupon.min_order_amount || 0;
+        setError(
+          `Minimum order amount of R${minAmount.toFixed(2)} required for this coupon`
+        );
+        return;
+      }
+
+      // Calculate discount
+      const discountAmount = couponUtils.calculateDiscount(coupon, subtotal);
+      const discountPercentage =
+        coupon.discount_type === "percentage" ? coupon.discount_value : undefined;
+
       const appliedCoupon: AppliedCoupon = {
         code: coupon.code,
-        discountAmount: result.discountAmount,
-        discountPercentage:
-          coupon.discount_type === "percentage"
-            ? coupon.discount_value
-            : undefined,
+        discountAmount,
+        discountPercentage,
         couponId: coupon.id,
       };
 
       onCouponApply(appliedCoupon);
       setCouponCode("");
-      toast.success(
-        `Coupon applied! You save R${result.discountAmount.toFixed(2)}`
-      );
+      toast.success(`Coupon applied! You save R${discountAmount.toFixed(2)}`);
     } catch (err) {
       console.error("Error applying coupon:", err);
       setError("Failed to apply coupon. Please try again.");
