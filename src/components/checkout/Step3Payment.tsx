@@ -1053,6 +1053,24 @@ Time: ${new Date().toISOString()}
         <p className="text-gray-600">Review and complete your purchase</p>
       </div>
 
+      {/* Coupon Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base sm:text-lg">
+            Have a Coupon?
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CouponInput
+            subtotal={orderSummary.subtotal_before_discount || orderSummary.book_price}
+            onCouponApply={handleCouponApply}
+            onCouponRemove={handleCouponRemove}
+            appliedCoupon={appliedCoupon}
+            disabled={processing}
+          />
+        </CardContent>
+      </Card>
+
       {/* Order Summary Card */}
       <Card>
         <CardHeader>
