@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getActiveLockerName } from "@/services/dynamicCourierService";
 import BobGoLockerSelector from "@/components/checkout/BobGoLockerSelector";
 import { BobGoLocation } from "@/services/bobgoLocationsService";
 
