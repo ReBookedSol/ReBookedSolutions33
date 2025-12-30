@@ -62,6 +62,7 @@ import ActivityLog from "./pages/ActivityLog";
 import BankingSetup from "./pages/BankingSetup";
 import UserProfile from "./pages/UserProfile";
 import Transparency from "./pages/Transparency";
+import CourierOptionsPanelAdmin from "./pages/CourierOptionsPanelAdmin";
 // import LockerSearchPage from "./pages/LockerSearchPage"; // DISABLED - Locker functionality removed
 
 
