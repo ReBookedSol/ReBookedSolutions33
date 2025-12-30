@@ -336,7 +336,8 @@ export const trackUnifiedShipment = async (
   trackingNumber: string,
   provider?: "bobgo",
 ): Promise<UnifiedTrackingResponse> => {
-  const { data, error } = await supabase.functions.invoke(`bobgo-track-shipment/${encodeURIComponent(trackingNumber)}`, { method: "GET" as any });
+  const trackFunction = await getTrackShipmentFunction();
+  const { data, error } = await supabase.functions.invoke(`${trackFunction}/${encodeURIComponent(trackingNumber)}`, { method: "GET" as any });
   if (error) throw new Error(error.message);
   const t = data?.tracking || {};
 
