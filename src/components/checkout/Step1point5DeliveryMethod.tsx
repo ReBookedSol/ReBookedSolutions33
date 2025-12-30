@@ -97,6 +97,16 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
     }
   };
 
+  const loadActiveLockerName = async () => {
+    try {
+      const name = await getActiveLockerName();
+      setActiveLockerName(name);
+    } catch (error) {
+      console.error("Error loading active locker name:", error);
+      setActiveLockerName("Locker");
+    }
+  };
+
   const handleSaveLockerToProfile = async () => {
     if (!selectedLocker) {
       toast.error("Please select a locker first");
