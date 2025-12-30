@@ -166,6 +166,7 @@ const CourierOptionsPanelAdmin = () => {
       if (error) throw error;
 
       setSettings(updatedSettings);
+      invalidateCache(); // Invalidate cache so new setting takes effect
       toast.success("Locker names updated successfully");
     } catch (error) {
       console.error("Error saving locker names:", error);
