@@ -273,12 +273,8 @@ function App() {
                         }
                       />
                       <Route
-                        path="/admin/courier-options"
-                        element={
-                          <ProtectedRoute>
-                            <CourierOptionsPanelAdmin />
-                          </ProtectedRoute>
-                        }
+                        path="/courier-settings"
+                        element={<CourierSettings />}
                       />
                       {/* DISABLED - Locker functionality removed */}
                       {/* <Route
