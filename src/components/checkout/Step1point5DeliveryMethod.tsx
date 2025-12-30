@@ -46,10 +46,12 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
   const [isLoadingSavedLocker, setIsLoadingSavedLocker] = useState(true);
   const [isSavingLocker, setIsSavingLocker] = useState(false);
   const [wantToChangeLocker, setWantToChangeLocker] = useState(false);
+  const [activeLockerName, setActiveLockerName] = useState("Locker");
 
-  // Load saved locker from profile on mount
+  // Load saved locker from profile and active locker name on mount
   useEffect(() => {
     loadSavedLocker();
+    loadActiveLockerName();
   }, []);
 
   // Auto-select delivery method and locker when clicking locker option
