@@ -258,7 +258,7 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
                   <Badge className="bg-amber-100 text-amber-800">Recommended</Badge>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
-                  Our courier will drop the book at your chosen BobGo pickup location. You'll collect it from there.
+                  Our courier will drop the book at your chosen {activeLockerName} location. You'll collect it from there.
                 </p>
 
                 {/* Show if user has saved locker and locker method is selected */}
