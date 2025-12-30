@@ -1,4 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
+import {
+  getGetRatesFunction,
+  getCreateShipmentFunction,
+  getTrackShipmentFunction,
+  getActiveLockerName,
+  getCourierDisplayName,
+} from "./dynamicCourierService";
 
 // Unified delivery types
 export interface UnifiedAddress {
