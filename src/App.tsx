@@ -62,7 +62,6 @@ import ActivityLog from "./pages/ActivityLog";
 import BankingSetup from "./pages/BankingSetup";
 import UserProfile from "./pages/UserProfile";
 import Transparency from "./pages/Transparency";
-import CourierSettings from "./pages/CourierSettings";
 // import LockerSearchPage from "./pages/LockerSearchPage"; // DISABLED - Locker functionality removed
 
 
@@ -271,10 +270,6 @@ function App() {
                             <Profile />
                           </ProtectedRoute>
                         }
-                      />
-                      <Route
-                        path="/courier-settings"
-                        element={<CourierSettings />}
                       />
                       {/* DISABLED - Locker functionality removed */}
                       {/* <Route

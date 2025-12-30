@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getActiveLockerName } from "@/services/dynamicCourierService";
 import BobGoLockerSelector from "@/components/checkout/BobGoLockerSelector";
 import { BobGoLocation } from "@/services/bobgoLocationsService";
 
@@ -46,12 +45,10 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
   const [isLoadingSavedLocker, setIsLoadingSavedLocker] = useState(true);
   const [isSavingLocker, setIsSavingLocker] = useState(false);
   const [wantToChangeLocker, setWantToChangeLocker] = useState(false);
-  const [activeLockerName, setActiveLockerName] = useState("Locker");
 
-  // Load saved locker from profile and active locker name on mount
+  // Load saved locker from profile on mount
   useEffect(() => {
     loadSavedLocker();
-    loadActiveLockerName();
   }, []);
 
   // Auto-select delivery method and locker when clicking locker option
@@ -94,16 +91,6 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
     } catch (error) {
     } finally {
       setIsLoadingSavedLocker(false);
-    }
-  };
-
-  const loadActiveLockerName = async () => {
-    try {
-      const name = await getActiveLockerName();
-      setActiveLockerName(name);
-    } catch (error) {
-      console.error("Error loading active locker name:", error);
-      setActiveLockerName("Locker");
     }
   };
 
@@ -254,11 +241,11 @@ const Step1point5DeliveryMethod: React.FC<Step1point5DeliveryMethodProps> = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2 font-medium text-base">
                   <MapPin className="w-5 h-5 flex-shrink-0" />
-                  <span>{activeLockerName} Drop-Off</span>
+                  <span>BobGo Locker Drop-Off</span>
                   <Badge className="bg-amber-100 text-amber-800">Recommended</Badge>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
-                  Our courier will drop the book at your chosen {activeLockerName} location. You'll collect it from there.
+                  Our courier will drop the book at your chosen BobGo pickup location. You'll collect it from there.
                 </p>
 
                 {/* Show if user has saved locker and locker method is selected */}

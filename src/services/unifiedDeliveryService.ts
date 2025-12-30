@@ -1,11 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import {
-  getGetRatesFunction,
-  getCreateShipmentFunction,
-  getTrackShipmentFunction,
-  getActiveLockerName,
-  getCourierDisplayName,
-} from "./dynamicCourierService";
 
 // Unified delivery types
 export interface UnifiedAddress {
@@ -211,9 +204,8 @@ export const getAllDeliveryQuotes = async (
       body.user_id = request.user_id;
     }
 
-    // Get the appropriate rates function based on admin settings
-    const ratesFunction = await getGetRatesFunction();
-    const { data, error } = await supabase.functions.invoke(ratesFunction, { body });
+
+    const { data, error } = await supabase.functions.invoke("bobgo-get-rates", { body });
 
 
     if (error) {
@@ -275,8 +267,7 @@ export const createUnifiedShipment = async (
     quote = quotes[0];
   }
 
-  const createFunction = await getCreateShipmentFunction();
-  const { data, error } = await supabase.functions.invoke(createFunction, {
+  const { data, error } = await supabase.functions.invoke("bobgo-create-shipment", {
     body: {
       order_id: request.reference || `order-${Date.now()}`,
       provider_slug: quote.provider_slug,
@@ -336,8 +327,7 @@ export const trackUnifiedShipment = async (
   trackingNumber: string,
   provider?: "bobgo",
 ): Promise<UnifiedTrackingResponse> => {
-  const trackFunction = await getTrackShipmentFunction();
-  const { data, error } = await supabase.functions.invoke(`${trackFunction}/${encodeURIComponent(trackingNumber)}`, { method: "GET" as any });
+  const { data, error } = await supabase.functions.invoke(`bobgo-track-shipment/${encodeURIComponent(trackingNumber)}`, { method: "GET" as any });
   if (error) throw new Error(error.message);
   const t = data?.tracking || {};
 
@@ -351,8 +341,6 @@ export const trackUnifiedShipment = async (
     signature: e.signature,
   }));
 
-  const courierName = await getCourierDisplayName();
-
   return {
     provider: "bobgo",
     tracking_number: t.tracking_number || t.shipment_tracking_reference || trackingNumber,
@@ -363,8 +351,8 @@ export const trackUnifiedShipment = async (
     events,
     recipient_signature: t.recipient_signature,
     proof_of_delivery: undefined,
-    tracking_url: t.tracking_url,
-    courier_name: t.courier_name || courierName,
+    tracking_url: t.tracking_url || `https://track.bobgo.co.za/${encodeURIComponent(trackingNumber)}`,
+    courier_name: t.courier_name,
     courier_slug: t.courier_slug,
     service_level: t.service_level,
     shipment_id: t.shipment_id || t.id,
