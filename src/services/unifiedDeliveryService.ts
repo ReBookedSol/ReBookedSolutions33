@@ -275,7 +275,8 @@ export const createUnifiedShipment = async (
     quote = quotes[0];
   }
 
-  const { data, error } = await supabase.functions.invoke("bobgo-create-shipment", {
+  const createFunction = await getCreateShipmentFunction();
+  const { data, error } = await supabase.functions.invoke(createFunction, {
     body: {
       order_id: request.reference || `order-${Date.now()}`,
       provider_slug: quote.provider_slug,
