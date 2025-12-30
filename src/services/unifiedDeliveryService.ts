@@ -351,6 +351,8 @@ export const trackUnifiedShipment = async (
     signature: e.signature,
   }));
 
+  const courierName = await getCourierDisplayName();
+
   return {
     provider: "bobgo",
     tracking_number: t.tracking_number || t.shipment_tracking_reference || trackingNumber,
@@ -361,8 +363,8 @@ export const trackUnifiedShipment = async (
     events,
     recipient_signature: t.recipient_signature,
     proof_of_delivery: undefined,
-    tracking_url: t.tracking_url || `https://track.bobgo.co.za/${encodeURIComponent(trackingNumber)}`,
-    courier_name: t.courier_name,
+    tracking_url: t.tracking_url,
+    courier_name: t.courier_name || courierName,
     courier_slug: t.courier_slug,
     service_level: t.service_level,
     shipment_id: t.shipment_id || t.id,
