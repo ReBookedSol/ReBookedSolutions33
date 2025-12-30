@@ -211,8 +211,9 @@ export const getAllDeliveryQuotes = async (
       body.user_id = request.user_id;
     }
 
-
-    const { data, error } = await supabase.functions.invoke("bobgo-get-rates", { body });
+    // Get the appropriate rates function based on admin settings
+    const ratesFunction = await getGetRatesFunction();
+    const { data, error } = await supabase.functions.invoke(ratesFunction, { body });
 
 
     if (error) {
