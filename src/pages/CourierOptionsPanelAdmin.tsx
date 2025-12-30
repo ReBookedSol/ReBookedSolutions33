@@ -132,6 +132,7 @@ const CourierOptionsPanelAdmin = () => {
       if (error) throw error;
 
       setSettings(updatedSettings);
+      invalidateCache(); // Invalidate cache so new setting takes effect
       toast.success(
         `Switched to ${courier === "bobgo" ? "BobGo" : "Courier Guy"}`
       );
