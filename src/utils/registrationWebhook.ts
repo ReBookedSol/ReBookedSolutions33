@@ -1,7 +1,9 @@
 /**
- * Send user registration data to the webhook
+ * Send user registration data to the webhook via Supabase edge function
  * Password is intentionally excluded from the payload
  */
+
+import { callEdgeFunction } from "@/utils/edgeFunctionClient";
 
 export interface RegistrationData {
   firstName: string;
@@ -11,8 +13,6 @@ export interface RegistrationData {
   affiliateCode?: string;
   [key: string]: string | undefined;
 }
-
-const WEBHOOK_URL = "https://hook.relay.app/api/v1/playbook/cmk0rzazy547x0om044t7g5px/trigger/lPLbxdN2Qz1-Hog1RF-CRA";
 
 export const sendRegistrationWebhook = async (data: RegistrationData): Promise<void> => {
   try {
@@ -29,17 +29,11 @@ export const sendRegistrationWebhook = async (data: RegistrationData): Promise<v
       },
     };
 
-    const response = await fetch(WEBHOOK_URL, {
+    // Call the edge function which will forward to the actual webhook
+    await callEdgeFunction("relay-webhook", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(webhookPayload),
+      body: webhookPayload,
     });
-
-    if (!response.ok) {
-      console.error(`Webhook request failed with status ${response.status}`);
-    }
   } catch (error) {
     // Log error but don't throw - webhook failure shouldn't block registration
     console.error("Error sending registration webhook:", error);
