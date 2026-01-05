@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, BookOpen, Book } from "lucide-react";
 import { BackupEmailService } from "@/utils/backupEmailService";
 import { callEdgeFunction } from "@/utils/edgeFunctionClient";
+import { sendRegistrationWebhook } from "@/utils/registrationWebhook";
 
 // Affiliate tracking storage key
 const AFFILIATE_STORAGE_KEY = 'affiliate_code';
@@ -125,6 +126,20 @@ const Register = () => {
 
       const affiliateCode = getStoredAffiliateCode();
       const result = await register(email, password, firstName, lastName, normalizedPhone, affiliateCode ?? undefined);
+
+      // Send registration data to webhook (non-blocking)
+      try {
+        await sendRegistrationWebhook({
+          firstName,
+          lastName,
+          email,
+          phone: normalizedPhone,
+          ...(affiliateCode && { affiliateCode }),
+        });
+      } catch (webhookError) {
+        // Log but don't fail signup if webhook call fails
+        console.warn('Failed to send registration webhook:', webhookError);
+      }
 
       // Call Brevo to create contact after successful signup (non-blocking)
       if (result?.needsVerification || result?.emailWarning) {
