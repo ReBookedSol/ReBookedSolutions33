@@ -10,6 +10,7 @@ const WEBHOOK_URLS: Record<string, string> = {
   order_purchase: "https://hook.relay.app/api/v1/playbook/cmj5u9bzr46790nm68squ0101/trigger/eCLqFOqSeT2yMUZc-1yTTA",
   contact_message: "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ",
   report: "https://hook.relay.app/api/v1/playbook/cmj5lqoya3rfa0om18j7jhhxn/trigger/EcrGxmUckpkITHTHtZB9mQ",
+  user_registration: "https://hook.relay.app/api/v1/playbook/cmk0rzazy547x0om044t7g5px/trigger/lPLbxdN2Qz1-Hog1RF-CRA",
 };
 
 async function sendWebhook(eventType: string, payload: any): Promise<boolean> {
