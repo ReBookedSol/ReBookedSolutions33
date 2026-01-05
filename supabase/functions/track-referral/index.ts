@@ -8,10 +8,11 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Use service role key to bypass RLS for backend operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -23,37 +24,44 @@ serve(async (req) => {
     );
 
     const { affiliate_code, new_user_id } = await req.json();
-    
-    // Trim and normalize the affiliate code
-    const normalizedCode = affiliate_code?.trim()?.toUpperCase();
 
-    if (!normalizedCode) {
+    console.log('Tracking referral:', { affiliate_code, new_user_id });
+
+    if (!affiliate_code || !new_user_id) {
+      console.error('Missing required fields:', { affiliate_code, new_user_id });
       return new Response(
-        JSON.stringify({ error: 'Affiliate code is required' }),
+        JSON.stringify({ error: 'Missing affiliate_code or new_user_id' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // Find affiliate by code - use maybeSingle() since affiliate might not exist
+    // Find affiliate by code - use maybeSingle to handle no results gracefully
     const { data: affiliate, error: affiliateError } = await supabaseClient
       .from('profiles')
-      .select('id, affiliate_code')
-      .ilike('affiliate_code', normalizedCode)
+      .select('id')
+      .eq('affiliate_code', affiliate_code)
       .eq('is_affiliate', true)
       .maybeSingle();
 
     if (affiliateError) {
-      throw affiliateError;
+      console.error('Error finding affiliate:', affiliateError);
+      return new Response(
+        JSON.stringify({ error: 'Error finding affiliate' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     if (!affiliate) {
+      console.error('Affiliate not found for code:', affiliate_code);
       return new Response(
         JSON.stringify({ error: 'Invalid affiliate code' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
 
-    // Check if user is already referred - use maybeSingle() since referral might not exist
+    console.log('Found affiliate:', affiliate.id);
+
+    // Check if user is already referred - use maybeSingle to handle no results gracefully
     const { data: existing, error: existingError } = await supabaseClient
       .from('affiliates_referrals')
       .select('id')
@@ -61,10 +69,15 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingError) {
-      throw existingError;
+      console.error('Error checking existing referral:', existingError);
+      return new Response(
+        JSON.stringify({ error: 'Error checking existing referral' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     if (existing) {
+      console.log('User already referred');
       return new Response(
         JSON.stringify({ message: 'User already has a referrer' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -82,15 +95,21 @@ serve(async (req) => {
       .single();
 
     if (referralError) {
-      throw referralError;
+      console.error('Error creating referral:', referralError);
+      return new Response(
+        JSON.stringify({ error: 'Error creating referral: ' + referralError.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
+    console.log('Referral created:', referral);
 
     return new Response(
       JSON.stringify({ success: true, referral }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
+    console.error('Error in track-referral:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),
