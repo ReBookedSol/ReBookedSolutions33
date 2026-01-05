@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, BookOpen, Book } from "lucide-react";
 import { BackupEmailService } from "@/utils/backupEmailService";
 import { callEdgeFunction } from "@/utils/edgeFunctionClient";
+import { sendRegistrationWebhook } from "@/utils/registrationWebhook";
 
 // Affiliate tracking storage key
 const AFFILIATE_STORAGE_KEY = 'affiliate_code';
