@@ -127,6 +127,20 @@ const Register = () => {
       const affiliateCode = getStoredAffiliateCode();
       const result = await register(email, password, firstName, lastName, normalizedPhone, affiliateCode ?? undefined);
 
+      // Send registration data to webhook (non-blocking)
+      try {
+        await sendRegistrationWebhook({
+          firstName,
+          lastName,
+          email,
+          phone: normalizedPhone,
+          ...(affiliateCode && { affiliateCode }),
+        });
+      } catch (webhookError) {
+        // Log but don't fail signup if webhook call fails
+        console.warn('Failed to send registration webhook:', webhookError);
+      }
+
       // Call Brevo to create contact after successful signup (non-blocking)
       if (result?.needsVerification || result?.emailWarning) {
         try {
