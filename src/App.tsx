@@ -289,8 +289,8 @@ function App() {
                       <Route path="/shipping" element={<Shipping />} />
                       <Route path="/getting-started" element={<GettingStarted />} />
                       <Route path="/transparency" element={<Transparency />} />
-                                            <Route path="/report" element={<Report />} />
-
+                      <Route path="/report" element={<Report />} />
+                      <Route path="/webhook-test" element={<WebhookTest />} />
 
                       {/* 404 Catch All */}
                       <Route path="*" element={<Index />} />
