@@ -13,45 +13,58 @@ interface EncryptedBundle {
   version?: number
 }
 
-function parseEncryptedBundle(data: unknown): EncryptedBundle {
-  // If it's a string, parse it as JSON
-  if (typeof data === 'string') {
-    try {
-      const parsed = JSON.parse(data)
-      return parsed as EncryptedBundle
-    } catch {
-      throw new Error('INVALID_ENCRYPTED_DATA_FORMAT')
-    }
-  }
-
-  // If it's already an object (from JSONB), validate and return it
-  if (typeof data === 'object' && data !== null) {
-    const bundle = data as Record<string, unknown>
-    if (
-      typeof bundle.ciphertext === 'string' &&
-      typeof bundle.iv === 'string' &&
-      typeof bundle.authTag === 'string'
-    ) {
-      return {
-        ciphertext: bundle.ciphertext,
-        iv: bundle.iv,
-        authTag: bundle.authTag,
-        version: typeof bundle.version === 'number' ? bundle.version : undefined
-      }
-    }
-  }
-
-  throw new Error('INVALID_ENCRYPTED_DATA_FORMAT')
-}
-
 function base64ToBytes(b64: string): Uint8Array {
   try {
-    const bin = atob(b64)
+    // Support base64url as well as standard base64
+    const normalized = b64
+      .replace(/\s/g, '')
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(b64.length / 4) * 4, '=')
+
+    const bin = atob(normalized)
     const bytes = new Uint8Array(bin.length)
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
     return bytes
   } catch (_e) {
     throw new Error('INVALID_BASE64')
+  }
+}
+
+function parseEncryptedBundle(value: unknown, fieldName: string): EncryptedBundle {
+  if (value == null) {
+    throw new Error(`MISSING_${fieldName.toUpperCase()}`)
+  }
+
+  let obj: any = value
+
+  // DB columns are TEXT in this project, so most commonly this comes through as a JSON string.
+  if (typeof value === 'string') {
+    try {
+      obj = JSON.parse(value)
+    } catch (_e) {
+      throw new Error(`INVALID_BUNDLE_JSON_${fieldName}`)
+    }
+  }
+
+  if (typeof obj !== 'object' || !obj) {
+    throw new Error(`INVALID_BUNDLE_${fieldName}`)
+  }
+
+  const ciphertext = (obj as any).ciphertext
+  const iv = (obj as any).iv
+  const authTag = (obj as any).authTag ?? (obj as any).tag
+  const version = (obj as any).version
+
+  if (typeof ciphertext !== 'string' || typeof iv !== 'string' || typeof authTag !== 'string') {
+    throw new Error(`INVALID_BUNDLE_FIELDS_${fieldName}`)
+  }
+
+  return {
+    ciphertext,
+    iv,
+    authTag,
+    version: typeof version === 'number' ? version : undefined,
   }
 }
 
@@ -63,27 +76,32 @@ function getEncryptionKey(version?: number): string | null {
   const v = version ?? 1
   const keyVar = `ENCRYPTION_KEY_V${v}`
   const fallbackVar = 'ENCRYPTION_KEY'
-  return Deno.env.get(keyVar) || Deno.env.get(fallbackVar) || null
+  const key = Deno.env.get(keyVar) || Deno.env.get(fallbackVar) || null
+  console.log(`Looking for encryption key: ${keyVar} or ${fallbackVar}, found: ${key ? 'yes' : 'no'}`)
+  return key
 }
 
 async function importAesKeyForDecrypt(rawKeyString: string): Promise<CryptoKey> {
   const enc = new TextEncoder()
   let keyBytes: Uint8Array = enc.encode(rawKeyString)
 
+  console.log(`Key string length: ${rawKeyString.length}, encoded bytes: ${keyBytes.byteLength}`)
+
   if (keyBytes.byteLength !== 32) {
     try {
       const b64 = base64ToBytes(rawKeyString)
+      console.log(`Trying base64 decode, result bytes: ${b64.byteLength}`)
       if (b64.byteLength !== 32) {
         throw new Error('INVALID_KEY_LENGTH')
       }
-      keyBytes = new Uint8Array(b64)
-    } catch (_e) {
+      keyBytes = b64
+    } catch (e) {
+      console.error('Key import error:', e)
       throw new Error('INVALID_KEY_LENGTH')
     }
   }
 
-  // @ts-ignore - Deno edge runtime types
-  return crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt'])
+  return crypto.subtle.importKey('raw', keyBytes.buffer as ArrayBuffer, 'AES-GCM', false, ['decrypt'])
 }
 
 async function decryptGCM(bundle: EncryptedBundle, keyString: string): Promise<string> {
@@ -116,107 +134,164 @@ async function decryptGCM(bundle: EncryptedBundle, keyString: string): Promise<s
 }
 
 async function getUserFromRequest(req: Request) {
-  const authHeader = req.headers.get('Authorization');
+  const authHeader = req.headers.get('Authorization')
   if (!authHeader) {
-    return null;
+    console.log('No authorization header found')
+    return null
   }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  );
+  )
 
-  const token = authHeader.replace('Bearer ', '');
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const token = authHeader.replace('Bearer ', '')
+  const { data: { user }, error } = await supabase.auth.getUser(token)
 
   if (error) {
-    return null;
+    console.error('Auth error:', error)
+    return null
   }
 
-  return user;
+  return user
+}
+
+async function isAdmin(supabase: any, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('role', 'admin')
+    .maybeSingle()
+  
+  return !!data
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const user = await getUserFromRequest(req);
+    const user = await getUserFromRequest(req)
     if (!user) {
+      console.error('Authentication failed - no user found')
       return new Response(
         JSON.stringify({ error: 'Unauthorized - please login first' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      )
     }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    // Get banking details for the user - select only encrypted columns
+    let targetUserId = user.id
+    let body: { user_id?: string } = {}
+    
+    try {
+      const text = await req.text()
+      if (text) {
+        body = JSON.parse(text)
+      }
+    } catch (_e) {
+      console.log('No JSON body or invalid JSON')
+    }
+
+    // If a different user_id is requested, check admin access
+    if (body.user_id && body.user_id !== user.id) {
+      const adminCheck = await isAdmin(supabase, user.id)
+      if (!adminCheck) {
+        console.error('Non-admin trying to access other user data')
+        return new Response(
+          JSON.stringify({ error: 'Forbidden - admin access required' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      targetUserId = body.user_id
+    }
+
+    console.log(`Fetching banking details for user: ${targetUserId}`)
+
     const { data: bankingDetails, error: fetchError } = await supabase
       .from('banking_subaccounts')
-      .select('encrypted_account_number, encrypted_bank_code, encrypted_bank_name, encrypted_business_name, encrypted_email')
-      .eq('user_id', user.id)
+      .select('encrypted_account_number, encrypted_bank_code, encrypted_bank_name, encrypted_business_name, encrypted_email, encryption_key_hash')
+      .eq('user_id', targetUserId)
       .eq('status', 'active')
-      .maybeSingle();
+      .maybeSingle()
 
-    if (fetchError || !bankingDetails) {
+    if (fetchError) {
+      console.error('Database error:', fetchError)
+      return new Response(
+        JSON.stringify({ error: 'Database error fetching banking details' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!bankingDetails) {
+      console.log('No banking details found for user:', targetUserId)
       return new Response(
         JSON.stringify({ error: 'No banking details found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      )
     }
 
-    // Check if data is encrypted
     const hasEncryptedData = !!(
       bankingDetails.encrypted_account_number &&
       bankingDetails.encrypted_bank_code &&
       bankingDetails.encrypted_bank_name &&
       bankingDetails.encrypted_business_name
-    );
+    )
 
     if (!hasEncryptedData) {
+      console.error('Incomplete encrypted banking data for user:', targetUserId)
       return new Response(
         JSON.stringify({ error: 'Banking details incomplete - encryption required' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      )
     }
 
-    // Get encryption key for decryption
     const encryptionKey = getEncryptionKey()
     if (!encryptionKey) {
+      console.error('ENCRYPTION_KEY not found in environment')
       return new Response(
         JSON.stringify({ error: 'Encryption key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Decrypt the encrypted data
     try {
-      // Parse and validate encrypted bundles (handles both string and JSONB objects)
-      const accountBundle = parseEncryptedBundle(bankingDetails.encrypted_account_number)
-      const bankCodeBundle = parseEncryptedBundle(bankingDetails.encrypted_bank_code)
-      const bankNameBundle = parseEncryptedBundle(bankingDetails.encrypted_bank_name)
-      const businessNameBundle = parseEncryptedBundle(bankingDetails.encrypted_business_name)
+      const decryptedAccountNumber = await decryptGCM(
+        parseEncryptedBundle(bankingDetails.encrypted_account_number, 'encrypted_account_number'),
+        encryptionKey
+      )
+      const decryptedBankCode = await decryptGCM(
+        parseEncryptedBundle(bankingDetails.encrypted_bank_code, 'encrypted_bank_code'),
+        encryptionKey
+      )
+      const decryptedBankName = await decryptGCM(
+        parseEncryptedBundle(bankingDetails.encrypted_bank_name, 'encrypted_bank_name'),
+        encryptionKey
+      )
+      const decryptedBusinessName = await decryptGCM(
+        parseEncryptedBundle(bankingDetails.encrypted_business_name, 'encrypted_business_name'),
+        encryptionKey
+      )
 
-      // Decrypt all fields
-      const decryptedAccountNumber = await decryptGCM(accountBundle, encryptionKey);
-      const decryptedBankCode = await decryptGCM(bankCodeBundle, encryptionKey);
-      const decryptedBankName = await decryptGCM(bankNameBundle, encryptionKey);
-      const decryptedBusinessName = await decryptGCM(businessNameBundle, encryptionKey);
-
-      let decryptedEmail: string | null = null;
+      let decryptedEmail: string | null = null
       if (bankingDetails.encrypted_email) {
         try {
-          const emailBundle = parseEncryptedBundle(bankingDetails.encrypted_email)
-          decryptedEmail = await decryptGCM(emailBundle, encryptionKey);
-        } catch (emailError) {
-          decryptedEmail = null;
+          decryptedEmail = await decryptGCM(
+            parseEncryptedBundle(bankingDetails.encrypted_email, 'encrypted_email'),
+            encryptionKey
+          )
+        } catch (_) {
+          console.warn('Failed to decrypt email, continuing without it')
         }
       }
+
+      console.log('✅ Successfully decrypted banking details for user:', targetUserId)
 
       return new Response(
         JSON.stringify({
@@ -231,27 +306,24 @@ serve(async (req) => {
           encrypted: true
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      )
 
     } catch (decryptError) {
-      const errorMessage = decryptError instanceof Error ? decryptError.message : 'Unknown decryption error'
-
+      console.error('Failed to decrypt banking details:', decryptError)
       return new Response(
-        JSON.stringify({
-          error: 'Failed to decrypt banking details',
-          details: errorMessage
-        }),
+        JSON.stringify({ error: 'Failed to decrypt banking details' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      )
     }
 
   } catch (error) {
+    console.error('Unexpected error in decrypt-banking-details:', error)
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    )
   }
-});
+})
