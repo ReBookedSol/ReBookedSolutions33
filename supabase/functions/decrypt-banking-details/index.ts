@@ -15,12 +15,56 @@ interface EncryptedBundle {
 
 function base64ToBytes(b64: string): Uint8Array {
   try {
-    const bin = atob(b64)
+    // Support base64url as well as standard base64
+    const normalized = b64
+      .replace(/\s/g, '')
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(b64.length / 4) * 4, '=')
+
+    const bin = atob(normalized)
     const bytes = new Uint8Array(bin.length)
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
     return bytes
   } catch (_e) {
     throw new Error('INVALID_BASE64')
+  }
+}
+
+function parseEncryptedBundle(value: unknown, fieldName: string): EncryptedBundle {
+  if (value == null) {
+    throw new Error(`MISSING_${fieldName.toUpperCase()}`)
+  }
+
+  let obj: any = value
+
+  // DB columns are TEXT in this project, so most commonly this comes through as a JSON string.
+  if (typeof value === 'string') {
+    try {
+      obj = JSON.parse(value)
+    } catch (_e) {
+      throw new Error(`INVALID_BUNDLE_JSON_${fieldName}`)
+    }
+  }
+
+  if (typeof obj !== 'object' || !obj) {
+    throw new Error(`INVALID_BUNDLE_${fieldName}`)
+  }
+
+  const ciphertext = (obj as any).ciphertext
+  const iv = (obj as any).iv
+  const authTag = (obj as any).authTag ?? (obj as any).tag
+  const version = (obj as any).version
+
+  if (typeof ciphertext !== 'string' || typeof iv !== 'string' || typeof authTag !== 'string') {
+    throw new Error(`INVALID_BUNDLE_FIELDS_${fieldName}`)
+  }
+
+  return {
+    ciphertext,
+    iv,
+    authTag,
+    version: typeof version === 'number' ? version : undefined,
   }
 }
 
@@ -119,7 +163,7 @@ async function isAdmin(supabase: any, userId: string): Promise<boolean> {
     .eq('user_id', userId)
     .eq('role', 'admin')
     .maybeSingle()
-
+  
   return !!data
 }
 
@@ -145,7 +189,7 @@ serve(async (req) => {
 
     let targetUserId = user.id
     let body: { user_id?: string } = {}
-
+    
     try {
       const text = await req.text()
       if (text) {
@@ -219,19 +263,19 @@ serve(async (req) => {
 
     try {
       const decryptedAccountNumber = await decryptGCM(
-        bankingDetails.encrypted_account_number as unknown as EncryptedBundle,
+        parseEncryptedBundle(bankingDetails.encrypted_account_number, 'encrypted_account_number'),
         encryptionKey
       )
       const decryptedBankCode = await decryptGCM(
-        bankingDetails.encrypted_bank_code as unknown as EncryptedBundle,
+        parseEncryptedBundle(bankingDetails.encrypted_bank_code, 'encrypted_bank_code'),
         encryptionKey
       )
       const decryptedBankName = await decryptGCM(
-        bankingDetails.encrypted_bank_name as unknown as EncryptedBundle,
+        parseEncryptedBundle(bankingDetails.encrypted_bank_name, 'encrypted_bank_name'),
         encryptionKey
       )
       const decryptedBusinessName = await decryptGCM(
-        bankingDetails.encrypted_business_name as unknown as EncryptedBundle,
+        parseEncryptedBundle(bankingDetails.encrypted_business_name, 'encrypted_business_name'),
         encryptionKey
       )
 
@@ -239,7 +283,7 @@ serve(async (req) => {
       if (bankingDetails.encrypted_email) {
         try {
           decryptedEmail = await decryptGCM(
-            bankingDetails.encrypted_email as unknown as EncryptedBundle,
+            parseEncryptedBundle(bankingDetails.encrypted_email, 'encrypted_email'),
             encryptionKey
           )
         } catch (_) {
