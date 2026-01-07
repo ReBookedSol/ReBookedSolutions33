@@ -301,7 +301,14 @@ const Checkout: React.FC = () => {
     );
   }
 
-  return <CheckoutFlow book={book} />;
+  return (
+    <>
+      <TemporaryCheckoutBlockModal
+        isOpen={showBlockModal}
+        onClose={() => navigate("/books")}
+      />
+    </>
+  );
 };
 
 export default Checkout;
