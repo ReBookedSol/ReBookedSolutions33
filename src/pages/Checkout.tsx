@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckoutBook } from "@/types/checkout";
 import { supabase } from "@/integrations/supabase/client";
 import CheckoutFlow from "@/components/checkout/CheckoutFlow";
+import TemporaryCheckoutBlockModal from "@/components/TemporaryCheckoutBlockModal";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
@@ -25,6 +26,7 @@ const Checkout: React.FC = () => {
   const [cartData, setCartData] = useState<CartCheckoutData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showBlockModal, setShowBlockModal] = useState(true);
 
   useEffect(() => {
     // Reset state when component mounts/changes
@@ -299,7 +301,14 @@ const Checkout: React.FC = () => {
     );
   }
 
-  return <CheckoutFlow book={book} />;
+  return (
+    <>
+      <TemporaryCheckoutBlockModal
+        isOpen={showBlockModal}
+        onClose={() => navigate("/books")}
+      />
+    </>
+  );
 };
 
 export default Checkout;

@@ -11,6 +11,7 @@ import BookActions from "@/components/book-details/BookActions";
 import BookPricing from "@/components/book-details/BookPricing";
 import SellerInfo from "@/components/book-details/SellerInfo";
 import ReportBookDialog from "@/components/ReportBookDialog";
+import TemporaryCheckoutBlockModal from "@/components/TemporaryCheckoutBlockModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertTriangle, BookOpen } from "lucide-react";
@@ -24,6 +25,7 @@ const BookDetails = () => {
   const { user, isAdmin } = useAuth();
   const { addToCart } = useCart();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isCheckoutBlockModalOpen, setIsCheckoutBlockModalOpen] = useState(false);
 
   // Validate and debug book ID
   useEffect(() => {
@@ -41,64 +43,11 @@ const BookDetails = () => {
   const { book, isLoading, error } = useBookDetails(id || "");
 
   const handleBuyNow = () => {
-    if (!user) {
-      toast.error("Please log in to purchase books");
-      navigate("/login");
-      return;
-    }
-
-    if (!book) return;
-
-    if (book.sold) {
-      toast.error("This book has already been sold");
-      return;
-    }
-
-    if (typeof book.availableQuantity === 'number' && book.availableQuantity <= 0) {
-      toast.error("This book is out of stock");
-      return;
-    }
-
-    if (user.id === book.seller?.id) {
-      toast.error("You cannot buy your own book");
-      return;
-    }
-
-    navigate(`/checkout/${book.id}`);
+    setIsCheckoutBlockModalOpen(true);
   };
 
   const handleAddToCart = () => {
-    if (!user) {
-      toast.error("Please log in to add books to cart");
-      navigate("/login");
-      return;
-    }
-
-    if (!book) {
-      toast.error("Book information is not available");
-      return;
-    }
-
-    if (!book.seller || !book.seller.id) {
-      toast.error("Seller information is not available");
-      return;
-    }
-
-    if (book.sold) {
-      toast.error("This book has already been sold");
-      return;
-    }
-
-    if (user.id === book.seller.id) {
-      toast.error("You cannot add your own book to cart");
-      return;
-    }
-
-    try {
-      addToCart(book);
-    } catch (error) {
-      toast.error("Failed to add book to cart. Please try again.");
-    }
+    setIsCheckoutBlockModalOpen(true);
   };
 
   const handleEditBook = () => {
@@ -274,6 +223,11 @@ const BookDetails = () => {
           bookTitle={book.title}
           sellerId={book.seller?.id}
           sellerName={book.seller?.name}
+        />
+
+        <TemporaryCheckoutBlockModal
+          isOpen={isCheckoutBlockModalOpen}
+          onClose={() => setIsCheckoutBlockModalOpen(false)}
         />
       </div>
     </Layout>
