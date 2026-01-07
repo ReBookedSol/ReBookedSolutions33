@@ -26,6 +26,7 @@ const Checkout: React.FC = () => {
   const [cartData, setCartData] = useState<CartCheckoutData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showBlockModal, setShowBlockModal] = useState(true);
 
   useEffect(() => {
     // Reset state when component mounts/changes
