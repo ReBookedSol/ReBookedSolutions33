@@ -25,6 +25,7 @@ const BookDetails = () => {
   const { user, isAdmin } = useAuth();
   const { addToCart } = useCart();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isCheckoutBlockModalOpen, setIsCheckoutBlockModalOpen] = useState(false);
 
   // Validate and debug book ID
   useEffect(() => {
