@@ -43,30 +43,7 @@ const BookDetails = () => {
   const { book, isLoading, error } = useBookDetails(id || "");
 
   const handleBuyNow = () => {
-    if (!user) {
-      toast.error("Please log in to purchase books");
-      navigate("/login");
-      return;
-    }
-
-    if (!book) return;
-
-    if (book.sold) {
-      toast.error("This book has already been sold");
-      return;
-    }
-
-    if (typeof book.availableQuantity === 'number' && book.availableQuantity <= 0) {
-      toast.error("This book is out of stock");
-      return;
-    }
-
-    if (user.id === book.seller?.id) {
-      toast.error("You cannot buy your own book");
-      return;
-    }
-
-    navigate(`/checkout/${book.id}`);
+    setIsCheckoutBlockModalOpen(true);
   };
 
   const handleAddToCart = () => {
