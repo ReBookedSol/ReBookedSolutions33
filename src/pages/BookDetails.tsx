@@ -224,6 +224,11 @@ const BookDetails = () => {
           sellerId={book.seller?.id}
           sellerName={book.seller?.name}
         />
+
+        <TemporaryCheckoutBlockModal
+          isOpen={isCheckoutBlockModalOpen}
+          onClose={() => setIsCheckoutBlockModalOpen(false)}
+        />
       </div>
     </Layout>
   );
