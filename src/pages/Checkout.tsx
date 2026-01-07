@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckoutBook } from "@/types/checkout";
 import { supabase } from "@/integrations/supabase/client";
 import CheckoutFlow from "@/components/checkout/CheckoutFlow";
+import TemporaryCheckoutBlockModal from "@/components/TemporaryCheckoutBlockModal";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
