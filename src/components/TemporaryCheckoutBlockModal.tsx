@@ -25,15 +25,15 @@ const TemporaryCheckoutBlockModal: React.FC<{
           <DialogTitle className="text-center text-xl">
             Checkout Temporarily Unavailable
           </DialogTitle>
-          <DialogDescription className="text-center mt-4">
-            <p className="text-gray-600 mb-4">
-              We're currently experiencing technical difficulties with our checkout system. Our team is working to restore service as quickly as possible.
-            </p>
-            <p className="text-sm text-gray-500">
-              Please try again in a few moments.
-            </p>
-          </DialogDescription>
         </DialogHeader>
+        <div className="space-y-3 text-center">
+          <div className="text-gray-600">
+            We're currently experiencing technical difficulties with our checkout system. Our team is working to restore service as quickly as possible.
+          </div>
+          <div className="text-sm text-gray-500">
+            Please try again in a few moments.
+          </div>
+        </div>
         <div className="flex gap-3 mt-6">
           <Button
             onClick={onClose}
