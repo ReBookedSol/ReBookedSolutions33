@@ -11,6 +11,7 @@ import BookActions from "@/components/book-details/BookActions";
 import BookPricing from "@/components/book-details/BookPricing";
 import SellerInfo from "@/components/book-details/SellerInfo";
 import ReportBookDialog from "@/components/ReportBookDialog";
+import TemporaryCheckoutBlockModal from "@/components/TemporaryCheckoutBlockModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertTriangle, BookOpen } from "lucide-react";
